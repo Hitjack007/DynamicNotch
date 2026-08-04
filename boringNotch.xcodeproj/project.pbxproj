@@ -114,6 +114,7 @@
 		4DA88E0E301F3F700095857C /* ThermalDaemonClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */; };
 		4DA88E11301F42F10095857C /* install-thermal-daemon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */; };
 		4DA88E1330208E210095857C /* logoutput.md in Resources */ = {isa = PBXBuildFile; fileRef = 4DA88E1230208E210095857C /* logoutput.md */; };
+		4DA88E153021DD6D0095857C /* AudioDeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -292,6 +293,7 @@
 		4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalDaemonClient.swift; sourceTree = "<group>"; };
 		4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "install-thermal-daemon.sh"; sourceTree = "<group>"; };
 		4DA88E1230208E210095857C /* logoutput.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = logoutput.md; path = ../logoutput.md; sourceTree = SOURCE_ROOT; };
+		4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDeviceModel.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -538,6 +540,7 @@
 				4D73E19C301EB0490084A6A1 /* ThermalSMC */,
 				4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */,
 				4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */,
+				4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -1019,6 +1022,7 @@
 				B1C4489B2C97376A001F0858 /* TipStore.swift in Sources */,
 				1153BD912D986DB300979FB0 /* PlaybackState.swift in Sources */,
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,
+				4DA88E153021DD6D0095857C /* AudioDeviceModel.swift in Sources */,
 				14E9FEAE2C7325770062E83F /* Button+Bouncing.swift in Sources */,
 				14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */,
 				14D570BC2C5E98EB0011E668 /* generic.swift in Sources */,
@@ -1295,6 +1299,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "To detect when external audio sources are connected";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -1347,6 +1352,7 @@
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "To detect when external audio sources are connected";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

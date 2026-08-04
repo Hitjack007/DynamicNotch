@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Boring Notch uses Bluetooth to identify your audio device and show the correct icon in the volume HUD.</string>
 	<key>NSAccessibilityUsageDescription</key>
 	<string>Required to intercept media key events for custom HUD display.</string>
 	<key>NSAppTransportSecurity</key>

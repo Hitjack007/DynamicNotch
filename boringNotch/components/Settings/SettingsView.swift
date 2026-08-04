@@ -1802,6 +1802,7 @@ struct ThermalSettings: View {
     @Default(.fanCurveEnabled) var fanCurveEnabled
     @Default(.fanCurvePoints) var fanCurvePoints
     @Default(.fanCurvePreset) var fanCurvePreset
+    @Default(.thermalNotchPresets) var thermalNotchPresets
 
     @State private var daemonAvailable: Bool = false
     @State private var showTerminalInstructions: Bool = false
@@ -1899,6 +1900,26 @@ struct ThermalSettings: View {
                     applyPreset(fanCurvePreset)
                 }
 
+                LabeledContent("Presets in notch") {
+                    Text("up to 3")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                }
+                ForEach(FanCurvePreset.allCases) { preset in
+                    Toggle(preset.rawValue, isOn: Binding(
+                        get: { thermalNotchPresets.contains(preset) },
+                        set: { on in
+                            if on {
+                                guard thermalNotchPresets.count < 3 else { return }
+                                thermalNotchPresets.append(preset)
+                            } else {
+                                thermalNotchPresets.removeAll { $0 == preset }
+                            }
+                        }
+                    ))
+                    .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
+                }
+
                 if fanCurvePreset == .custom && daemonAvailable {
                     VStack(alignment: .leading, spacing: 10) {
                         FanCurveEditorView()
@@ -1936,6 +1957,8 @@ struct ThermalSettings: View {
     private func applyPreset(_ preset: FanCurvePreset) {
         switch preset {
         case .appleDefault:
+            fanCurveEnabled = false
+        case .maxSpeed:
             fanCurveEnabled = false
         case .custom:
             fanCurveEnabled = true

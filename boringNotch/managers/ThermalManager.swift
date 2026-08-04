@@ -16,6 +16,7 @@ final class ThermalManager: ObservableObject {
     @Published var fanRPMs: [Float] = []
     @Published var isAvailable: Bool = false
     @Published var daemonAvailable: Bool = false
+    var hasFans: Bool { fanCount > 0 }
 
     private var smc: SMCConnection?
     private var timer: Timer?
@@ -217,7 +218,14 @@ final class ThermalManager: ObservableObject {
             let val = smcBytesToFloat(r.bytes, size: r.size)
             return val > 0 ? val : nil
         }
-        applyFanCurve()
+        if Defaults[.fanCurvePreset] == .maxSpeed {
+            if abs(1.0 - lastAppliedFraction) >= 0.02 {
+                lastAppliedFraction = 1.0
+                applyFraction(1.0)
+            }
+        } else {
+            applyFanCurve()
+        }
         checkThermalAlert()
     }
 

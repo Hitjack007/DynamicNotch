@@ -61,13 +61,25 @@ enum FanCurvePreset: String, CaseIterable, Identifiable, Defaults.Serializable {
     case ramp80       = "Ramps up at 80°C"
     case ramp70       = "Ramps up at 70°C"
     case ramp60       = "Ramps up at 60°C"
+    case maxSpeed     = "Max Speed"
     case custom       = "Custom"
 
     var id: String { rawValue }
 
+    var shortName: String {
+        switch self {
+        case .appleDefault: return "Auto"
+        case .ramp80:       return "Ramp 80°"
+        case .ramp70:       return "Ramp 70°"
+        case .ramp60:       return "Ramp 60°"
+        case .maxSpeed:     return "Max"
+        case .custom:       return "Custom"
+        }
+    }
+
     var curvePoints: [FanCurvePoint]? {
         switch self {
-        case .appleDefault, .custom: return nil
+        case .appleDefault, .custom, .maxSpeed: return nil
         case .ramp80: return [
             FanCurvePoint(tempC: 50, fanPercent: 0),
             FanCurvePoint(tempC: 75, fanPercent: 20),
@@ -261,4 +273,5 @@ extension Defaults.Keys {
     static let fanCurveEnabled = Key<Bool>("fanCurveEnabled", default: false)
     static let fanCurvePoints = Key<[FanCurvePoint]>("fanCurvePoints", default: FanCurvePoint.defaultCurve)
     static let fanCurvePreset = Key<FanCurvePreset>("fanCurvePreset", default: .appleDefault)
+    static let thermalNotchPresets = Key<[FanCurvePreset]>("thermalNotchPresets", default: [.appleDefault, .maxSpeed, .ramp80])
 }

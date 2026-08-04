@@ -10,6 +10,8 @@ import Defaults
 
 struct ThermalView: View {
     @ObservedObject private var thermal = ThermalManager.shared
+    @Default(.fanCurvePreset) private var activePreset
+    @Default(.thermalNotchPresets) private var notchPresets
 
     var body: some View {
         Group {
@@ -40,9 +42,13 @@ struct ThermalView: View {
     private var readoutView: some View {
         HStack(spacing: 0) {
             tempGauge
-            if !thermal.fanRPMs.isEmpty {
-                separator
+            separator
+            if thermal.hasFans {
                 fanColumn
+                separator
+                presetList
+            } else {
+                fanlessLabel
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -78,6 +84,78 @@ struct ThermalView: View {
             }
         }
         .frame(minWidth: 90)
+    }
+
+    private var fanlessLabel: some View {
+        VStack(spacing: 4) {
+            Image(systemName: "wind")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("Fanless")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var visiblePresets: [FanCurvePreset] {
+        FanCurvePreset.allCases.filter { notchPresets.contains($0) }
+    }
+
+    private var chipFontSize: CGFloat {
+        switch visiblePresets.count {
+        case 1:  return 13
+        case 2:  return 11
+        default: return 9
+        }
+    }
+
+    private var chipPaddingH: CGFloat { visiblePresets.count == 1 ? 11 : visiblePresets.count == 2 ? 9 : 7 }
+    private var chipPaddingV: CGFloat { visiblePresets.count == 1 ? 6  : visiblePresets.count == 2 ? 4 : 3 }
+    private var chipSpacing: CGFloat  { visiblePresets.count == 1 ? 0  : visiblePresets.count == 2 ? 6 : 3 }
+
+    private var presetList: some View {
+        VStack(alignment: .leading, spacing: chipSpacing) {
+            ForEach(visiblePresets) { preset in
+                presetChip(preset)
+            }
+        }
+        .padding(.leading, 4)
+    }
+
+    @ViewBuilder
+    private func presetChip(_ preset: FanCurvePreset) -> some View {
+        let isActive = activePreset == preset
+        Button {
+            applyPreset(preset)
+        } label: {
+            Text(preset.shortName)
+                .font(.system(size: chipFontSize, weight: isActive ? .semibold : .regular))
+                .foregroundStyle(isActive ? Color.black : Color.white.opacity(0.65))
+                .padding(.horizontal, chipPaddingH)
+                .padding(.vertical, chipPaddingV)
+                .background(
+                    Capsule()
+                        .fill(isActive ? Color.white : Color.white.opacity(0.08))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func applyPreset(_ preset: FanCurvePreset) {
+        Defaults[.fanCurvePreset] = preset
+        switch preset {
+        case .appleDefault:
+            Defaults[.fanCurveEnabled] = false
+        case .maxSpeed:
+            Defaults[.fanCurveEnabled] = false
+        case .custom:
+            Defaults[.fanCurveEnabled] = true
+        default:
+            if let pts = preset.curvePoints {
+                Defaults[.fanCurvePoints] = pts
+            }
+            Defaults[.fanCurveEnabled] = true
+        }
     }
 
     private var separator: some View {

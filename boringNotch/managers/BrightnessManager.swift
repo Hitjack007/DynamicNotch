@@ -39,24 +39,29 @@ final class BrightnessManager: ObservableObject {
 	}
 
 	@MainActor func setRelative(delta: Float) {
-		let current = DisplayServicesAPI.get() ?? rawBrightness
-		let target = max(0, min(1, current + delta))
-
-		// Show HUD immediately — no async round-trip needed.
+		// DisplayServicesSetBrightnessSmooth takes a signed delta, not an absolute target.
+		// After each call, read back the settled target so our HUD stays in sync.
+		if DisplayServicesAPI.setSmooth(delta) {
+			let settled = DisplayServicesAPI.get() ?? max(0, min(1, rawBrightness + delta))
+			rawBrightness = settled
+			BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(settled))
+			publish(brightness: settled, touchDate: true)
+			return
+		}
+		// Fallback: instant absolute setter.
+		let target = max(0, min(1, rawBrightness + delta))
+		rawBrightness = target
 		BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(target))
-
 		if DisplayServicesAPI.set(target) {
 			publish(brightness: target, touchDate: true)
 		} else {
-			// Fallback to XPC helper (e.g. external displays via DDC).
+			// XPC fallback (e.g. external displays via DDC).
 			Task { @MainActor in
-				let starting = await client.currentScreenBrightness() ?? current
+				let starting = await client.currentScreenBrightness() ?? target
 				let xpcTarget = max(0, min(1, starting + delta))
 				if await client.setScreenBrightness(xpcTarget) {
 					publish(brightness: xpcTarget, touchDate: true)
-					if abs(xpcTarget - target) > 0.02 {
-						BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(xpcTarget))
-					}
+					BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(xpcTarget))
 				}
 			}
 		}
@@ -103,8 +108,14 @@ private enum DisplayServicesAPI {
         .flatMap { dlsym($0, "DisplayServicesGetBrightness") }
         .map { unsafeBitCast($0, to: GetFn.self) }
 
+    // Absolute-value setter — used by setAbsolute.
     static let setFn: SetFn? = handle
         .flatMap { dlsym($0, "DisplayServicesSetBrightness") }
+        .map { unsafeBitCast($0, to: SetFn.self) }
+
+    // Delta-based smooth setter — second arg is a SIGNED STEP (±0.0625), not an absolute target.
+    static let setSmoothFn: SetFn? = handle
+        .flatMap { dlsym($0, "DisplayServicesSetBrightnessSmooth") }
         .map { unsafeBitCast($0, to: SetFn.self) }
 
     static func get() -> Float? {
@@ -117,6 +128,13 @@ private enum DisplayServicesAPI {
     static func set(_ value: Float) -> Bool {
         guard let fn = setFn else { return false }
         return fn(CGMainDisplayID(), value) == 0
+    }
+
+    /// Calls DisplayServicesSetBrightnessSmooth with a signed delta (not an absolute value).
+    @discardableResult
+    static func setSmooth(_ delta: Float) -> Bool {
+        guard let fn = setSmoothFn else { return false }
+        return fn(CGMainDisplayID(), delta) == 0
     }
 }
 

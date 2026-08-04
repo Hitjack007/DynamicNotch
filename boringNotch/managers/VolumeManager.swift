@@ -9,6 +9,7 @@ import AppKit
 import Combine
 import CoreAudio
 import Foundation
+import IOBluetooth
 
 final class VolumeManager: NSObject, ObservableObject {
     static let shared = VolumeManager()
@@ -16,6 +17,7 @@ final class VolumeManager: NSObject, ObservableObject {
     @Published private(set) var rawVolume: Float = 0
     @Published private(set) var isMuted: Bool = false
     @Published private(set) var lastChangeAt: Date = .distantPast
+    @Published private(set) var bluetoothAudioModel: AudioDeviceModel?
 
     let visibleDuration: TimeInterval = 1.2
 
@@ -29,6 +31,7 @@ final class VolumeManager: NSObject, ObservableObject {
         super.init()
         setupAudioListener()
         fetchCurrentVolume()
+        detectBluetoothAudioDevice()
     }
 
     var shouldShowOverlay: Bool { Date().timeIntervalSince(lastChangeAt) < visibleDuration }
@@ -40,7 +43,7 @@ final class VolumeManager: NSObject, ObservableObject {
         let current = readVolumeInternal() ?? rawVolume
         let target = max(0, min(1, current + delta))
         setAbsolute(target)
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target))
+        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
 
     @MainActor func decrease(stepDivisor: Float = 1.0) {
@@ -49,7 +52,7 @@ final class VolumeManager: NSObject, ObservableObject {
         let current = readVolumeInternal() ?? rawVolume
         let target = max(0, min(1, current - delta))
         setAbsolute(target)
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target))
+        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
 
     @MainActor func toggleMuteAction() {
@@ -68,7 +71,7 @@ final class VolumeManager: NSObject, ObservableObject {
         }
 
         toggleMuteInternal()
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(willBeMuted ? 0 : resultingVolume))
+        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(willBeMuted ? 0 : resultingVolume), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
     
     func refresh() { fetchCurrentVolume() }
@@ -182,6 +185,7 @@ final class VolumeManager: NSObject, ObservableObject {
             AudioObjectID(kAudioObjectSystemObject), &defaultDevAddr, nil
         ) { _, _ in
             self.fetchCurrentVolume()
+            self.detectBluetoothAudioDevice()
         }
 
         var masterAddr = AudioObjectPropertyAddress(
@@ -368,6 +372,62 @@ final class VolumeManager: NSObject, ObservableObject {
             self.rawVolume = volume
             self.isMuted = muted
         }
+    }
+
+    // MARK: - Bluetooth Audio Device Detection
+
+    private func detectBluetoothAudioDevice() {
+        let deviceID = systemOutputDeviceID()
+        guard deviceID != kAudioObjectUnknown, isBluetoothDevice(deviceID) else {
+            DispatchQueue.main.async { self.bluetoothAudioModel = nil }
+            return
+        }
+        let name = audioDeviceName(deviceID)
+
+        // IOBluetoothDevice must be queried on the main thread.
+        // vendorID/productID are not exposed in the Swift module; CoD + name covers all practical cases.
+        DispatchQueue.main.async {
+            var cod: UInt32 = 0
+
+            if let paired = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] {
+                if let match = paired.first(where: { device in
+                    guard device.isConnected(), let btName = device.name, !btName.isEmpty else { return false }
+                    return btName == name
+                        || btName.localizedCaseInsensitiveContains(name)
+                        || name.localizedCaseInsensitiveContains(btName)
+                }) {
+                    cod = match.classOfDevice
+                }
+            }
+
+            self.bluetoothAudioModel = AudioDeviceModel.resolve(
+                vendorID: 0, productID: 0, cod: cod, name: name
+            )
+        }
+    }
+
+    private func isBluetoothDevice(_ deviceID: AudioObjectID) -> Bool {
+        var addr = AudioObjectPropertyAddress(
+            mSelector: kAudioDevicePropertyTransportType,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var type: UInt32 = 0
+        var size = UInt32(MemoryLayout<UInt32>.size)
+        AudioObjectGetPropertyData(deviceID, &addr, 0, nil, &size, &type)
+        return type == kAudioDeviceTransportTypeBluetooth || type == kAudioDeviceTransportTypeBluetoothLE
+    }
+
+    private func audioDeviceName(_ deviceID: AudioObjectID) -> String {
+        var addr = AudioObjectPropertyAddress(
+            mSelector: kAudioObjectPropertyName,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var cfName: Unmanaged<CFString>? = nil
+        var size = UInt32(MemoryLayout<CFString>.size)
+        AudioObjectGetPropertyData(deviceID, &addr, 0, nil, &size, &cfName)
+        return cfName?.takeRetainedValue() as String? ?? ""
     }
 }
 

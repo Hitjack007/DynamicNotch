@@ -5,6 +5,7 @@
 //  Created by Alexander on 2025-06-23.
 //
 
+import CoreBluetooth
 import SwiftUI
 import AVFoundation
 
@@ -14,6 +15,7 @@ enum OnboardingStep {
     case calendarPermission
     case remindersPermission
     case accessibilityPermission
+    case bluetoothPermission
     case musicPermission
     case finished
 }
@@ -22,6 +24,7 @@ private let calendarService = CalendarService()
 
 struct OnboardingView: View {
     @State var step: OnboardingStep = .welcome
+    @State private var btManager: CBCentralManager?
     let onFinish: () -> Void
     let onOpenSettings: () -> Void
 
@@ -112,6 +115,28 @@ struct OnboardingView: View {
                         Task {
                             await requestAccessibilityPermission()
                             withAnimation(.easeInOut(duration: 0.6)) {
+                                step = .bluetoothPermission
+                            }
+                        }
+                    },
+                    onSkip: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .bluetoothPermission
+                        }
+                    }
+                )
+                .transition(.opacity)
+
+            case .bluetoothPermission:
+                PermissionRequestView(
+                    icon: Image(systemName: "airpodspro"),
+                    title: "Enable Bluetooth Access",
+                    description: "Boring Notch uses Bluetooth to identify your connected audio device and show the correct icon — AirPods, AirPods Pro, AirPods Max, Beats, and more — in the volume HUD.",
+                    privacyNote: "Bluetooth access is only used to read the device name and class. No audio is accessed or transmitted.",
+                    onAllow: {
+                        Task {
+                            await requestBluetoothPermission()
+                            withAnimation(.easeInOut(duration: 0.6)) {
                                 step = .musicPermission
                             }
                         }
@@ -123,7 +148,7 @@ struct OnboardingView: View {
                     }
                 )
                 .transition(.opacity)
-                
+
             case .musicPermission:
                 MusicControllerSelectionView(
                     onContinue: {
@@ -158,5 +183,13 @@ struct OnboardingView: View {
     
     func requestAccessibilityPermission() async {
         await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
+    }
+
+    func requestBluetoothPermission() async {
+        // Initializing CBCentralManager triggers the macOS Bluetooth permission dialog.
+        // Keep the reference alive while the dialog is shown.
+        btManager = CBCentralManager(delegate: nil, queue: nil)
+        try? await Task.sleep(for: .seconds(1))
+        btManager = nil
     }
 }

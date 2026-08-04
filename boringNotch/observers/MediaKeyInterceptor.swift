@@ -338,7 +338,8 @@ final class MediaKeyInterceptor {
             switch keyType {
             case .soundUp, .soundDown, .mute:
                 let v = VolumeManager.shared.rawVolume
-                BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(v))
+                let icon = VolumeManager.shared.bluetoothAudioModel?.sfSymbolName ?? ""
+                BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(v), icon: icon)
             case .brightnessUp, .brightnessDown:
                 if command {
                     let v = KeyboardBacklightManager.shared.rawBrightness
