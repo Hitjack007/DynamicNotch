@@ -11,12 +11,17 @@ import Defaults
 import AVFoundation
 import os
 
-// One-line switch: set to true to use .cgHIDEventTap instead of .cgSessionEventTap.
+// One-line switch: set to true to use .cghidEventTap instead of .cgSessionEventTap.
 // This beats OSD.framework's own tap on Sequoia if .cgSessionEventTap proves insufficient.
 // Default OFF — change here to test without a larger refactor.
 private let SUPPRESS_OSD_USE_HID_TAP = false
 
 private let kSystemDefinedEventType = CGEventType(rawValue: 14)!
+
+// CGSMainConnectionID — re-exported by CoreGraphics from SkyLight.
+// Declared private so it doesn't conflict with MacroVisionKit's own binding.
+@_silgen_name("CGSMainConnectionID")
+private func cgsMainConnectionID() -> Int32
 
 final class MediaKeyInterceptor {
     static let shared = MediaKeyInterceptor()
@@ -38,10 +43,13 @@ final class MediaKeyInterceptor {
     private let step: Float = 1.0 / 16.0
     private var audioPlayer: AVAudioPlayer?
 
-    // Brightness polling state — all accessed on main thread only.
-    private var brightnessPoller: DispatchSourceTimer?
-    private var lastKnownBrightness: Float = -1
-    private var programmaticBrightnessChange = false
+    // OSD suppression
+    private var osdIdleTimer: DispatchSourceTimer?
+    private var osdAggressiveTask: Task<Void, Never>?
+
+    // Cached CoreGraphics handle for dynamic CGS symbol resolution.
+    private static let coreGraphicsHandle: UnsafeMutableRawPointer? =
+        dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY)
 
     private init() {}
 
@@ -88,7 +96,9 @@ final class MediaKeyInterceptor {
         }
 
         let tapLevel: CGEventTapLocation = SUPPRESS_OSD_USE_HID_TAP ? .cghidEventTap : .cgSessionEventTap
-        let mask = CGEventMask(1 << kSystemDefinedEventType.rawValue)
+        let mask: CGEventMask = (1 << kSystemDefinedEventType.rawValue)
+            | (1 << CGEventType.keyDown.rawValue)
+            | (1 << CGEventType.keyUp.rawValue)
         eventTap = CGEvent.tapCreate(
             tap: tapLevel,
             place: .headInsertEventTap,
@@ -110,7 +120,6 @@ final class MediaKeyInterceptor {
         let tapLevelName = SUPPRESS_OSD_USE_HID_TAP ? "cgHIDEventTap" : "cgSessionEventTap"
         logger.fault("[MediaKeys] CGEventTap created: \(tapCreated ? "yes" : "no", privacy: .public)")
         logger.fault("[MediaKeys] Tap level: \(tapLevelName, privacy: .public)")
-        logger.fault("[MediaKeys] Brightness polling: starting at 20Hz")
         logger.fault("[MediaKeys] IOHIDManager: REMOVED")
 
         guard let eventTap else {
@@ -125,7 +134,7 @@ final class MediaKeyInterceptor {
         CGEvent.tapEnable(tap: eventTap, enable: true)
         logger.fault("Event tap started — bundleID=\(Bundle.main.bundleIdentifier ?? "?", privacy: .public)")
 
-        startBrightnessPolling()
+        startOSDSuppressor()
     }
 
     func stop() {
@@ -137,7 +146,7 @@ final class MediaKeyInterceptor {
         }
         runLoopSource = nil
         eventTap = nil
-        stopBrightnessPolling()
+        stopOSDSuppressor()
     }
 
     fileprivate func reenableEventTap() {
@@ -151,6 +160,13 @@ final class MediaKeyInterceptor {
         guard cgEvent.type != .null else {
             return Unmanaged.passUnretained(cgEvent)
         }
+
+        // Brightness keys from external keyboards arrive as raw keyDown/keyUp
+        // events on Sequoia — they bypass the sysDefined path entirely.
+        if cgEvent.type == .keyDown || cgEvent.type == .keyUp {
+            return handleBrightnessKeyEvent(cgEvent)
+        }
+
         guard let nsEvent = NSEvent(cgEvent: cgEvent),
               nsEvent.type == .systemDefined else {
             return Unmanaged.passUnretained(cgEvent)
@@ -193,6 +209,32 @@ final class MediaKeyInterceptor {
         }
 
         handleKeyPress(keyType: keyType, option: option, shift: shift, command: command)
+        return nil
+    }
+
+    private func handleBrightnessKeyEvent(_ cgEvent: CGEvent) -> Unmanaged<CGEvent>? {
+        let rawCode = cgEvent.getIntegerValueField(.keyboardEventKeycode)
+        let isBrightnessUp   = rawCode == 0x71 || rawCode == 0x90
+        let isBrightnessDown = rawCode == 0x6B || rawCode == 0x91
+
+        guard isBrightnessUp || isBrightnessDown else {
+            return Unmanaged.passUnretained(cgEvent)
+        }
+
+        if cgEvent.type == .keyUp {
+            logger.fault("[Brightness] keyUp keycode=\(String(format: "0x%02X", rawCode)) → swallowed")
+            return nil
+        }
+
+        // keyDown — apply delta and trigger HUD
+        let delta: Float = isBrightnessUp ? step : -step
+        logger.fault("[Brightness] keyDown keycode=\(String(format: "0x%02X", rawCode)) → \(isBrightnessUp ? "brightnessUp" : "brightnessDown", privacy: .public) → HUD triggered, event swallowed")
+
+        Task { @MainActor in
+            BrightnessManager.shared.setRelative(delta: delta)
+        }
+        triggerAggressiveOSDCheck()
+
         return nil
     }
 
@@ -282,18 +324,11 @@ final class MediaKeyInterceptor {
     }
 
     private func adjustBrightness(delta: Float, keyboard: Bool) {
-        // Mark as programmatic before the async dispatch so the brightness poller
-        // (which also runs on main) ignores the resulting value change.
-        programmaticBrightnessChange = true
         Task { @MainActor in
             if keyboard {
                 KeyboardBacklightManager.shared.setRelative(delta: delta)
             } else {
                 BrightnessManager.shared.setRelative(delta: delta)
-            }
-            // Clear the flag after the poller has had one cycle to record the new value.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
-                self?.programmaticBrightnessChange = false
             }
         }
     }
@@ -319,55 +354,102 @@ final class MediaKeyInterceptor {
         }
     }
 
-    // MARK: - Brightness Polling
-    // External keyboard brightness keys on Sequoia bypass CGEventTap entirely —
-    // they go direct from HID to BezelServices, generating zero CGEvents.
-    // We poll DisplayServices at 20Hz to detect changes we didn't initiate and
-    // show our HUD alongside the system OSD (suppression requires private OSD.framework APIs).
+    // MARK: - OSD Suppression
+    // OSDUIHelper spawns its window slightly after the key event reaches BezelServices.
+    // We run a 1-second idle CGWindowList scan that switches to 20ms aggressive mode
+    // for 500ms when a brightness key fires to narrow the race window.
 
-    private func startBrightnessPolling() {
-        guard brightnessPoller == nil else { return }
-
-        // Seed on the calling (main) thread so the first poll doesn't false-trigger.
-        lastKnownBrightness = BrightnessManager.pollCurrentBrightness() ?? -1
-
-        let queue = DispatchQueue(label: "com.boringnotch.brightness-poll", qos: .utility)
+    private func startOSDSuppressor() {
+        guard osdIdleTimer == nil else { return }
+        let queue = DispatchQueue(label: "com.boringnotch.osd-idle", qos: .background)
         let timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now() + .milliseconds(50), repeating: .milliseconds(50))
+        timer.schedule(deadline: .now() + 1, repeating: 1)
         timer.setEventHandler { [weak self] in
-            // Dispatch to main so all state reads/writes stay on one thread.
-            DispatchQueue.main.async { self?.pollBrightness() }
+            self?.checkForOSDWindow()
         }
         timer.resume()
-        brightnessPoller = timer
-        logger.fault("[MediaKeys] Brightness polling: active at 20Hz")
+        osdIdleTimer = timer
     }
 
-    private func stopBrightnessPolling() {
-        brightnessPoller?.cancel()
-        brightnessPoller = nil
+    private func stopOSDSuppressor() {
+        osdIdleTimer?.cancel()
+        osdIdleTimer = nil
+        osdAggressiveTask?.cancel()
+        osdAggressiveTask = nil
     }
 
-    private func pollBrightness() {
-        guard let current = BrightnessManager.pollCurrentBrightness() else { return }
+    // Launched from handleBrightnessKeyEvent — polls every 20ms for 500ms.
+    private func triggerAggressiveOSDCheck() {
+        osdAggressiveTask?.cancel()
+        osdAggressiveTask = Task { [weak self] in
+            guard let self else { return }
+            for _ in 0..<25 {
+                guard !Task.isCancelled else { return }
+                if self.checkForOSDWindow() { return }
+                try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
+            }
+            self.logger.fault("[OSD] No OSDUIHelper window found in 500ms window — system may not have shown OSD")
+        }
+    }
 
-        let last = lastKnownBrightness
-        let delta = abs(current - last)
+    // Returns true if an OSD window was found and suppression was attempted.
+    // Safe to call from any thread — uses only thread-safe CGWindowList and CGS APIs.
+    @discardableResult
+    private func checkForOSDWindow() -> Bool {
+        let windowList = CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements],
+            kCGNullWindowID
+        ) as? [[String: Any]] ?? []
 
-        guard delta > 0.01 else { return }
+        for window in windowList {
+            guard let ownerName = window[kCGWindowOwnerName as String] as? String,
+                  ownerName == "OSDUIHelper",
+                  let windowNumber = window[kCGWindowNumber as String] as? Int else { continue }
+            let windowID = CGWindowID(windowNumber)
+            logger.fault("[OSD] OSDUIHelper window detected: id=\(windowID)")
+            suppressOSDWindow(windowID)
+            return true
+        }
+        return false
+    }
 
-        lastKnownBrightness = current
+    private func suppressOSDWindow(_ windowID: CGWindowID) {
+        let conn = cgsMainConnectionID()
 
-        if programmaticBrightnessChange {
-            logger.fault("[Brightness] polled=\(current) last=\(last) delta=\(delta) → ignored (programmatic change)")
-            return
+        // Option A — set alpha to 0 (invisible but still composited)
+        typealias SetAlphaFn = @convention(c) (Int32, CGWindowID, CGFloat) -> CGError
+        if let sym = MediaKeyInterceptor.coreGraphicsHandle.flatMap({ dlsym($0, "CGSSetWindowAlpha") }) {
+            let fn = unsafeBitCast(sym, to: SetAlphaFn.self)
+            if fn(conn, windowID, 0.0) == .success {
+                logger.fault("[OSD] Suppressed via option A (CGSSetWindowAlpha)")
+                return
+            }
+        }
+        logger.fault("[OSD] Option A failed, trying option B")
+
+        // Option B — push window level below all screens
+        typealias SetLevelFn = @convention(c) (Int32, CGWindowID, Int32) -> CGError
+        if let sym = MediaKeyInterceptor.coreGraphicsHandle.flatMap({ dlsym($0, "CGSSetWindowLevel") }) {
+            let fn = unsafeBitCast(sym, to: SetLevelFn.self)
+            if fn(conn, windowID, Int32.min) == .success {
+                logger.fault("[OSD] Suppressed via option B (CGSSetWindowLevel)")
+                return
+            }
+        }
+        logger.fault("[OSD] Option B failed, trying option C")
+
+        // Option C — move window off-screen
+        typealias MoveWindowFn = @convention(c) (Int32, CGWindowID, UnsafePointer<CGPoint>) -> CGError
+        if let sym = MediaKeyInterceptor.coreGraphicsHandle.flatMap({ dlsym($0, "CGSMoveWindow") }) {
+            let fn = unsafeBitCast(sym, to: MoveWindowFn.self)
+            var offscreen = CGPoint(x: -10000, y: -10000)
+            if fn(conn, windowID, &offscreen) == .success {
+                logger.fault("[OSD] Suppressed via option C (CGSMoveWindow)")
+                return
+            }
         }
 
-        logger.fault("[Brightness] polled=\(current) last=\(last) delta=\(delta) → HUD triggered")
-        Task { @MainActor in
-            BrightnessManager.shared.refresh()
-            BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(current))
-        }
+        logger.fault("[OSD] Suppression failed — all CGS options returned errors")
     }
 
     private func openSystemSettings(for keyType: NXKeyType, command: Bool) {
