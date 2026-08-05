@@ -641,6 +641,19 @@ struct Media: View {
             }
             
             Section {
+                Defaults.Toggle(key: .useResponsiveSpectrogram) {
+                    Text("Responsive spectrogram")
+                }
+                .disabled(!Defaults[.useMusicVisualizer])
+            } header: {
+                Text("Spectrogram")
+            } footer: {
+                Text("When enabled, bars respond to actual audio content via system audio capture (requires Screen Recording permission). Disable to use the default animated spectrogram.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
                 Toggle(
                     "Show music live activity",
                     isOn: $coordinator.musicLiveActivityEnabled.animation()

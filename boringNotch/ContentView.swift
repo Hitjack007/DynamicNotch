@@ -35,6 +35,8 @@ struct ContentView: View {
     @Namespace var albumArtNamespace
 
     @Default(.useMusicVisualizer) var useMusicVisualizer
+    @Default(.useResponsiveSpectrogram) var useResponsiveSpectrogram
+    @ObservedObject var spectrumAnalyzer = SpectrumAnalyzer.shared
 
     @Default(.showNotHumanFace) var showNotHumanFace
 
@@ -457,18 +459,49 @@ struct ContentView: View {
 
             HStack {
                 if useMusicVisualizer {
-                    Rectangle()
-                        .fill(
-                            Defaults[.coloredSpectrogram]
-                                ? Color(nsColor: musicManager.avgColor).gradient
-                                : Color.gray.gradient
-                        )
-                        .frame(width: 50, alignment: .center)
-                        .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
-                        .mask {
-                            AudioSpectrumView(isPlaying: $musicManager.isPlaying)
-                                .frame(width: 16, height: 12)
-                        }
+                    if useResponsiveSpectrogram {
+                        Rectangle()
+                            .fill(
+                                Defaults[.coloredSpectrogram]
+                                    ? Color(nsColor: musicManager.avgColor).gradient
+                                    : Color.gray.gradient
+                            )
+                            .frame(width: 50, alignment: .center)
+                            .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
+                            .mask {
+                                SpectrumBarView(bandLevels: spectrumAnalyzer.bandLevels)
+                                    .frame(width: 16, height: 12)
+                            }
+                            .onAppear {
+                                Task {
+                                    if musicManager.isPlaying {
+                                        await spectrumAnalyzer.start()
+                                    }
+                                }
+                            }
+                            .onDisappear {
+                                spectrumAnalyzer.scheduleStop(after: 5)
+                            }
+                            .onChange(of: musicManager.isPlaying) { _, playing in
+                                Task {
+                                    if playing { await spectrumAnalyzer.start() }
+                                    else { await spectrumAnalyzer.stop() }
+                                }
+                            }
+                    } else {
+                        Rectangle()
+                            .fill(
+                                Defaults[.coloredSpectrogram]
+                                    ? Color(nsColor: musicManager.avgColor).gradient
+                                    : Color.gray.gradient
+                            )
+                            .frame(width: 50, alignment: .center)
+                            .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
+                            .mask {
+                                AudioSpectrumView(isPlaying: $musicManager.isPlaying)
+                                    .frame(width: 16, height: 12)
+                            }
+                    }
                 } else {
                     LottieAnimationContainer()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
