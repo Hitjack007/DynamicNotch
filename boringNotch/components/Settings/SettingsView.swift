@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 07/08/2024.
+//  Created by Mark Greene on 07/08/2024.
 //
 
 import AVFoundation

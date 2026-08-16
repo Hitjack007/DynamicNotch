@@ -2,7 +2,7 @@
 //  OpenNotchHUD.swift
 //  boringNotch
 //
-//  Created by Alexander on 2024-11-23.
+//  Created by Mark Greene on 2024-11-23.
 //
 
 import SwiftUI

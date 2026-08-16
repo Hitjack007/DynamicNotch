@@ -2,7 +2,7 @@
 //  sizeMatters.swift
 //  boringNotch
 //
-//  Created by Harsh Vardhan  Goswami  on 05/08/24.
+//  Created by Mark Greene on 05/08/24.
 //
 
 import Defaults

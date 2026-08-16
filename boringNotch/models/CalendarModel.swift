@@ -2,7 +2,7 @@
 //  CalendarModel.swift
 //  Calendr
 //
-//  Created by Paker on 31/12/20.
+//  Created by Mark Greene on 31/12/20.
 //  Original source: https://github.com/pakerwreah/Calendr
 //
 

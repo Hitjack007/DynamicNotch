@@ -2,7 +2,7 @@
 //  SpotifyController.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-03-29.
+//  Created by Mark Greene on 2025-03-29.
 //
 
 import Foundation

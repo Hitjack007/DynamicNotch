@@ -2,7 +2,7 @@
 //  ConditionalModifier.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 20/08/2024.
+//  Created by Mark Greene on 20/08/2024.
 //
 
 import SwiftUI

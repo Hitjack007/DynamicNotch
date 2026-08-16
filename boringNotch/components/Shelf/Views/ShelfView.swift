@@ -2,7 +2,7 @@
 //  ShelfItemView.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-09-24.
+//  Created by Mark Greene on 2025-09-24.
 //
 
 import SwiftUI

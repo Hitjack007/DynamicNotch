@@ -2,7 +2,7 @@
 //  EditPanelView.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 12/08/2024.
+//  Created by Mark Greene on 12/08/2024.
 //
 
 import SwiftUI

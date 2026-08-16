@@ -2,7 +2,7 @@
 //  BoringNotchWindow.swift
 //  boringNotch
 //
-//  Created by Harsh Vardhan  Goswami  on 06/08/24.
+//  Created by Mark Greene on 06/08/24.
 //
 
 import Cocoa

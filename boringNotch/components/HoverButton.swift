@@ -2,7 +2,7 @@
 //  HoverButton.swift
 //  boringNotch
 //
-//  Created by Kraigo on 04.09.2024.
+//  Created by Mark Greene on 04.09.2024.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  OnboardingView.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-06-23.
+//  Created by Mark Greene on 2025-06-23.
 //
 
 import CoreBluetooth

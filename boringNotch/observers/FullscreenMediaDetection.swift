@@ -2,7 +2,7 @@
 //  FullscreenMediaDetection.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 06/09/2024.
+//  Created by Mark Greene on 06/09/2024.
 //
 
 import Foundation

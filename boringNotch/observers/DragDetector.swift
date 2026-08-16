@@ -2,7 +2,7 @@
 //  DragDetector.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-11-20.
+//  Created by Mark Greene on 2025-11-20.
 //
 
 import Cocoa

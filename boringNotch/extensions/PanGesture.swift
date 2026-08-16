@@ -2,7 +2,7 @@
 //  PanGesture.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 21/08/2024.
+//  Created by Mark Greene on 21/08/2024.
 //
 
 import AppKit

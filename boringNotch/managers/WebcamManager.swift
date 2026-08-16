@@ -2,7 +2,7 @@
 //  WebcamManager.swift
 //  boringNotch
 //
-//  Created by Harsh Vardhan  Goswami  on 19/08/24.
+//  Created by Mark Greene on 19/08/24.
 //
 import AVFoundation
 import SwiftUI

@@ -2,7 +2,7 @@
 //  TipStore.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 15/09/2024.
+//  Created by Mark Greene on 15/09/2024.
 //
 
 import SwiftUI

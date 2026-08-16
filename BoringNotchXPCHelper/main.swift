@@ -2,7 +2,7 @@
 //  main.swift
 //  BoringNotchXPCHelper
 //
-//  Created by Alexander on 2025-11-16.
+//  Created by Mark Greene on 2025-11-16.
 //
 
 import Foundation

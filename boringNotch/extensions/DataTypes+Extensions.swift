@@ -2,7 +2,7 @@
     //  DataTypes+Extensions.swift
     //  boringNotch
     //
-    //  Created by Harsh Vardhan  Goswami  on 27/08/24.
+    //  Created by Mark Greene on 27/08/24.
     //
 
 import Foundation

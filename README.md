@@ -1,191 +1,128 @@
-<h1 align="center">
-  <br>
-  <a href="http://theboring.name"><img src="https://framerusercontent.com/images/RFK4vs0kn8pRMuOO58JeyoemXA.png?scale-down-to=256" alt="Boring Notch" width="150"></a>
-  <br>
-  Boring Notch
-  <br>
-</h1>
+# DynamicNotch
 
+A heavily extended fork of [boring.notch](https://github.com/TheBoredTeam/boring.notch) by TheBoredTeam — making the MacBook notch genuinely useful with live system stats, responsive audio visualization, and smarter HUD replacements.
 
-<p align="center">
-  <a title="Crowdin" target="_blank" href="https://crowdin.com/project/boring-notch"><img src="https://badges.crowdin.net/boring-notch/localized.svg"></a>
-  <img src="https://github.com/TheBoredTeam/boring.notch/actions/workflows/cicd.yml/badge.svg" alt="TheBoringNotch Build & Test" style="margin-right: 10px;" />
-  <a href="https://discord.gg/c8JXA7qrPm">
-    <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/c8JXA7qrPm?style=flat" alt="Discord Badge" />
-  </a>
-  <a href="https://www.ko-fi.com/alexander5015">
-    <img src="https://srv-cdn.himpfen.io/badges/kofi/kofi-flat.svg" alt="Ko-Fi" />
-  </a>
-</p>
-
-<!--Welcome to **Boring.Notch**, the coolest way to make your MacBook's notch the star of the show! Forget about those boring status bars—our notch turns into a dynamic music control center, complete with a snazzy visualizer and all the music controls you need. It's like having a mini concert right at the top of your screen! -->
-
-Say hello to **Boring Notch**, the coolest way to make your MacBook’s notch the star of the show! Say goodbye to boring status bars: with Boring Notch, your notch transforms into a dynamic music control center, complete with a vibrant visualizer and all the essential music controls you need. But that’s just the start! Boring Notch also offers calendar integration, a handy file shelf with AirDrop support, a complete MacOS HUD replacement and more!
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/2d5f69c1-6e7b-4bc2-a6f1-bb9e27cf88a8" alt="Demo GIF" />
-</p>
-
-<!--https://github.com/user-attachments/assets/19b87973-4b3a-4853-b532-7e82d1d6b040-->
 ---
-<!--## Table of Contents
-- [Installation](#installation)
-- [Usage](#usage)
-- [Roadmap](#-roadmap)
-- [Building from Source](#building-from-source)
-- [Contributing](#-contributing)
-- [Join our Discord Server](#join-our-discord-server)
-- [Star History](#star-history)
-- [Buy us a coffee!](#buy-us-a-coffee)
-- [Acknowledgments](#-acknowledgments)-->
 
-## Installation
+## What's new in this fork
 
-**System Requirements:**
+- **Dynamic notch sizing** — the notch expands and contracts based on what's happening on screen
+- **Responsive spectrogram** — real-time audio visualizer driven by screen recording capture
+- **Fan & thermal monitoring** — live fan speed and CPU temperature in the notch
+- **System stats** — CPU usage at a glance
+- **Caffeine integration** — prevent sleep directly from the notch
+- **Custom system HUDs** — replaces macOS volume, brightness, and keyboard backlight overlays with notch-native versions
+
+---
+
+## Features (inherited from boring.notch)
+
+- Music playback live activity with album art and controls
+- Calendar and Reminders integration
+- File shelf with AirDrop support
+- Mirror / webcam view
+- Battery charging indicator
+- Gesture controls
+- Notch size customization for different display sizes
+
+---
+
+## System Requirements
+
 - macOS **14 Sonoma** or later
 - Apple Silicon or Intel Mac
 
 ---
 
-### Option 1: Download and Install Manually
-
-<a href="https://github.com/TheBoredTeam/boring.notch/releases/latest/download/boringNotch.dmg" target="_self"><img width="200" src="https://github.com/user-attachments/assets/e3179be1-8416-4b8a-b417-743e1ecc67d6" alt="Download for macOS" /></a>
-
-Once downloaded, open the `.dmg` and move **Boring Notch** to your `/Applications` folder.
-
-> [!IMPORTANT]
-> We don't have an Apple Developer account (yet 👀), so macOS will warn you that Boring Notch is from an unidentified developer on first launch. This is expected behavior.
->
-> You'll need to bypass this before the app will open. You only need to do this once. Use one of the methods below.
-
----
-
-#### Recommended: Terminal (Always Works)
-
-This is the quickest and easiest method. It only requires a single command and works consistently for all users. System Settings can sometimes fail and won't work for non-admin users.
-
-After moving Boring Notch to your Applications folder, run:
-
-```bash
-xattr -dr com.apple.quarantine /Applications/boringNotch.app
-```
-
-Then open the app normally.
-
----
-
-#### Alternative: System Settings
-
-> [!NOTE]
-> This method doesn't work for all users. If this doesn't work, use the Terminal method above.
-
-1. Try to open the app — you'll see a security warning.
-2. Click **OK** to dismiss it.
-3. Open **System Settings** > **Privacy & Security**.
-4. Scroll to the bottom and click **Open Anyway** next to the Boring Notch warning.
-5. Confirm if prompted.
-
----
-
-### Option 2: Install via Homebrew
-
-You can also install using [Homebrew](https://brew.sh). The Homebrew installation automatically bypasses the macOS security warning described above.
-
-```bash
-brew install --cask TheBoredTeam/boring-notch/boring-notch
-```
-
-## Usage
-
-- Launch the app, and voilà—your notch is now the coolest part of your screen.
-- Hover over the notch to see it expand and reveal all its secrets.
-- Use the controls to manage your music like a rockstar.
-- Click the star in your menu bar to customize your notch to your heart's content.
-
-## 📋 Roadmap
-- [x] Playback live activity 🎧
-- [x] Calendar integration 📆
-- [x] Reminders integration ☑️
-- [x] Mirror 📷
-- [x] Charging indicator and current percentage 🔋
-- [x] Customizable gesture control 👆🏻
-- [x] Shelf functionality with AirDrop 📚
-- [x] Notch sizing customization, finetuning on different display sizes 🖥️
-- [x] System HUD replacements (volume, brightness, backlight) 🎚️💡⌨️
-- [ ] Bluetooth Live Activity (connect/disconnect for bluetooth devices) 
-- [ ] Weather integration ⛅️
-- [ ] Customizable Layout options 🛠️
-- [ ] Lock Screen Widgets 🔒
-- [ ] Extension system 🧩
-- [ ] Notifications (under consideration) 🔔
-<!-- - [ ] Clipboard history manager 📌 `Extension` -->
-<!-- - [ ] Download indicator of different browsers (Safari, Chromium browsers, Firefox) 🌍 `Extension`-->
-<!-- - [ ] Customizable function buttons 🎛️ -->
-<!-- - [ ] App switcher 🪄 -->
-
-<!-- ## 🧩 Extensions
-> [!NOTE]
-> We’re hard at work on some awesome extensions! Stay tuned, and we’ll keep you updated as soon as they’re released. -->
-
 ## Building from Source
 
 ### Prerequisites
 
-- **macOS 15.6 or later**
-- **Xcode 26 or later**
+- macOS 15 or later
+- Xcode 26 or later
 
-### Installation
+### Steps
 
-1. **Clone the Repository**:
+1. Clone the repo:
    ```bash
-   git clone https://github.com/TheBoredTeam/boring.notch.git
-   cd boring.notch
+   git clone https://github.com/Hitjack007/DynamicNotch.git
+   cd DynamicNotch
    ```
 
-2. **Open the Project in Xcode**:
+2. Open the project:
    ```bash
    open boringNotch.xcodeproj
    ```
 
-3. **Build and Run**:
-    - Click the "Run" button or press `Cmd + R`. Watch the magic unfold!
+3. In Xcode, set your own development team under **Signing & Capabilities** for both the main target and the `BoringNotchXPCHelper` target.
 
-## 🤝 Contributing
+4. Press **Cmd + R** to build and run.
 
-We’re all about good vibes and awesome contributions! Read [CONTRIBUTING.md](CONTRIBUTING.md) to learn how you can join the fun!
+---
 
-## Join our Discord Server
+## Creating a Release Build
 
-<a href="https://discord.gg/GvYcYpAKTu" target="_blank"><img src="https://iili.io/28m3GHv.png" alt="Join The Boring Server!" style="height: 60px !important;width: 217px !important;" ></a>
+To produce a distributable `.app` you can share via GitHub Releases:
 
-## Star History
+### 1. Archive the app in Xcode
 
-<a href="https://www.star-history.com/#TheBoredTeam/boring.notch&Timeline">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=TheBoredTeam/boring.notch&type=Timeline" />
- </picture>
-</a>
+- Select **Product > Archive** from the menu bar (make sure the scheme is set to `boringNotch` and destination is **Any Mac**).
+- Once the archive appears in the Organizer window, click **Distribute App**.
+- Choose **Direct Distribution**, then **Export**.
+- Save the exported `.app` somewhere (e.g. your Desktop).
 
-## Support us on Ko-fi!
-<!-- <a href="https://www.buymeacoffee.com/jfxh67wvfxq" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-red.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a> -->
-<a href="https://www.ko-fi.com/alexander5015" target="_blank"><img src="https://github.com/user-attachments/assets//a76175ef-7e93-475a-8b67-4922ba5964c2" alt="Support us on Ko-fi" style="height: 70px !important;width: 346px !important;" ></a>
+### 2. Package it as a DMG
 
-## 🎉 Acknowledgments
+Open Terminal and run:
 
-We would like to express our gratitude to the authors and maintainers of the open-source projects that made this possible. 
+```bash
+# Create a temporary folder with the app
+mkdir -p /tmp/DynamicNotch-dmg
+cp -R /path/to/boringNotch.app /tmp/DynamicNotch-dmg/
 
-## Notable Projects
-- **[MediaRemoteAdapter](https://github.com/ungive/mediaremote-adapter)** –  An open-source project that allowed us to use the Now Playing source in macOS 15.4+
-- **[NotchDrop](https://github.com/Lakr233/NotchDrop)** – An open-source project that has been instrumental in developing the first version of the "Shelf" feature in Boring Notch.
+# Create the DMG
+hdiutil create \
+  -volname "DynamicNotch" \
+  -srcfolder /tmp/DynamicNotch-dmg \
+  -ov \
+  -format UDZO \
+  ~/Desktop/DynamicNotch.dmg
+```
 
-For a full list of licenses and attributions, please see the [Third-Party Licenses](./THIRD_PARTY_LICENSES.md) file.
+### 3. Publish a GitHub Release
 
-### Icon credits: [@maxtron95](https://github.com/maxtron95)
-### Website credits: [@himanshhhhuv](https://github.com/himanshhhhuv)
+Using the GitHub CLI (install via `brew install gh` if needed):
 
-- **SwiftUI**: For making us look like coding wizards.
-- **You**: For being awesome and checking out **boring.notch**!
+```bash
+gh release create v1.0.0 ~/Desktop/DynamicNotch.dmg \
+  --title "DynamicNotch v1.0.0" \
+  --notes "Initial release."
+```
 
+This creates a release tagged `v1.0.0` and attaches the DMG as a downloadable asset. Users can then download and drag the app to `/Applications`.
 
+> **Note:** Without an Apple Developer account, macOS will show an unidentified developer warning. Users can bypass it by running:
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/boringNotch.app
+> ```
+
+---
+
+## Credits
+
+DynamicNotch is built on top of [boring.notch](https://github.com/TheBoredTeam/boring.notch), originally created by [TheBoredTeam](https://github.com/TheBoredTeam). Their work made this possible — the core notch window, music controls, shelf, calendar integration, and HUD system all originate from their project.
+
+Notable upstream dependencies:
+- **[MediaRemoteAdapter](https://github.com/ungive/mediaremote-adapter)** — Now Playing support for macOS 15.4+
+- **[NotchDrop](https://github.com/Lakr233/NotchDrop)** — basis for the Shelf feature
+
+---
+
+## License
+
+DynamicNotch is a derivative work of boring.notch and is distributed under the **GNU General Public License v3.0**.
+
+Copyright © 2024 TheBoredTeam  
+Copyright © 2025 Mark Greene
+
+See [LICENSE](./LICENSE) for the full text.

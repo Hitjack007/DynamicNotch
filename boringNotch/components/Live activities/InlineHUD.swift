@@ -2,7 +2,7 @@
 //  InlineHUDs.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 14/09/2024.
+//  Created by Mark Greene on 14/09/2024.
 //
 
 import SwiftUI

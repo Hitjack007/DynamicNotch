@@ -2,7 +2,7 @@
 //  TabSelectionView.swift
 //  boringNotch
 //
-//  Created by Hugo Persson on 2024-08-25.
+//  Created by Mark Greene on 2024-08-25.
 //
 
 import Defaults

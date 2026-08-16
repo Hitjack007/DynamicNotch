@@ -2,7 +2,7 @@
 //  ShelfStateViewModel.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-09.
+//  Created by Mark Greene on 2025-10-09.
 
 import Defaults
 import Foundation

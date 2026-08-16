@@ -2,7 +2,7 @@
 //  Constants.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 16/08/2024.
+//  Created by Mark Greene on 16/08/2024.
 //
 
 import KeyboardShortcuts

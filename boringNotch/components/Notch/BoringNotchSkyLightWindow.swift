@@ -2,7 +2,7 @@
 //  BoringNotchSkyLightWindow.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-20.
+//  Created by Mark Greene on 2025-10-20.
 //
 
 import Cocoa

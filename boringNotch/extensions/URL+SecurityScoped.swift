@@ -2,7 +2,7 @@
 //  URL+SecurityScoped.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-07.
+//  Created by Mark Greene on 2025-10-07.
 //
 
 import Foundation

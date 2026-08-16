@@ -1,7 +1,7 @@
 //
 //  EmptyState.swift
 //
-// Created by Harsh Vardhan  Goswami  on  04/08/24.
+// Created by Mark Greene on  04/08/24.
 //
 
 import SwiftUI

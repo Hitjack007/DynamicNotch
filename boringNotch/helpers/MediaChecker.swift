@@ -2,7 +2,7 @@
 //  MediaChecker.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-07-26.
+//  Created by Mark Greene on 2025-07-26.
 //
 
 import Foundation

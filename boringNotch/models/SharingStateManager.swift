@@ -2,7 +2,7 @@
 //  SharingStateManager.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-10.
+//  Created by Mark Greene on 2025-10-10.
 //
 
 import AppKit

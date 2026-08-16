@@ -2,7 +2,7 @@
 //  Color+AccentColor.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-24.
+//  Created by Mark Greene on 2025-10-24.
 //
 
 import SwiftUI

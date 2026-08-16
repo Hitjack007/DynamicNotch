@@ -2,7 +2,7 @@
 //  AssociatedObject.swift
 //  boringNotch
 //
-//  Created by Alexander on 2025-10-05.
+//  Created by Mark Greene on 2025-10-05.
 //
 
 import Foundation

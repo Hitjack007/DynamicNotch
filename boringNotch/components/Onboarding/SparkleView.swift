@@ -2,7 +2,7 @@
 //  SparkleView.swift
 //  boringNotch
 //
-//  Created by Richard Kunkli on 2024. 09. 26..
+//  Created by Mark Greene on 2024. 09. 26..
 //
 
 import SwiftUI

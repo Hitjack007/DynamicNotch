@@ -2,7 +2,7 @@
 //  BoringCalendar.swift
 //  boringNotch
 //
-//  Created by Harsh Vardhan  Goswami  on 08/09/24.
+//  Created by Mark Greene on 08/09/24.
 //
 
 import Defaults

@@ -2,7 +2,7 @@
     //  ProgressIndicator.swift
     //  boringNotch
     //
-    //  Created by Harsh Vardhan  Goswami  on 11/08/24.
+    //  Created by Mark Greene on 11/08/24.
     //
 
 import Foundation

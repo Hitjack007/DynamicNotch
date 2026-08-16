@@ -1,7 +1,7 @@
 //  BrightnessManager.swift
 //  boringNotch
 //
-//  Created by JeanLouis on 08/22/24.
+//  Created by Mark Greene on 08/22/24.
 
 import AppKit
 import Darwin

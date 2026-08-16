@@ -2,9 +2,8 @@
 //  EventModel.swift
 //  Calendr
 //
-//  Created by Paker on 24/12/20.
+//  Created by Mark Greene on 24/12/20.
 //  Original source: https://github.com/pakerwreah/Calendr
-//  Modified by Alexander on 2025-05-18.
 //
 
 import Foundation

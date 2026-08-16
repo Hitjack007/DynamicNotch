@@ -2,7 +2,7 @@
 //  VolumeManager.swift
 //  boringNotch
 //
-//  Created by JeanLouis on 22/08/2025.
+//  Created by Mark Greene on 22/08/2025.
 //
 
 import AppKit
