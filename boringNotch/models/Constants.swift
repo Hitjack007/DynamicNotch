@@ -118,6 +118,28 @@ enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializa
 }
 
 // Sneak peek styles for selection in settings
+enum ShelfItemExpiry: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case never        = "Never"
+    case oneHour      = "1 hour"
+    case twoHours     = "2 hours"
+    case twentyFourHours = "24 hours"
+    case twoDays      = "2 days"
+    case sevenDays    = "7 days"
+
+    var id: String { rawValue }
+
+    var timeInterval: TimeInterval? {
+        switch self {
+        case .never:            return nil
+        case .oneHour:          return 3_600
+        case .twoHours:         return 7_200
+        case .twentyFourHours:  return 86_400
+        case .twoDays:          return 172_800
+        case .sevenDays:        return 604_800
+        }
+    }
+}
+
 enum SneakPeekStyle: String, CaseIterable, Identifiable, Defaults.Serializable {
     case standard = "Default"
     case inline = "Inline"
@@ -181,6 +203,8 @@ extension Defaults.Keys {
     static let playerColorTinting = Key<Bool>("playerColorTinting", default: true)
     static let useMusicVisualizer = Key<Bool>("useMusicVisualizer", default: true)
     static let useResponsiveSpectrogram = Key<Bool>("useResponsiveSpectrogram", default: true)
+    static let spectrogramTitleExclusions = Key<[String]>("spectrogramTitleExclusions", default: [])
+    static let spectrogramAppExclusions = Key<[String]>("spectrogramAppExclusions", default: [])
     static let customVisualizers = Key<[CustomVisualizer]>("customVisualizers", default: [])
     static let selectedVisualizer = Key<CustomVisualizer?>("selectedVisualizer", default: nil)
     
@@ -237,6 +261,7 @@ extension Defaults.Keys {
     static let copyOnDrag = Key<Bool>("copyOnDrag", default: false)
     static let autoRemoveShelfItems = Key<Bool>("autoRemoveShelfItems", default: false)
     static let expandedDragDetection = Key<Bool>("expandedDragDetection", default: true)
+    static let shelfItemExpiry = Key<ShelfItemExpiry>("shelfItemExpiry", default: .never)
     
     // MARK: Calendar
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)
@@ -267,6 +292,12 @@ extension Defaults.Keys {
 
     static let didClearLegacyURLCacheV1 = Key<Bool>("didClearLegacyURLCache_v1", default: false)
 
+    // MARK: System Stats
+    static let showSystemStatsTab = Key<Bool>("showSystemStatsTab", default: false)
+    static let showStatsCPU       = Key<Bool>("showStatsCPU", default: true)
+    static let showStatsRAM       = Key<Bool>("showStatsRAM", default: true)
+    static let showStatsSwap      = Key<Bool>("showStatsSwap", default: true)
+
     // MARK: Thermal
     static let showThermalTab = Key<Bool>("showThermalTab", default: true)
     static let thermalAlertEnabled = Key<Bool>("thermalAlertEnabled", default: true)
@@ -275,4 +306,9 @@ extension Defaults.Keys {
     static let fanCurvePoints = Key<[FanCurvePoint]>("fanCurvePoints", default: FanCurvePoint.defaultCurve)
     static let fanCurvePreset = Key<FanCurvePreset>("fanCurvePreset", default: .appleDefault)
     static let thermalNotchPresets = Key<[FanCurvePreset]>("thermalNotchPresets", default: [.appleDefault, .maxSpeed, .ramp80])
+
+    // MARK: Caffeine
+    static let showCaffeineButton      = Key<Bool>("showCaffeineButton", default: false)
+    static let caffeineDefaultDuration = Key<Int>("caffeineDefaultDuration", default: 0)
+    static let caffeineKeepAppsActive  = Key<Bool>("caffeineKeepAppsActive", default: false)
 }

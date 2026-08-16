@@ -48,6 +48,12 @@ struct SettingsView: View {
                 NavigationLink(value: "Thermal") {
                     Label("Thermal", systemImage: "thermometer.medium")
                 }
+                NavigationLink(value: "SystemStats") {
+                    Label("System Stats", systemImage: "cpu")
+                }
+                NavigationLink(value: "Caffeine") {
+                    Label("Caffeine", systemImage: "cup.and.saucer")
+                }
 //                NavigationLink(value: "Downloads") {
 //                    Label("Downloads", systemImage: "square.and.arrow.down")
 //                }
@@ -62,9 +68,6 @@ struct SettingsView: View {
                 // }
                 NavigationLink(value: "Advanced") {
                     Label("Advanced", systemImage: "gearshape.2")
-                }
-                NavigationLink(value: "About") {
-                    Label("About", systemImage: "info.circle")
                 }
             }
             .listStyle(SidebarListStyle())
@@ -88,6 +91,10 @@ struct SettingsView: View {
                     Charge()
                 case "Thermal":
                     ThermalSettings()
+                case "SystemStats":
+                    SystemStatsSettings()
+                case "Caffeine":
+                    CaffeineSettings()
                 case "Shelf":
                     Shelf()
                 case "Shortcuts":
@@ -96,16 +103,6 @@ struct SettingsView: View {
                     GeneralSettings()
                 case "Advanced":
                     Advanced()
-                case "About":
-                    if let controller = updaterController {
-                        About(updaterController: controller)
-                    } else {
-                        // Fallback with a default controller
-                        About(
-                            updaterController: SPUStandardUpdaterController(
-                                startingUpdater: false, updaterDelegate: nil,
-                                userDriverDelegate: nil))
-                    }
                 default:
                     GeneralSettings()
                 }
@@ -601,6 +598,12 @@ struct Media: View {
     @Default(.sneakPeekStyles) var sneakPeekStyles
 
     @Default(.enableLyrics) var enableLyrics
+    @Default(.spectrogramTitleExclusions) var spectrogramTitleExclusions
+    @Default(.spectrogramAppExclusions) var spectrogramAppExclusions
+    @ObservedObject private var musicManager = MusicManager.shared
+    @State private var newTitleKeyword = ""
+    @State private var isAddingTitleKeyword = false
+    @State private var isAddingAppExclusion = false
 
     var body: some View {
         Form {
@@ -619,7 +622,11 @@ struct Media: View {
             } header: {
                 Text("Media Source")
             } footer: {
-                if MusicManager.shared.isNowPlayingDeprecated {
+                if musicManager.nowPlayingCheckFailed {
+                    Text("'Now Playing' was hidden because the required framework failed to load after 5 attempts. Try restarting the app.")
+                        .foregroundStyle(.red.opacity(0.8))
+                        .font(.caption)
+                } else if musicManager.isNowPlayingDeprecated {
                     HStack {
                         Text("YouTube Music requires this third-party app to be installed: ")
                             .foregroundStyle(.secondary)
@@ -629,7 +636,7 @@ struct Media: View {
                             destination: URL(string: "https://github.com/pear-devs/pear-desktop")!
                         )
                         .font(.caption)
-                        .foregroundColor(.blue)  // Ensures it's visibly a link
+                        .foregroundColor(.blue)
                     }
                 } else {
                     Text(
@@ -649,6 +656,93 @@ struct Media: View {
                 Text("Spectrogram")
             } footer: {
                 Text("When enabled, bars respond to actual audio content via system audio capture (requires Screen Recording permission). Disable to use the default animated spectrogram.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ForEach(spectrogramTitleExclusions, id: \.self) { keyword in
+                    HStack {
+                        Text(keyword)
+                        Spacer()
+                        Button {
+                            spectrogramTitleExclusions.removeAll { $0 == keyword }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.red)
+                    }
+                }
+                Button {
+                    newTitleKeyword = ""
+                    isAddingTitleKeyword = true
+                } label: {
+                    Label("Add keyword", systemImage: "plus")
+                }
+                .sheet(isPresented: $isAddingTitleKeyword) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Add title keyword")
+                            .font(.headline)
+                        TextField("e.g. Disney+", text: $newTitleKeyword)
+                        HStack {
+                            Spacer()
+                            Button("Cancel") {
+                                isAddingTitleKeyword = false
+                            }
+                            Button("Add") {
+                                addTitleKeyword()
+                                isAddingTitleKeyword = false
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(newTitleKeyword.trimmingCharacters(in: .whitespaces).isEmpty)
+                        }
+                    }
+                    .textFieldStyle(.roundedBorder)
+                    .padding()
+                    .frame(minWidth: 300)
+                }
+            } header: {
+                Text("Spectrogram exclusions — Title keywords")
+            } footer: {
+                Text("The responsive spectrogram is disabled when the now-playing title contains any of these words. Useful for sites like Disney+ or Netflix that pause on screen capture.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
+                ForEach(spectrogramAppExclusions, id: \.self) { bundleID in
+                    HStack {
+                        Text(bundleID)
+                        Spacer()
+                        Button {
+                            spectrogramAppExclusions.removeAll { $0 == bundleID }
+                        } label: {
+                            Image(systemName: "minus.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.red)
+                    }
+                }
+                Button {
+                    isAddingAppExclusion = true
+                } label: {
+                    Label("Add app", systemImage: "plus")
+                }
+                .sheet(isPresented: $isAddingAppExclusion) {
+                    AppPickerSheet { bundleID in
+                        if !spectrogramAppExclusions.contains(bundleID) {
+                            spectrogramAppExclusions.append(bundleID)
+                        }
+                        isAddingAppExclusion = false
+                    } onCancel: {
+                        isAddingAppExclusion = false
+                    }
+                }
+            } header: {
+                Text("Spectrogram exclusions — Apps")
+            } footer: {
+                Text("The responsive spectrogram is disabled for these apps by bundle identifier (e.g. com.google.Chrome, com.apple.Safari).")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -711,13 +805,138 @@ struct Media: View {
         .navigationTitle("Media")
     }
 
+    private func addTitleKeyword() {
+        let trimmed = newTitleKeyword.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !spectrogramTitleExclusions.contains(trimmed) else { return }
+        spectrogramTitleExclusions.append(trimmed)
+        newTitleKeyword = ""
+    }
+
     // Only show controller options that are available on this macOS version
     private var availableMediaControllers: [MediaControllerType] {
-        if MusicManager.shared.isNowPlayingDeprecated {
+        if musicManager.isNowPlayingDeprecated {
             return MediaControllerType.allCases.filter { $0 != .nowPlaying }
         } else {
             return MediaControllerType.allCases
         }
+    }
+}
+
+struct AppEntry: Identifiable {
+    let id: String  // bundleID
+    let name: String
+    let icon: NSImage
+}
+
+struct AppPickerSheet: View {
+    let onSelect: (String) -> Void
+    let onCancel: () -> Void
+
+    @State private var apps: [AppEntry] = []
+    @State private var searchText = ""
+    @State private var isLoading = true
+
+    var filtered: [AppEntry] {
+        guard !searchText.isEmpty else { return apps }
+        return apps.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText) ||
+            $0.id.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Select App to Exclude")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel", action: onCancel)
+            }
+            .padding([.horizontal, .top])
+            .padding(.bottom, 8)
+
+            Divider()
+
+            if isLoading {
+                VStack {
+                    ProgressView("Scanning applications…")
+                        .padding()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(filtered) { app in
+                    Button {
+                        onSelect(app.id)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(nsImage: app.icon)
+                                .resizable()
+                                .interpolation(.high)
+                                .frame(width: 28, height: 28)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(app.name)
+                                    .fontWeight(.medium)
+                                Text(app.id)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .searchable(text: $searchText, prompt: "Search by name or bundle ID")
+            }
+        }
+        .frame(width: 420, height: 520)
+        .task { await loadApps() }
+    }
+
+    @MainActor
+    private func loadApps() async {
+        let appData = await Task.detached(priority: .userInitiated) {
+            AppPickerSheet.scanApps()
+        }.value
+        apps = appData.map { name, bundleID, path in
+            AppEntry(id: bundleID, name: name, icon: NSWorkspace.shared.icon(forFile: path))
+        }
+        isLoading = false
+    }
+
+    nonisolated private static func scanApps() -> [(name: String, bundleID: String, path: String)] {
+        let fm = FileManager.default
+        var seen = Set<String>()
+        var result: [(name: String, bundleID: String, path: String)] = []
+
+        let dirs: [URL] = [
+            URL(fileURLWithPath: "/Applications"),
+            URL(fileURLWithPath: "/System/Applications"),
+            fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications")
+        ]
+
+        for dir in dirs {
+            guard let enumerator = fm.enumerator(
+                at: dir,
+                includingPropertiesForKeys: nil,
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            ) else { continue }
+
+            for case let url as URL in enumerator where url.pathExtension == "app" {
+                guard let bundle = Bundle(url: url),
+                      let bundleID = bundle.bundleIdentifier,
+                      !seen.contains(bundleID) else { continue }
+
+                let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
+                    ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
+                    ?? url.deletingPathExtension().lastPathComponent
+
+                seen.insert(bundleID)
+                result.append((name: name, bundleID: bundleID, path: url.path))
+            }
+        }
+
+        return result.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 }
 
@@ -924,10 +1143,11 @@ struct About: View {
 }
 
 struct Shelf: View {
-    
+
     @Default(.shelfTapToOpen) var shelfTapToOpen: Bool
     @Default(.quickShareProvider) var quickShareProvider
     @Default(.expandedDragDetection) var expandedDragDetection: Bool
+    @Default(.shelfItemExpiry) var shelfItemExpiry: ShelfItemExpiry
     @StateObject private var quickShareService = QuickShareService.shared
 
     private var selectedProvider: QuickShareProvider? {
@@ -961,6 +1181,15 @@ struct Shelf: View {
                 }
                 Defaults.Toggle(key: .autoRemoveShelfItems) {
                     Text("Remove from shelf after dragging")
+                }
+                Picker("Auto-delete items after", selection: $shelfItemExpiry) {
+                    ForEach(ShelfItemExpiry.allCases) { expiry in
+                        Text(expiry.rawValue).tag(expiry)
+                    }
+                }
+                .pickerStyle(.menu)
+                .onChange(of: shelfItemExpiry) {
+                    ShelfStateViewModel.shared.cleanupExpiredItems()
                 }
 
             } header: {
@@ -1818,6 +2047,7 @@ struct ThermalSettings: View {
     @Default(.thermalNotchPresets) var thermalNotchPresets
 
     @State private var daemonAvailable: Bool = false
+    @State private var hasFans: Bool = true
     @State private var showTerminalInstructions: Bool = false
     @State private var installError: String? = nil
 
@@ -1846,120 +2076,140 @@ struct ThermalSettings: View {
             } footer: {
                 Text("Shows a brief orange strip in the closed notch when peak CPU or GPU temperature exceeds the threshold. Alerts are rate-limited to once per minute.")
             }
+            .disabled(!showThermalTab)
 
             Section {
-                // Daemon status row
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(daemonAvailable ? Color.green : Color.orange)
-                        .frame(width: 8, height: 8)
-                    Text(daemonAvailable ? "Fan daemon running" : "Fan daemon not installed")
-                        .foregroundStyle(daemonAvailable ? .primary : .secondary)
-                    Spacer()
-                    if !daemonAvailable {
-                        if showTerminalInstructions {
-                            HStack(spacing: 6) {
-                                Button("Check again") { checkDaemon() }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
-                                Button { showTerminalInstructions = false } label: {
-                                    Image(systemName: "xmark")
-                                }
-                                .buttonStyle(.borderless)
-                                .controlSize(.small)
-                            }
-                        } else {
-                            Button("Setup…") { installDaemon() }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
-                        }
-                    } else {
-                        Button("Reinstall") { installDaemon() }
-                            .buttonStyle(.borderless)
-                            .controlSize(.small)
+                if !hasFans {
+                    HStack(spacing: 10) {
+                        Image(systemName: "info.circle")
                             .foregroundStyle(.secondary)
-                    }
-                }
-
-                if showTerminalInstructions {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Command copied to clipboard.")
-                            .font(.caption).bold()
-                        Text("In Terminal, press ⌘V then Enter. Takes ~15s to compile. After it finishes, click Check again.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if !daemonAvailable {
-                            Text("Still not detected? Run in Terminal: sudo launchctl list com.boringnotch.thermaldaemon")
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(.orange)
-                                .textSelection(.enabled)
-                        }
-                    }
-                }
-
-                if let err = installError {
-                    Text(err)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
-
-                Picker("Fan Curve", selection: $fanCurvePreset) {
-                    ForEach(FanCurvePreset.allCases) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .disabled(!daemonAvailable)
-                .onChange(of: fanCurvePreset) {
-                    applyPreset(fanCurvePreset)
-                }
-
-                LabeledContent("Presets in notch") {
-                    Text("up to 3")
-                        .foregroundStyle(.secondary)
-                        .font(.caption)
-                }
-                ForEach(FanCurvePreset.allCases) { preset in
-                    Toggle(preset.rawValue, isOn: Binding(
-                        get: { thermalNotchPresets.contains(preset) },
-                        set: { on in
-                            if on {
-                                guard thermalNotchPresets.count < 3 else { return }
-                                thermalNotchPresets.append(preset)
-                            } else {
-                                thermalNotchPresets.removeAll { $0 == preset }
-                            }
-                        }
-                    ))
-                    .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
-                }
-
-                if fanCurvePreset == .custom && daemonAvailable {
-                    VStack(alignment: .leading, spacing: 10) {
-                        FanCurveEditorView()
-
-                        HStack {
-                            Text("Tap to add · Right-click to remove · Drag to move · 2–5 points")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Not available on this Mac")
+                                .font(.subheadline)
+                            Text("Fan curve control requires fans. This Mac is fanless.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Spacer()
-                            Button("Reset") {
-                                fanCurvePoints = FanCurvePoint.defaultCurve
-                            }
-                            .font(.caption)
-                            .buttonStyle(.borderless)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 2)
+                } else {
+                    // Daemon status row
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(daemonAvailable ? Color.green : Color.orange)
+                            .frame(width: 8, height: 8)
+                        Text(daemonAvailable ? "Fan daemon running" : "Fan daemon not installed")
+                            .foregroundStyle(daemonAvailable ? .primary : .secondary)
+                        Spacer()
+                        if !daemonAvailable {
+                            if showTerminalInstructions {
+                                HStack(spacing: 6) {
+                                    Button("Check again") { checkDaemon() }
+                                        .buttonStyle(.borderedProminent)
+                                        .controlSize(.small)
+                                    Button { showTerminalInstructions = false } label: {
+                                        Image(systemName: "xmark")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .controlSize(.small)
+                                }
+                            } else {
+                                Button("Setup…") { installDaemon() }
+                                    .buttonStyle(.borderedProminent)
+                                    .controlSize(.small)
+                            }
+                        } else {
+                            Button("Reinstall") { installDaemon() }
+                                .buttonStyle(.borderless)
+                                .controlSize(.small)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if showTerminalInstructions {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Command copied to clipboard.")
+                                .font(.caption).bold()
+                            Text("In Terminal, press ⌘V then Enter. Takes ~15s to compile. After it finishes, click Check again.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            if !daemonAvailable {
+                                Text("Still not detected? Run in Terminal: sudo launchctl list com.boringnotch.thermaldaemon")
+                                    .font(.system(.caption, design: .monospaced))
+                                    .foregroundStyle(.orange)
+                                    .textSelection(.enabled)
+                            }
+                        }
+                    }
+
+                    if let err = installError {
+                        Text(err)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
+
+                    Picker("Fan Curve", selection: $fanCurvePreset) {
+                        ForEach(FanCurvePreset.allCases) { preset in
+                            Text(preset.rawValue).tag(preset)
+                        }
+                    }
+                    .disabled(!daemonAvailable)
+                    .onChange(of: fanCurvePreset) {
+                        applyPreset(fanCurvePreset)
+                    }
+
+                    LabeledContent("Presets in notch") {
+                        Text("up to 3")
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                    }
+                    ForEach(FanCurvePreset.allCases) { preset in
+                        Toggle(preset.rawValue, isOn: Binding(
+                            get: { thermalNotchPresets.contains(preset) },
+                            set: { on in
+                                if on {
+                                    guard thermalNotchPresets.count < 3 else { return }
+                                    thermalNotchPresets.append(preset)
+                                } else {
+                                    thermalNotchPresets.removeAll { $0 == preset }
+                                }
+                            }
+                        ))
+                        .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
+                    }
+
+                    if fanCurvePreset == .custom && daemonAvailable {
+                        VStack(alignment: .leading, spacing: 10) {
+                            FanCurveEditorView()
+
+                            HStack {
+                                Text("Tap to add · Right-click to remove · Drag to move · 2–5 points")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Button("Reset") {
+                                    fanCurvePoints = FanCurvePoint.defaultCurve
+                                }
+                                .font(.caption)
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                 }
             } header: {
                 Text("Fan Curve")
             } footer: {
-                Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when boring.notch quits.")
+                if hasFans {
+                    Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when boring.notch quits.")
+                }
             }
+            .disabled(!showThermalTab)
         }
         .formStyle(.grouped)
         .onAppear {
             daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
+            hasFans = ThermalManager.shared.detectHasFans()
             // Migrate: if fan curve was previously enabled but no preset was stored
             if fanCurveEnabled && fanCurvePreset == .appleDefault {
                 fanCurvePreset = .custom
@@ -1994,8 +2244,10 @@ struct ThermalSettings: View {
             return
         }
         // The App Sandbox blocks privileged AppleScript execution. Instead, copy the
-        // sudo command to clipboard and open Terminal so the user can run it directly.
-        let cmd = "sudo bash '\(scriptPath)'"
+        // sudo commands to clipboard and open Terminal so the user can run them directly.
+        // Kill the old daemon first (bootout for macOS 13+, pkill as fallback), then install fresh.
+        let killCmd = "sudo launchctl bootout system/com.boringnotch.thermaldaemon 2>/dev/null; sudo pkill -f BoringNotchThermalDaemon 2>/dev/null; sleep 1"
+        let cmd = "\(killCmd) && sudo bash '\(scriptPath)'"
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(cmd, forType: .string)
         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"))
@@ -2007,6 +2259,93 @@ struct ThermalSettings: View {
         daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
         ThermalManager.shared.daemonAvailable = daemonAvailable
         if daemonAvailable { showTerminalInstructions = false }
+    }
+}
+
+struct CaffeineSettings: View {
+    @Default(.showCaffeineButton)      var showCaffeineButton
+    @Default(.caffeineDefaultDuration) var caffeineDefaultDuration
+    @Default(.caffeineKeepAppsActive)  var caffeineKeepAppsActive
+    @ObservedObject var caffeineManager = CaffeineManager.shared
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Show Caffeine button in notch", isOn: $showCaffeineButton)
+                    .onChange(of: showCaffeineButton) { _, enabled in
+                        if !enabled {
+                            caffeineManager.deactivate()
+                        }
+                    }
+            } header: {
+                Text("Display")
+            } footer: {
+                Text("Adds a coffee cup button to the open notch. Click it to prevent your Mac from sleeping.")
+            }
+
+            Section {
+                Picker("Activate for", selection: $caffeineDefaultDuration) {
+                    Text("Indefinitely").tag(0)
+                    Text("30 minutes").tag(30 * 60)
+                    Text("1 hour").tag(60 * 60)
+                    Text("2 hours").tag(2 * 60 * 60)
+                    Text("4 hours").tag(4 * 60 * 60)
+                    Text("5 hours").tag(5 * 60 * 60)
+                }
+            } header: {
+                Text("Duration")
+            } footer: {
+                Text("How long Caffeine stays active after tapping the notch button. When the Mac goes to sleep it always deactivates automatically.")
+            }
+            .disabled(!showCaffeineButton)
+
+            Section {
+                Toggle("Keep apps active", isOn: Binding(
+                    get: { caffeineKeepAppsActive },
+                    set: { newValue in
+                        caffeineKeepAppsActive = newValue
+                        caffeineManager.updateActivitySimulation(enabled: newValue)
+                    }
+                ))
+            } header: {
+                Text("Presence")
+            } footer: {
+                Text("Simulates mouse activity every 30 seconds when the system has been idle for 90 seconds, keeping apps like Teams and Slack from showing you as Away. Requires Accessibility permission.")
+            }
+            .disabled(!showCaffeineButton)
+        }
+        .formStyle(.grouped)
+    }
+}
+
+struct SystemStatsSettings: View {
+    @Default(.showSystemStatsTab) var showSystemStatsTab
+    @Default(.showStatsCPU)       var showStatsCPU
+    @Default(.showStatsRAM)       var showStatsRAM
+    @Default(.showStatsSwap)      var showStatsSwap
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Show System Stats tab", isOn: $showSystemStatsTab)
+            } header: {
+                Text("Display")
+            } footer: {
+                Text("Adds a System Stats tab to the open notch showing live CPU usage, RAM, and swap.")
+            }
+
+            Section {
+                Toggle("CPU usage", isOn: $showStatsCPU)
+                Toggle("RAM usage", isOn: $showStatsRAM)
+                Toggle("Swap usage", isOn: $showStatsSwap)
+            } header: {
+                Text("Metrics")
+            } footer: {
+                Text("Choose which metrics to display. Swap is automatically hidden if your Mac reports no swap.")
+            }
+            .disabled(!showSystemStatsTab)
+        }
+        .formStyle(.grouped)
     }
 }
 

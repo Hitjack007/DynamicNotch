@@ -4,6 +4,7 @@
 //
 //  Created by Alexander on 2025-10-09.
 
+import Defaults
 import Foundation
 import AppKit
 
@@ -25,6 +26,7 @@ final class ShelfStateViewModel: ObservableObject {
 
     private init() {
         items = ShelfPersistenceService.shared.load()
+        cleanupExpiredItems()
     }
 
 
@@ -86,6 +88,15 @@ final class ShelfStateViewModel: ObservableObject {
                 self?.add(dropped)
                 self?.isLoading = false
             }
+        }
+    }
+
+    func cleanupExpiredItems() {
+        guard let interval = Defaults[.shelfItemExpiry].timeInterval else { return }
+        let cutoff = Date().addingTimeInterval(-interval)
+        let expired = items.filter { $0.dateAdded < cutoff }
+        for item in expired {
+            remove(item)
         }
     }
 

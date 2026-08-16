@@ -13,6 +13,7 @@ struct BoringHeader: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @StateObject var tvm = ShelfStateViewModel.shared
+    @ObservedObject var caffeineManager = CaffeineManager.shared
     var body: some View {
         HStack(spacing: 0) {
             HStack {
@@ -52,6 +53,22 @@ struct BoringHeader: View {
                                     .overlay {
                                         Image(systemName: "web.camera")
                                             .foregroundColor(.white)
+                                            .padding()
+                                            .imageScale(.medium)
+                                    }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        if Defaults[.showCaffeineButton] {
+                            Button(action: {
+                                CaffeineManager.shared.toggle()
+                            }) {
+                                Capsule()
+                                    .fill(.black)
+                                    .frame(width: 30, height: 30)
+                                    .overlay {
+                                        Image(systemName: caffeineManager.isActive ? "cup.and.saucer.fill" : "cup.and.saucer")
+                                            .foregroundColor(caffeineManager.isActive ? .effectiveAccent : .white)
                                             .padding()
                                             .imageScale(.medium)
                                     }

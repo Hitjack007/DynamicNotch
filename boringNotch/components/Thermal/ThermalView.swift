@@ -42,13 +42,11 @@ struct ThermalView: View {
     private var readoutView: some View {
         HStack(spacing: 0) {
             tempGauge
-            separator
             if thermal.hasFans {
+                separator
                 fanColumn
                 separator
                 presetList
-            } else {
-                fanlessLabel
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -84,17 +82,6 @@ struct ThermalView: View {
             }
         }
         .frame(minWidth: 90)
-    }
-
-    private var fanlessLabel: some View {
-        VStack(spacing: 4) {
-            Image(systemName: "wind")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text("Fanless")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
     }
 
     private var visiblePresets: [FanCurvePreset] {

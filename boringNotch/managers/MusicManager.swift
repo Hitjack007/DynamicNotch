@@ -22,7 +22,8 @@ class MusicManager: ObservableObject {
     private var debounceIdleTask: Task<Void, Never>?
 
     // Helper to check if macOS has removed support for NowPlayingController
-    public private(set) var isNowPlayingDeprecated: Bool = false
+    @Published public private(set) var isNowPlayingDeprecated: Bool = false
+    @Published public private(set) var nowPlayingCheckFailed: Bool = false
     private let mediaChecker = MediaChecker()
 
     // Active controller
@@ -56,6 +57,17 @@ class MusicManager: ObservableObject {
 
     private var artworkData: Data? = nil
 
+    /// Returns true when the responsive spectrogram should be suppressed for the current track/app.
+    var isExcludedFromResponsiveSpectrogram: Bool {
+        let titleExclusions = Defaults[.spectrogramTitleExclusions]
+        let appExclusions = Defaults[.spectrogramAppExclusions]
+        if let bundleID = bundleIdentifier,
+           appExclusions.contains(where: { bundleID.localizedCaseInsensitiveContains($0) }) {
+            return true
+        }
+        return titleExclusions.contains(where: { songTitle.localizedCaseInsensitiveContains($0) })
+    }
+
     // Store last values at the time artwork was changed
     private var lastArtworkTitle: String = "I'm Handsome"
     private var lastArtworkArtist: String = "Me"
@@ -77,16 +89,54 @@ class MusicManager: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Initialize deprecation check asynchronously
-        Task { @MainActor in
-            do {
-                self.isNowPlayingDeprecated = try await self.mediaChecker.checkDeprecationStatus()
-                print("Deprecation check completed: \(self.isNowPlayingDeprecated)")
-            } catch {
-                print("Failed to check deprecation status: \(error). Defaulting to false.")
-                self.isNowPlayingDeprecated = false
+        // Go idle immediately when the source app quits
+        NSWorkspace.shared.notificationCenter
+            .publisher(for: NSWorkspace.didTerminateApplicationNotification)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] notification in
+                guard let self = self,
+                      let bundleID = self.bundleIdentifier,
+                      !bundleID.isEmpty,
+                      let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                      app.bundleIdentifier == bundleID else { return }
+                withAnimation {
+                    self.isPlayerIdle = true
+                }
             }
-            
+            .store(in: &cancellables)
+
+        // Initialize deprecation check asynchronously, with up to 5 retries (30s apart).
+        // Exit code 1 from the test subprocess is ambiguous — it means either "deprecated"
+        // or a transient framework-load failure. Retrying distinguishes the two: a genuine
+        // deprecation is consistent; a transient error clears on a later attempt.
+        Task { @MainActor in
+            let maxAttempts = 5
+            var finalIsDeprecated = false
+            var finalCheckFailed = false
+
+            for attempt in 1...maxAttempts {
+                do {
+                    let isDeprecated = try await self.mediaChecker.checkDeprecationStatus()
+                    if !isDeprecated {
+                        break
+                    }
+                    if attempt < maxAttempts {
+                        print("Now Playing check returned non-zero (attempt \(attempt)/\(maxAttempts)), retrying in 30s...")
+                        try? await Task.sleep(for: .seconds(30))
+                    } else {
+                        finalIsDeprecated = true
+                        finalCheckFailed = true
+                        print("Now Playing check failed all \(maxAttempts) attempts.")
+                    }
+                } catch {
+                    print("Failed to check deprecation status: \(error). Defaulting to available.")
+                    break
+                }
+            }
+
+            self.isNowPlayingDeprecated = finalIsDeprecated
+            self.nowPlayingCheckFailed = finalCheckFailed
+
             // Initialize the active controller after deprecation check
             self.setActiveControllerBasedOnPreference()
         }
@@ -186,13 +236,16 @@ class MusicManager: ObservableObject {
             NSLog("Playback state changed: \(state.isPlaying ? "Playing" : "Paused")")
             withAnimation(.smooth) {
                 self.isPlaying = state.isPlaying
-                self.updateIdleState(state: state.isPlaying)
             }
 
             if state.isPlaying && !state.title.isEmpty && !state.artist.isEmpty {
                 self.updateSneakPeek()
             }
         }
+
+        // Keep idle state in sync: idle only when there is no track info at all
+        let hasTrack = !state.title.isEmpty || !state.artist.isEmpty
+        self.updateIdleState(isPlaying: state.isPlaying, hasTrack: hasTrack)
 
         // Check for changes in track metadata using last artwork change values
         let titleChanged = state.title != self.lastArtworkTitle
@@ -535,17 +588,20 @@ class MusicManager: ObservableObject {
         }
     }
 
-    private func updateIdleState(state: Bool) {
-        if state {
+    // Stays visible while paused (like Apple's Now Playing widget).
+    // Only goes idle when there is truly no track info (source gone or app quit).
+    private func updateIdleState(isPlaying: Bool, hasTrack: Bool) {
+        debounceIdleTask?.cancel()
+
+        if isPlaying || hasTrack {
             isPlayerIdle = false
-            debounceIdleTask?.cancel()
         } else {
-            debounceIdleTask?.cancel()
+            // Source is gone — go idle after a brief delay to avoid flicker on rapid transitions
             debounceIdleTask = Task { [weak self] in
                 guard let self = self else { return }
-                try? await Task.sleep(for: .seconds(Defaults[.waitInterval]))
+                try? await Task.sleep(for: .seconds(2))
                 withAnimation {
-                    self.isPlayerIdle = !self.isPlaying
+                    self.isPlayerIdle = true
                 }
             }
         }

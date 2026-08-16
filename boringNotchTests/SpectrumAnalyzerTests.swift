@@ -1,6 +1,6 @@
 import Testing
 import AVFoundation
-@testable import boringNotch
+@testable import DynamicNotch
 
 // MARK: - Helpers
 

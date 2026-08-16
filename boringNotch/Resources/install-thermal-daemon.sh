@@ -134,9 +134,10 @@ private final class FanControl {
         }
         for i in 0..<count { smc.write(String(format: "F%dMd", i), bytes: [0x01]) }
         for i in 0..<count {
-            let clamped = min(maxRPM.indices.contains(i) ? maxRPM[i] : 6000,
-                              max(minRPM.indices.contains(i) ? minRPM[i] : 0, rpm))
-            smc.write(String(format: "F%dTg", i), bytes: toBytes(clamped))
+            let lo = minRPM.indices.contains(i) ? minRPM[i] : 0
+            let hi = maxRPM.indices.contains(i) ? maxRPM[i] : 6000
+            let staggered = rpm + Float(i) * 115  // offset fans to avoid resonance (matches Apple default)
+            smc.write(String(format: "F%dTg", i), bytes: toBytes(min(hi, max(lo, staggered))))
         }
     }
 
@@ -158,8 +159,72 @@ private final class FanControl {
     }
 }
 
+// Smoothly ramps fan RPM toward a target at ≤ 450 RPM/s.
+// Delays ramp-up 2 s and ramp-down 5 s to absorb heatsink thermal mass.
+private final class RampController {
+    private let fans: FanControl
+    private var currentRPM: Float = 0   // last RPM written to SMC
+    private var targetRPM: Float? = nil  // nil = auto mode
+    private var deadline: Date? = nil    // earliest time to start moving
+    private var direction: Int = 0       // +1 up, -1 down, 0 neutral
+    private let mu = NSLock()
+
+    private let maxStep: Float = 225     // 450 RPM/s × 0.5 s tick
+    private let tickInterval: TimeInterval = 0.5
+    private let upDelay: TimeInterval = 2.0
+    private let downDelay: TimeInterval = 5.0
+
+    init(fans: FanControl) {
+        self.fans = fans
+        Thread.detachNewThread { [weak self] in self?.loop() }
+    }
+
+    func setTarget(_ rpm: Float) {
+        mu.lock(); defer { mu.unlock() }
+        let newDir = rpm > currentRPM ? 1 : (rpm < currentRPM ? -1 : 0)
+        if newDir != 0 && newDir != direction {
+            direction = newDir
+            deadline = Date().addingTimeInterval(newDir > 0 ? upDelay : downDelay)
+        }
+        targetRPM = rpm
+    }
+
+    func setAuto() {
+        mu.lock()
+        targetRPM = nil; deadline = nil; direction = 0
+        fans.setAuto()
+        currentRPM = 0
+        mu.unlock()
+    }
+
+    func statusSuffix() -> String {
+        mu.lock(); defer { mu.unlock() }
+        guard let t = targetRPM else { return " target=auto" }
+        let waiting = deadline.map { Date() < $0 } ?? false
+        return " target=\(Int(t)) cmd_rpm=\(Int(currentRPM))\(waiting ? " (pending)" : "")"
+    }
+
+    private func loop() {
+        while true {
+            Thread.sleep(forTimeInterval: tickInterval)
+            mu.lock()
+            guard let target = targetRPM else { mu.unlock(); continue }
+            if let d = deadline, Date() < d { mu.unlock(); continue }
+            deadline = nil
+            let delta = target - currentRPM
+            guard abs(delta) >= 1 else { mu.unlock(); continue }
+            let step = min(abs(delta), maxStep)
+            currentRPM += delta > 0 ? step : -step
+            let rpmToWrite = currentRPM
+            mu.unlock()
+            fans.setRPM(rpmToWrite)
+        }
+    }
+}
+
 guard let smc = SMC() else { fputs("error: SMC open failed\n", stderr); exit(1) }
 guard let fans = FanControl(smc: smc) else { fputs("error: no fans\n", stderr); exit(1) }
+private let ramp = RampController(fans: fans)
 
 let sockPath = "/tmp/boringnotch-thermal.sock"
 var shouldStop = false
@@ -198,12 +263,12 @@ func handle(_ fd: Int32) {
     var resp = "ok"
     switch cmd {
     case "set":
-        if let rpm = Float(arg), rpm >= 0 { fans.setRPM(rpm) }
+        if let rpm = Float(arg), rpm >= 0 { ramp.setTarget(rpm) }
         else { resp = "error: invalid rpm" }
     case "auto":
-        fans.setAuto()
+        ramp.setAuto()
     case "status":
-        resp = fans.statusLine()
+        resp = fans.statusLine() + ramp.statusSuffix()
     default:
         resp = "error: unknown command"
     }
@@ -218,7 +283,7 @@ while !shouldStop {
     Darwin.close(clientFD)
 }
 
-fans.setAuto()
+ramp.setAuto()
 unlink(sockPath)
 Darwin.close(serverFD)
 SWIFTSRC
@@ -255,10 +320,17 @@ chmod 644 "$PLIST_DEST"
 chown root:wheel "$PLIST_DEST"
 
 echo "Loading daemon..."
-# Stop any existing instance
+# Kill any running instance (covers processes started outside launchctl)
+pkill -f "BoringNotchThermalDaemon" 2>/dev/null || true
+# Unregister the old service from launchd
 launchctl bootout system "$PLIST_LABEL" 2>/dev/null || \
-    launchctl unload "$PLIST_DEST" 2>/dev/null || true
-sleep 1
+    launchctl bootout system/$PLIST_LABEL 2>/dev/null || true
+launchctl unload "$PLIST_DEST" 2>/dev/null || true
+# Wait up to 5 s for the old process to fully exit before binding the socket
+for _i in 1 2 3 4 5; do
+    pgrep -q -f "BoringNotchThermalDaemon" 2>/dev/null || break
+    sleep 1
+done
 
 # Bootstrap is the correct API on macOS 13+; fall back to legacy load
 if ! launchctl bootstrap system "$PLIST_DEST" 2>/dev/null; then

@@ -47,8 +47,8 @@ final class ThermalDaemonClient {
         guard fd >= 0 else { return nil }
         defer { Darwin.close(fd) }
 
-        // Short receive timeout so a slow/stuck daemon doesn't hang the UI
-        var tv = timeval(tv_sec: 0, tv_usec: 300_000)  // 300ms
+        // Must exceed the daemon's 600ms Ftst-unlock sleep (first set after auto resets unlocked=false)
+        var tv = timeval(tv_sec: 0, tv_usec: 800_000)  // 800ms
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
 
         var addr = sockaddr_un()

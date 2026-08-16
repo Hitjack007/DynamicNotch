@@ -53,10 +53,33 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     var kind: ShelfItemKind
     var isTemporary: Bool
+    var dateAdded: Date
+
     init(id: UUID = UUID(), kind: ShelfItemKind, isTemporary: Bool = false) {
         self.id = id
         self.kind = kind
         self.isTemporary = isTemporary
+        self.dateAdded = Date()
+    }
+
+    enum CodingKeys: CodingKey { case id, kind, isTemporary, dateAdded }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id          = try c.decode(UUID.self,         forKey: .id)
+        kind        = try c.decode(ShelfItemKind.self, forKey: .kind)
+        isTemporary = try c.decode(Bool.self,          forKey: .isTemporary)
+        // Older persisted items won't have dateAdded; treat them as added right now
+        // so they won't expire until a full interval has elapsed from today.
+        dateAdded   = (try? c.decodeIfPresent(Date.self, forKey: .dateAdded)) ?? Date()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id,          forKey: .id)
+        try c.encode(kind,        forKey: .kind)
+        try c.encode(isTemporary, forKey: .isTemporary)
+        try c.encode(dateAdded,   forKey: .dateAdded)
     }
     
     var displayName: String {

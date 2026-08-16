@@ -110,6 +110,7 @@ struct ShelfView: View {
         }
         .onAppear {
             ShelfStateViewModel.shared.cleanupInvalidItems()
+            ShelfStateViewModel.shared.cleanupExpiredItems()
         }
     }
 }

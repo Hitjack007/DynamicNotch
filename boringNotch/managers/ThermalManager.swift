@@ -18,6 +18,13 @@ final class ThermalManager: ObservableObject {
     @Published var daemonAvailable: Bool = false
     var hasFans: Bool { fanCount > 0 }
 
+    func detectHasFans() -> Bool {
+        if isAvailable { return hasFans }
+        guard let conn = SMCConnection() else { return false }
+        let r = conn.readKey("FNum")
+        return r.success ? (Int(r.bytes.first ?? 0) > 0) : false
+    }
+
     private var smc: SMCConnection?
     private var timer: Timer?
     private var cpuKeys: [String] = []
@@ -34,8 +41,14 @@ final class ThermalManager: ObservableObject {
     private var lastAppliedFraction: Float = -1
     private var lastAlertDate: Date?
 
+    private var sessionIsActive: Bool = true    // false during Fast User Switching
+    private var screenIsUnlocked: Bool = true  // false while screen is locked
+    private var canControlFans: Bool { sessionIsActive && screenIsUnlocked }
+
     private init() {
-        start()
+        if Defaults[.showThermalTab] {
+            start()
+        }
     }
 
     func start() {
@@ -49,15 +62,56 @@ final class ThermalManager: ObservableObject {
         buildKeyCache(conn)
         daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
 
-        let t = Timer(timeInterval: 2.0, repeats: true) { [weak self] _ in
+        let t = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
         tick()
+
+        let nc = NSWorkspace.shared.notificationCenter
+        nc.addObserver(forName: NSWorkspace.sessionDidResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.handleSessionResign() }
+        }
+        nc.addObserver(forName: NSWorkspace.sessionDidBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.handleSessionBecomeActive() }
+        }
+
+        let dnc = DistributedNotificationCenter.default()
+        dnc.addObserver(forName: NSNotification.Name("com.apple.screenIsLocked"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.handleScreenLock() }
+        }
+        dnc.addObserver(forName: NSNotification.Name("com.apple.screenIsUnlocked"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.handleScreenUnlock() }
+        }
+    }
+
+    // MARK: - Session lifecycle
+
+    private func handleSessionResign() {
+        sessionIsActive = false
+        resetToAuto()
+    }
+
+    private func handleSessionBecomeActive() {
+        sessionIsActive = true
+        lastAppliedFraction = -1
+        tick()
+    }
+
+    private func handleScreenLock() {
+        screenIsUnlocked = false
+        resetToAuto()
+    }
+
+    private func handleScreenUnlock() {
+        screenIsUnlocked = true
+        lastAppliedFraction = -1
+        tick()
     }
 
     func stop() {
+        resetToAuto()  // hand fans back to Apple before disconnecting
         timer?.invalidate()
         timer = nil
         smc = nil
@@ -133,7 +187,8 @@ final class ThermalManager: ObservableObject {
         for i in 0..<fanCount {
             let lo = fanMin.indices.contains(i) ? fanMin[i] : 1200
             let hi = fanMax.indices.contains(i) ? fanMax[i] : 6000
-            _ = smc.writeKey(SMCFanKey.key(SMCFanKey.target, fan: i), bytes: floatToSMCBytes(lo + (hi - lo) * fraction))
+            let staggered = lo + (hi - lo) * fraction + Float(i) * 115
+            _ = smc.writeKey(SMCFanKey.key(SMCFanKey.target, fan: i), bytes: floatToSMCBytes(min(hi, max(lo, staggered))))
         }
     }
 
@@ -218,6 +273,7 @@ final class ThermalManager: ObservableObject {
             let val = smcBytesToFloat(r.bytes, size: r.size)
             return val > 0 ? val : nil
         }
+        guard canControlFans else { return }
         if Defaults[.fanCurvePreset] == .maxSpeed {
             if abs(1.0 - lastAppliedFraction) >= 0.02 {
                 lastAppliedFraction = 1.0

@@ -120,6 +120,11 @@
 		4DA88E1B3021E7010095857C /* SpectrumBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E1A3021E7010095857C /* SpectrumBarView.swift */; };
 		4DA88E1D3021E7320095857C /* SpectrumAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E1C3021E7320095857C /* SpectrumAnalyzer.swift */; };
 		4DA88E1F302304200095857C /* SpectralTilt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E1E302304200095857C /* SpectralTilt.swift */; };
+		4DA88E33302463510095857C /* SystemStatsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E32302463510095857C /* SystemStatsManager.swift */; };
+		4DA88E353024635F0095857C /* SystemStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E343024635F0095857C /* SystemStatsView.swift */; };
+		4DA88E39302476DC0095857C /* SleepPreventionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E38302476DC0095857C /* SleepPreventionManager.swift */; };
+		4DA88E3A302476DC0095857C /* CaffeineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E37302476DC0095857C /* CaffeineManager.swift */; };
+		4DA88E3B302476DC0095857C /* ActivitySimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E36302476DC0095857C /* ActivitySimulator.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -277,7 +282,7 @@
 		14C08BB52C8DE42D000F8AA0 /* CalendarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarManager.swift; sourceTree = "<group>"; };
 		14C08BB82C8DE4B1000F8AA0 /* BoringCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoringCalendar.swift; sourceTree = "<group>"; };
 		14C08BC02C8E03AD000F8AA0 /* NSImage+Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImage+Extensions.swift"; sourceTree = "<group>"; };
-		14CEF4122C5CAED300855D72 /* boringNotch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = boringNotch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		14CEF4122C5CAED300855D72 /* DynamicNotch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DynamicNotch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		14CEF4152C5CAED300855D72 /* boringNotchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = boringNotchApp.swift; sourceTree = "<group>"; };
 		14CEF4172C5CAED300855D72 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		14CEF4192C5CAED400855D72 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -313,6 +318,11 @@
 		4DA88E1E302304200095857C /* SpectralTilt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectralTilt.swift; sourceTree = "<group>"; };
 		4DA88E21302304640095857C /* SpectrumAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrumAnalyzerTests.swift; sourceTree = "<group>"; };
 		4DA88E26302305750095857C /* boringNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = boringNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DA88E32302463510095857C /* SystemStatsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsManager.swift; sourceTree = "<group>"; };
+		4DA88E343024635F0095857C /* SystemStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsView.swift; sourceTree = "<group>"; };
+		4DA88E36302476DC0095857C /* ActivitySimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySimulator.swift; sourceTree = "<group>"; };
+		4DA88E37302476DC0095857C /* CaffeineManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaffeineManager.swift; sourceTree = "<group>"; };
+		4DA88E38302476DC0095857C /* SleepPreventionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepPreventionManager.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -549,6 +559,7 @@
 				507266DA2C908E2E00A2D00D /* HoverButton.swift */,
 				B1F747F82EC7E94000F841DB /* LottieView.swift */,
 				4D73E19D301EB0490084A6A1 /* Thermal */,
+				4DA88E313024633A0095857C /* SystemStats */,
 			);
 			path = components;
 			sourceTree = "<group>";
@@ -556,6 +567,9 @@
 		147163B52C5D804B0068B555 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				4DA88E36302476DC0095857C /* ActivitySimulator.swift */,
+				4DA88E37302476DC0095857C /* CaffeineManager.swift */,
+				4DA88E38302476DC0095857C /* SleepPreventionManager.swift */,
 				11D58EA12E760AE100FA8377 /* ImageService.swift */,
 				F38DE6472D8243E2008B5C6D /* BatteryActivityManager.swift */,
 				112FB7342CCF16F70015238C /* NotchSpaceManager.swift */,
@@ -568,6 +582,7 @@
 				4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */,
 				4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */,
 				4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */,
+				4DA88E32302463510095857C /* SystemStatsManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -605,7 +620,7 @@
 		14CEF4132C5CAED300855D72 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				14CEF4122C5CAED300855D72 /* boringNotch.app */,
+				14CEF4122C5CAED300855D72 /* DynamicNotch.app */,
 				11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */,
 				4DA88E26302305750095857C /* boringNotchTests.xctest */,
 			);
@@ -725,6 +740,14 @@
 				4DA88E21302304640095857C /* SpectrumAnalyzerTests.swift */,
 			);
 			path = boringNotchTests;
+			sourceTree = "<group>";
+		};
+		4DA88E313024633A0095857C /* SystemStats */ = {
+			isa = PBXGroup;
+			children = (
+				4DA88E343024635F0095857C /* SystemStatsView.swift */,
+			);
+			path = SystemStats;
 			sourceTree = "<group>";
 		};
 		9A0887332C7AFF7E00C160EA /* Tabs */ = {
@@ -876,9 +899,9 @@
 			productReference = 11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
-		14CEF4112C5CAED300855D72 /* boringNotch */ = {
+		14CEF4112C5CAED300855D72 /* DynamicNotch */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 14CEF4212C5CAED400855D72 /* Build configuration list for PBXNativeTarget "boringNotch" */;
+			buildConfigurationList = 14CEF4212C5CAED400855D72 /* Build configuration list for PBXNativeTarget "DynamicNotch" */;
 			buildPhases = (
 				14CEF40E2C5CAED300855D72 /* Sources */,
 				14CEF40F2C5CAED300855D72 /* Frameworks */,
@@ -894,7 +917,7 @@
 			fileSystemSynchronizedGroups = (
 				112FB72F2CCF12CC0015238C /* private */,
 			);
-			name = boringNotch;
+			name = DynamicNotch;
 			packageProductDependencies = (
 				14D032192C68F32E0096E6A1 /* LaunchAtLogin */,
 				14D0321C2C68F3350096E6A1 /* Sparkle */,
@@ -910,7 +933,7 @@
 				111BEA6E2ED166E20079DD4E /* MacroVisionKit */,
 			);
 			productName = dynamicNotch;
-			productReference = 14CEF4122C5CAED300855D72 /* boringNotch.app */;
+			productReference = 14CEF4122C5CAED300855D72 /* DynamicNotch.app */;
 			productType = "com.apple.product-type.application";
 		};
 		4DA88E25302305750095857C /* boringNotchTests */ = {
@@ -985,7 +1008,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				14CEF4112C5CAED300855D72 /* boringNotch */,
+				14CEF4112C5CAED300855D72 /* DynamicNotch */,
 				11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */,
 				4DA88E25302305750095857C /* boringNotchTests */,
 			);
@@ -1046,6 +1069,9 @@
 				B186543C2C6F49AE000B926A /* ShortcutConstants.swift in Sources */,
 				11A45C792E34E63100CEB175 /* MediaChecker.swift in Sources */,
 				B1D365CE2C6A979C0047BDBC /* LiveActivityModifier.swift in Sources */,
+				4DA88E39302476DC0095857C /* SleepPreventionManager.swift in Sources */,
+				4DA88E3A302476DC0095857C /* CaffeineManager.swift in Sources */,
+				4DA88E3B302476DC0095857C /* ActivitySimulator.swift in Sources */,
 				1113ABD02E80E6BB00EC13B2 /* ThumbnailService.swift in Sources */,
 				11CFC65B2E097E9D00748C80 /* WelcomeView.swift in Sources */,
 				14D570C02C5EA5870011E668 /* AnimatedFace.swift in Sources */,
@@ -1057,6 +1083,7 @@
 				1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */,
 				14D570CB2C5F4B2C0011E668 /* BatteryStatusViewModel.swift in Sources */,
 				9A0887322C7A693000C160EA /* TabButton.swift in Sources */,
+				4DA88E353024635F0095857C /* SystemStatsView.swift in Sources */,
 				1153BD9C2D98853B00979FB0 /* NowPlayingController.swift in Sources */,
 				1194E9402EACC652009C82D6 /* Color+AccentColor.swift in Sources */,
 				B141C2412CA5F53F00AC8CC8 /* SparkleView.swift in Sources */,
@@ -1112,6 +1139,7 @@
 				118EBE272E92DE8400D54B5A /* NSMenu+AssociatedObject.swift in Sources */,
 				B1CE8CFE2C6F659400DD9871 /* KeyboardShortcutsHelper.swift in Sources */,
 				14D570C62C5F38210011E668 /* BoringHeader.swift in Sources */,
+				4DA88E33302463510095857C /* SystemStatsManager.swift in Sources */,
 				B17266E32C65F7FB0031BA0D /* WhatsNewView.swift in Sources */,
 				14C08BB62C8DE42D000F8AA0 /* CalendarManager.swift in Sources */,
 				14D570CD2C5F4BB70011E668 /* BoringBattery.swift in Sources */,
@@ -1183,7 +1211,7 @@
 		};
 		4DA88E2B302305750095857C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 14CEF4112C5CAED300855D72 /* boringNotch */;
+			target = 14CEF4112C5CAED300855D72 /* DynamicNotch */;
 			targetProxy = 4DA88E2A302305750095857C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1205,7 +1233,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.3;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.BoringNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1230,7 +1258,7 @@
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.3;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch.BoringNotchXPCHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.BoringNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1389,12 +1417,12 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotch;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "To detect when external audio sources are connected";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Boring Notch uses Bluetooth to identify your audio device and show the correct icon in the volume HUD.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -1405,7 +1433,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.3;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1442,12 +1470,12 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = boringNotch/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = TheBoringNotch;
+				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotch;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSBackgroundOnly = NO;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses AppleEvents to control music";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "To detect when external audio sources are connected";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Boring Notch uses Bluetooth to identify your audio device and show the correct icon in the volume HUD.";
 				INFOPLIST_KEY_NSCalendarsUsageDescription = "This app uses the calendar to display your calendar events";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to display a live camera view";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -1458,7 +1486,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 2.7.3;
-				PRODUCT_BUNDLE_IDENTIFIER = theboringteam.boringnotch;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1534,7 +1562,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		14CEF4212C5CAED400855D72 /* Build configuration list for PBXNativeTarget "boringNotch" */ = {
+		14CEF4212C5CAED400855D72 /* Build configuration list for PBXNativeTarget "DynamicNotch" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				14CEF4222C5CAED400855D72 /* Debug */,

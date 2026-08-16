@@ -82,22 +82,33 @@ struct AlbumArtView: View {
                 
 
     private var albumArtImage: some View {
-        Image(nsImage: musicManager.albumArt)
-            .resizable()
-            .aspectRatio(1, contentMode: .fit)
-            .matchedGeometryEffect(id: "albumArt", in: albumArtNamespace)
-            .clipped()
-            .clipShape(
-                RoundedRectangle(
-                    cornerRadius: Defaults[.cornerRadiusScaling]
-                        ? MusicPlayerImageSizes.cornerRadiusInset.opened
-                        : MusicPlayerImageSizes.cornerRadiusInset.closed)
-            )
+        ZStack {
+            if musicManager.isPlayerIdle {
+                Image(systemName: "music.note.slash")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(20)
+                    .foregroundStyle(Color.gray.opacity(0.6))
+            } else {
+                Image(nsImage: musicManager.albumArt)
+                    .resizable()
+                    .scaledToFill()
+            }
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .matchedGeometryEffect(id: "albumArt", in: albumArtNamespace)
+        .clipped()
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: Defaults[.cornerRadiusScaling]
+                    ? MusicPlayerImageSizes.cornerRadiusInset.opened
+                    : MusicPlayerImageSizes.cornerRadiusInset.closed)
+        )
     }
 
     @ViewBuilder
     private var appIconOverlay: some View {
-        if vm.notchState == .open && !musicManager.usingAppIconForArtwork {
+        if vm.notchState == .open && !musicManager.usingAppIconForArtwork && !musicManager.isPlayerIdle {
             AppIcon(for: musicManager.bundleIdentifier ?? "com.apple.Music")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
@@ -139,12 +150,14 @@ struct MusicControlsView: View {
     }
 
     private func songInfo(width: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let idle = musicManager.isPlayerIdle
+        return VStack(alignment: .leading, spacing: 0) {
             MarqueeText(
-                $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: .white,
+                idle ? .constant("Not Playing") : $musicManager.songTitle,
+                font: .headline, nsFont: .headline, textColor: idle ? .gray : .white,
                 frameWidth: width)
             MarqueeText(
-                $musicManager.artistName,
+                idle ? .constant("") : $musicManager.artistName,
                 font: .headline,
                 nsFont: .headline,
                 textColor: Defaults[.playerColorTinting]
@@ -153,7 +166,7 @@ struct MusicControlsView: View {
                 frameWidth: width
             )
             .fontWeight(.medium)
-            if Defaults[.enableLyrics] {
+            if Defaults[.enableLyrics] && !idle {
                 TimelineView(.animation(minimumInterval: 0.25)) { timeline in
                     let currentElapsed: Double = {
                         guard musicManager.isPlaying else { return musicManager.elapsedTime }
@@ -190,19 +203,23 @@ struct MusicControlsView: View {
     }
 
     private var musicSlider: some View {
-        TimelineView(.animation(minimumInterval: musicManager.playbackRate > 0 ? 0.1 : nil)) { timeline in
+        let idle = musicManager.isPlayerIdle
+        let displayRate = idle ? 0.0 : musicManager.playbackRate
+        return TimelineView(.animation(minimumInterval: displayRate > 0 ? 0.1 : nil)) { timeline in
             MusicSliderView(
                 sliderValue: $sliderValue,
-                duration: $musicManager.songDuration,
+                duration: idle ? .constant(0.0) : $musicManager.songDuration,
                 lastDragged: $lastDragged,
                 color: musicManager.avgColor,
                 dragging: $dragging,
                 currentDate: timeline.date,
                 timestampDate: musicManager.timestampDate,
-                elapsedTime: musicManager.elapsedTime,
-                playbackRate: musicManager.playbackRate,
-                isPlaying: musicManager.isPlaying
+                elapsedTime: idle ? 0.0 : musicManager.elapsedTime,
+                playbackRate: displayRate,
+                isPlaying: musicManager.isPlaying,
+                isIdle: idle
             ) { newValue in
+                guard !idle else { return }
                 MusicManager.shared.seek(to: newValue)
             }
             .padding(.top, 5)
@@ -219,6 +236,8 @@ struct MusicControlsView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .center)
+        .disabled(musicManager.isPlayerIdle)
+        .opacity(musicManager.isPlayerIdle ? 0.35 : 1)
     }
 
     private var activeSlots: [MusicControlButton] {
@@ -477,6 +496,7 @@ struct MusicSliderView: View {
     let elapsedTime: Double
     let playbackRate: Double
     let isPlaying: Bool
+    var isIdle: Bool = false
     var onValueChange: (Double) -> Void
 
 
@@ -501,13 +521,17 @@ struct MusicSliderView: View {
             }
             .fontWeight(.medium)
             .foregroundColor(
-                Defaults[.playerColorTinting]
+                (!isIdle && Defaults[.playerColorTinting])
                     ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6) : .gray
             )
             .font(.caption)
         }
         .onChange(of: currentDate) {
-           guard !dragging, timestampDate.timeIntervalSince(lastDragged) > -1 else { return }
+            if isIdle {
+                sliderValue = 0
+                return
+            }
+            guard !dragging, timestampDate.timeIntervalSince(lastDragged) > -1 else { return }
             sliderValue = MusicManager.shared.estimatedPlaybackPosition(at: currentDate)
         }
     }

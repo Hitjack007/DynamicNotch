@@ -36,9 +36,13 @@ struct ContentView: View {
 
     @Default(.useMusicVisualizer) var useMusicVisualizer
     @Default(.useResponsiveSpectrogram) var useResponsiveSpectrogram
+    @Default(.spectrogramTitleExclusions) var spectrogramTitleExclusions
+    @Default(.spectrogramAppExclusions) var spectrogramAppExclusions
     @ObservedObject var spectrumAnalyzer = SpectrumAnalyzer.shared
 
     @Default(.showNotHumanFace) var showNotHumanFace
+    @Default(.showThermalTab) var showThermalTab
+    @Default(.showSystemStatsTab) var showSystemStatsTab
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -69,12 +73,12 @@ struct ContentView: View {
         {
             chinWidth = 640
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
-            && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle)
+            && vm.notchState == .closed && musicManager.isPlaying
             && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace]
+            && !musicManager.isPlaying && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
@@ -243,6 +247,21 @@ struct ContentView: View {
                 }
             }
         }
+        .onChange(of: showThermalTab) { _, enabled in
+            if enabled {
+                ThermalManager.shared.start()
+            } else {
+                ThermalManager.shared.stop()
+                if coordinator.currentView == .thermal {
+                    coordinator.currentView = .home
+                }
+            }
+        }
+        .onChange(of: showSystemStatsTab) { _, enabled in
+            if !enabled && coordinator.currentView == .systemStats {
+                coordinator.currentView = .home
+            }
+        }
     }
 
     @ViewBuilder
@@ -294,10 +313,10 @@ struct ContentView: View {
                       } else if coordinator.thermalAlertShow && vm.notchState == .closed {
                           ThermalClosedAlert(temp: coordinator.thermalAlertTemp)
                               .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
-                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && (musicManager.isPlaying || !musicManager.isPlayerIdle) && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
+                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && musicManager.isPlaying && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
-                      } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
                            BoringHeader()
@@ -358,6 +377,8 @@ struct ContentView: View {
                         ShelfView()
                     case .thermal:
                         ThermalView()
+                    case .systemStats:
+                        SystemStatsView()
                     }
                 }
                 .transition(
@@ -459,7 +480,7 @@ struct ContentView: View {
 
             HStack {
                 if useMusicVisualizer {
-                    if useResponsiveSpectrogram {
+                    if useResponsiveSpectrogram && !musicManager.isExcludedFromResponsiveSpectrogram {
                         Rectangle()
                             .fill(
                                 Defaults[.coloredSpectrogram]
@@ -474,7 +495,7 @@ struct ContentView: View {
                             }
                             .onAppear {
                                 Task {
-                                    if musicManager.isPlaying {
+                                    if musicManager.isPlaying && !musicManager.isExcludedFromResponsiveSpectrogram {
                                         await spectrumAnalyzer.start()
                                     }
                                 }
@@ -484,8 +505,47 @@ struct ContentView: View {
                             }
                             .onChange(of: musicManager.isPlaying) { _, playing in
                                 Task {
-                                    if playing { await spectrumAnalyzer.start() }
-                                    else { await spectrumAnalyzer.stop() }
+                                    if playing && !musicManager.isExcludedFromResponsiveSpectrogram {
+                                        await spectrumAnalyzer.start()
+                                    } else {
+                                        await spectrumAnalyzer.stop()
+                                    }
+                                }
+                            }
+                            .onChange(of: musicManager.songTitle) { _, _ in
+                                Task {
+                                    if musicManager.isExcludedFromResponsiveSpectrogram {
+                                        await spectrumAnalyzer.stop()
+                                    } else if musicManager.isPlaying {
+                                        await spectrumAnalyzer.start()
+                                    }
+                                }
+                            }
+                            .onChange(of: musicManager.bundleIdentifier) { _, _ in
+                                Task {
+                                    if musicManager.isExcludedFromResponsiveSpectrogram {
+                                        await spectrumAnalyzer.stop()
+                                    } else if musicManager.isPlaying {
+                                        await spectrumAnalyzer.start()
+                                    }
+                                }
+                            }
+                            .onChange(of: spectrogramTitleExclusions) { _, _ in
+                                Task {
+                                    if musicManager.isExcludedFromResponsiveSpectrogram {
+                                        await spectrumAnalyzer.stop()
+                                    } else if musicManager.isPlaying {
+                                        await spectrumAnalyzer.start()
+                                    }
+                                }
+                            }
+                            .onChange(of: spectrogramAppExclusions) { _, _ in
+                                Task {
+                                    if musicManager.isExcludedFromResponsiveSpectrogram {
+                                        await spectrumAnalyzer.stop()
+                                    } else if musicManager.isPlaying {
+                                        await spectrumAnalyzer.start()
+                                    }
                                 }
                             }
                     } else {
@@ -536,6 +596,11 @@ struct ContentView: View {
             vm.dropEvent = true
             ShelfStateViewModel.shared.load(providers)
             return true
+        }
+        .onDisappear {
+            // Reset stuck targeting flag — SwiftUI doesn't reliably call dropExited
+            // when this view is removed from the hierarchy during an active drag
+            vm.dragDetectorTargeting = false
         }
         } else {
             EmptyView()
