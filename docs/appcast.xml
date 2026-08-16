@@ -51,5 +51,18 @@
         type="application/octet-stream"/>
     </item>
 
+
+    <item>
+      <title>Version 1.1.1</title>
+      <pubDate>Sun, 16 Aug 2026 02:20:31 +0000</pubDate>
+      <sparkle:version>202608161418</sparkle:version>
+      <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v1.1.1/DynamicNotch-1.1.1.dmg"
+        sparkle:edSignature="ZrlvdX0L9XTLDSP39C+pc1F1wT+AEP50IcpBKs2EtXYvxVjHKAg/xX56mdP3MzpQFTcFCn9BPnDuS4doxj3HCQ=="
+        length="9190335"
+        type="application/octet-stream"/>
+    </item>
+
   </channel>
 </rss>
