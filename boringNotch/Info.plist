@@ -15,6 +15,8 @@
 	</dict>
 	<key>NSScreenRecordingUsageDescription</key>
 	<string>Boring Notch uses screen recording access to analyse system audio for the responsive spectrogram visualizer. No screen content is captured or stored.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 	<key>SUEnableDownloaderService</key>
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>

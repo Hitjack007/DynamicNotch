@@ -18,6 +18,7 @@ enum OnboardingStep {
     case accessibilityPermission
     case bluetoothPermission
     case screenRecordingPermission
+    case fullDiskAccessPermission
     case musicPermission
     case finished
 }
@@ -161,8 +162,30 @@ struct OnboardingView: View {
                         Task {
                             await requestScreenRecordingPermission()
                             withAnimation(.easeInOut(duration: 0.6)) {
-                                step = .musicPermission
+                                step = .fullDiskAccessPermission
                             }
+                        }
+                    },
+                    onSkip: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .fullDiskAccessPermission
+                        }
+                    }
+                )
+                .transition(.opacity)
+
+            case .fullDiskAccessPermission:
+                PermissionRequestView(
+                    icon: Image(systemName: "externaldrive.fill"),
+                    title: "Enable Full Disk Access",
+                    description: "The Claude Usage feature reads your browser's session cookie to show your token usage in the notch. macOS protects browser cookies behind Full Disk Access — without it, the app cannot read the cookie automatically.\n\nClick Allow Access to open System Settings, add DynamicNotch to the list, then return here.",
+                    privacyNote: "Only the claude.ai session cookie is ever read. No other files are accessed.",
+                    onAllow: {
+                        NSWorkspace.shared.open(
+                            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
+                        )
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .musicPermission
                         }
                     },
                     onSkip: {

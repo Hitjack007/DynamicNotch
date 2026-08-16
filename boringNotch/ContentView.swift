@@ -23,6 +23,7 @@ struct ContentView: View {
     @ObservedObject var brightnessManager = BrightnessManager.shared
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var thermalManager = ThermalManager.shared
+    @ObservedObject var claudeManager = ClaudeUsageManager.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -42,6 +43,8 @@ struct ContentView: View {
     @Default(.showNotHumanFace) var showNotHumanFace
     @Default(.showThermalTab) var showThermalTab
     @Default(.showSystemStatsTab) var showSystemStatsTab
+    @Default(.showClaudeUsageTab) var showClaudeUsageTab
+    @Default(.claudeUsageInNotch) var claudeUsageInNotch
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -79,6 +82,11 @@ struct ContentView: View {
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && !musicManager.isPlaying && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
+        {
+            chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
+        } else if !coordinator.expandingView.show && vm.notchState == .closed
+            && claudeUsageInNotch && showClaudeUsageTab
+            && claudeManager.isAuthenticated && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         }
@@ -261,6 +269,16 @@ struct ContentView: View {
                 coordinator.currentView = .home
             }
         }
+        .onChange(of: showClaudeUsageTab) { _, enabled in
+            if enabled {
+                ClaudeUsageManager.shared.start()
+            } else {
+                ClaudeUsageManager.shared.stop()
+                if coordinator.currentView == .claudeUsage {
+                    coordinator.currentView = .home
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -317,6 +335,11 @@ struct ContentView: View {
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed
+                          && claudeUsageInNotch && showClaudeUsageTab
+                          && claudeManager.isAuthenticated && !vm.hideOnClosed {
+                          ClaudeUsageLiveActivity()
+                              .frame(alignment: .center)
                        } else if vm.notchState == .open {
                            BoringHeader()
                                .frame(height: max(24, vm.effectiveClosedNotchHeight))
@@ -378,6 +401,8 @@ struct ContentView: View {
                         ThermalView()
                     case .systemStats:
                         SystemStatsView()
+                    case .claudeUsage:
+                        ClaudeUsageView()
                     }
                 }
                 .transition(

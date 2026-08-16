@@ -19,6 +19,7 @@ struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @AppStorage("showThermalTab") private var showThermalTab: Bool = true
     @AppStorage("showSystemStatsTab") private var showSystemStatsTab: Bool = false
+    @AppStorage("showClaudeUsageTab") private var showClaudeUsageTab: Bool = false
     @Namespace var animation
     @State private var hapticTrigger = false
 
@@ -27,8 +28,9 @@ struct TabSelectionView: View {
             TabModel(label: "Home", icon: "house.fill", view: .home),
             TabModel(label: "Shelf", icon: "tray.fill", view: .shelf),
         ]
-        if showThermalTab     { result.append(TabModel(label: "Thermal", icon: "thermometer.medium", view: .thermal)) }
-        if showSystemStatsTab { result.append(TabModel(label: "Stats",   icon: "cpu",                view: .systemStats)) }
+        if showThermalTab     { result.append(TabModel(label: "Thermal", icon: "thermometer.medium",    view: .thermal)) }
+        if showSystemStatsTab { result.append(TabModel(label: "Stats",   icon: "cpu",                  view: .systemStats)) }
+        if showClaudeUsageTab { result.append(TabModel(label: "Claude",  icon: "brain.head.profile",   view: .claudeUsage)) }
         return result
     }
 

@@ -125,6 +125,12 @@
 		4DA88E39302476DC0095857C /* SleepPreventionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E38302476DC0095857C /* SleepPreventionManager.swift */; };
 		4DA88E3A302476DC0095857C /* CaffeineManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E37302476DC0095857C /* CaffeineManager.swift */; };
 		4DA88E3B302476DC0095857C /* ActivitySimulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E36302476DC0095857C /* ActivitySimulator.swift */; };
+		4DA88EDA303167C20095857C /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88ED9303167C20095857C /* KeychainHelper.swift */; };
+		4DA88EDC303167D20095857C /* SafariCookieReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDB303167D20095857C /* SafariCookieReader.swift */; };
+		4DA88EDE303167E90095857C /* ChromeCookieReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDD303167E90095857C /* ChromeCookieReader.swift */; };
+		4DA88EE03031680B0095857C /* ClaudeUsageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */; };
+		4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE1303168190095857C /* ClaudeUsageView.swift */; };
+		4DA88EE4303168210095857C /* ClaudeUsageLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -323,6 +329,12 @@
 		4DA88E36302476DC0095857C /* ActivitySimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySimulator.swift; sourceTree = "<group>"; };
 		4DA88E37302476DC0095857C /* CaffeineManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaffeineManager.swift; sourceTree = "<group>"; };
 		4DA88E38302476DC0095857C /* SleepPreventionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepPreventionManager.swift; sourceTree = "<group>"; };
+		4DA88ED9303167C20095857C /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		4DA88EDB303167D20095857C /* SafariCookieReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariCookieReader.swift; sourceTree = "<group>"; };
+		4DA88EDD303167E90095857C /* ChromeCookieReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromeCookieReader.swift; sourceTree = "<group>"; };
+		4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageManager.swift; sourceTree = "<group>"; };
+		4DA88EE1303168190095857C /* ClaudeUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageView.swift; sourceTree = "<group>"; };
+		4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageLiveActivity.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -516,6 +528,9 @@
 				14288DD62C6E015000B9F80C /* AudioPlayer.swift */,
 				5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */,
 				14288E0B2C6F8EC000B9F80C /* AppIcons.swift */,
+				4DA88ED9303167C20095857C /* KeychainHelper.swift */,
+				4DA88EDB303167D20095857C /* SafariCookieReader.swift */,
+				4DA88EDD303167E90095857C /* ChromeCookieReader.swift */,
 			);
 			path = helpers;
 			sourceTree = "<group>";
@@ -560,6 +575,7 @@
 				B1F747F82EC7E94000F841DB /* LottieView.swift */,
 				4D73E19D301EB0490084A6A1 /* Thermal */,
 				4DA88E313024633A0095857C /* SystemStats */,
+				4DA88ED8303167B90095857C /* ClaudeUsage */,
 			);
 			path = components;
 			sourceTree = "<group>";
@@ -583,6 +599,7 @@
 				4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */,
 				4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */,
 				4DA88E32302463510095857C /* SystemStatsManager.swift */,
+				4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -748,6 +765,15 @@
 				4DA88E343024635F0095857C /* SystemStatsView.swift */,
 			);
 			path = SystemStats;
+			sourceTree = "<group>";
+		};
+		4DA88ED8303167B90095857C /* ClaudeUsage */ = {
+			isa = PBXGroup;
+			children = (
+				4DA88EE1303168190095857C /* ClaudeUsageView.swift */,
+				4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */,
+			);
+			path = ClaudeUsage;
 			sourceTree = "<group>";
 		};
 		9A0887332C7AFF7E00C160EA /* Tabs */ = {
@@ -1081,6 +1107,7 @@
 				B1D365D02C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift in Sources */,
 				1194E87C2EA19E09009C82D6 /* ImageProcessingService.swift in Sources */,
 				1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */,
+				4DA88EDC303167D20095857C /* SafariCookieReader.swift in Sources */,
 				14D570CB2C5F4B2C0011E668 /* BatteryStatusViewModel.swift in Sources */,
 				9A0887322C7A693000C160EA /* TabButton.swift in Sources */,
 				4DA88E353024635F0095857C /* SystemStatsView.swift in Sources */,
@@ -1101,8 +1128,10 @@
 				B1C974342C642B6D0000E707 /* MarqueeTextView.swift in Sources */,
 				14288DE82C6E01C800B9F80C /* ProgressIndicator.swift in Sources */,
 				1113ABC52E80E27000EC13B2 /* ShelfItemView.swift in Sources */,
+				4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */,
 				1113ABC62E80E27000EC13B2 /* ShelfPersistenceService.swift in Sources */,
 				1113ABC82E80E27000EC13B2 /* ShelfItem.swift in Sources */,
+				4DA88EDE303167E90095857C /* ChromeCookieReader.swift in Sources */,
 				1113ABCA2E80E27000EC13B2 /* ShelfSelectionModel.swift in Sources */,
 				1113ABCB2E80E27000EC13B2 /* QuickLookService.swift in Sources */,
 				1113ABCC2E80E27000EC13B2 /* ShelfDropService.swift in Sources */,
@@ -1121,6 +1150,7 @@
 				118EBE312E9717DB00D54B5A /* URL+SecurityScoped.swift in Sources */,
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
+				4DA88EE4303168210095857C /* ClaudeUsageLiveActivity.swift in Sources */,
 				111BEA612ED09B1B0079DD4E /* NSScreen+UUID.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
 				9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */,
@@ -1128,6 +1158,7 @@
 				14E9FEAA2C70BF610062E83F /* DownloadView.swift in Sources */,
 				B1B112912C6A572100093D8F /* EditPanelView.swift in Sources */,
 				B1C4489B2C97376A001F0858 /* TipStore.swift in Sources */,
+				4DA88EE03031680B0095857C /* ClaudeUsageManager.swift in Sources */,
 				1153BD912D986DB300979FB0 /* PlaybackState.swift in Sources */,
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,
 				4DA88E1D3021E7320095857C /* SpectrumAnalyzer.swift in Sources */,
@@ -1145,6 +1176,7 @@
 				14D570CD2C5F4BB70011E668 /* BoringBattery.swift in Sources */,
 				B10F84A32C6C9596009F3026 /* TestView.swift in Sources */,
 				1443E7F32C609DCE0027C1FC /* matters.swift in Sources */,
+				4DA88EDA303167C20095857C /* KeychainHelper.swift in Sources */,
 				11C5E3162DFE88510065821E /* SettingsView.swift in Sources */,
 				4DA88E0C301F3C3E0095857C /* FanCurveEditorView.swift in Sources */,
 				1153BD932D986E4300979FB0 /* AppleMusicController.swift in Sources */,

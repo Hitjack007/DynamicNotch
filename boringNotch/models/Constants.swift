@@ -108,6 +108,16 @@ extension Notification.Name {
 }
 
 // Media controller types for selection in settings
+enum ClaudeBrowserPreference: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case auto   = "Auto"
+    case safari = "Safari"
+    case chrome = "Chrome"
+    case brave  = "Brave"
+    case edge   = "Edge"
+
+    var id: String { rawValue }
+}
+
 enum MediaControllerType: String, CaseIterable, Identifiable, Defaults.Serializable {
     case nowPlaying = "Now Playing"
     case appleMusic = "Apple Music"
@@ -306,6 +316,13 @@ extension Defaults.Keys {
     static let fanCurvePoints = Key<[FanCurvePoint]>("fanCurvePoints", default: FanCurvePoint.defaultCurve)
     static let fanCurvePreset = Key<FanCurvePreset>("fanCurvePreset", default: .appleDefault)
     static let thermalNotchPresets = Key<[FanCurvePreset]>("thermalNotchPresets", default: [.appleDefault, .maxSpeed, .ramp80])
+
+    // MARK: Claude Usage
+    static let showClaudeUsageTab      = Key<Bool>("showClaudeUsageTab", default: false)
+    static let claudeUsageInNotch      = Key<Bool>("claudeUsageInNotch", default: false)
+    static let claudeClosedNotchShowRing = Key<Bool>("claudeClosedNotchShowRing", default: true)
+    static let claudePreferredBrowser  = Key<ClaudeBrowserPreference>("claudePreferredBrowser", default: .auto)
+    static let claudePollingInterval   = Key<Int>("claudePollingInterval", default: 5)
 
     // MARK: Caffeine
     static let showCaffeineButton      = Key<Bool>("showCaffeineButton", default: false)

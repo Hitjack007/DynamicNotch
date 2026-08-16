@@ -54,6 +54,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Caffeine") {
                     Label("Caffeine", systemImage: "cup.and.saucer")
                 }
+                NavigationLink(value: "ClaudeUsage") {
+                    Label("Claude Usage", systemImage: "brain.head.profile")
+                }
 //                NavigationLink(value: "Downloads") {
 //                    Label("Downloads", systemImage: "square.and.arrow.down")
 //                }
@@ -95,6 +98,8 @@ struct SettingsView: View {
                     SystemStatsSettings()
                 case "Caffeine":
                     CaffeineSettings()
+                case "ClaudeUsage":
+                    ClaudeUsageSettings()
                 case "Shelf":
                     Shelf()
                 case "Shortcuts":
@@ -1097,8 +1102,6 @@ struct About: View {
                 } header: {
                     Text("Version info")
                 }
-
-                UpdaterSettingsView(updater: updaterController.updater)
 
                 HStack(spacing: 30) {
                     Spacer(minLength: 0)
@@ -2359,6 +2362,162 @@ struct SystemStatsSettings: View {
             .disabled(!showSystemStatsTab)
         }
         .formStyle(.grouped)
+    }
+}
+
+struct ClaudeUsageSettings: View {
+    @Default(.showClaudeUsageTab)         var showClaudeUsageTab
+    @Default(.claudeUsageInNotch)         var claudeUsageInNotch
+    @Default(.claudeClosedNotchShowRing)  var claudeClosedNotchShowRing
+    @Default(.claudePreferredBrowser)     var claudePreferredBrowser
+    @Default(.claudePollingInterval)      var claudePollingInterval
+    @ObservedObject var manager = ClaudeUsageManager.shared
+
+    @State private var hasFullDiskAccess = false
+    @State private var manualSessionKey = ""
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Enable Claude Usage", isOn: $showClaudeUsageTab)
+            } header: {
+                Text("Display")
+            } footer: {
+                Text("Adds a Claude Usage tab to the open notch. Log into Claude in your browser first, then authenticate below.")
+            }
+
+            Section {
+                Toggle("Show in closed notch", isOn: $claudeUsageInNotch)
+                Picker("Left indicator", selection: $claudeClosedNotchShowRing) {
+                    Text("Progress ring").tag(true)
+                    Text("Percentage").tag(false)
+                }
+                .pickerStyle(.segmented)
+                .disabled(!claudeUsageInNotch)
+            } header: {
+                Text("Closed Notch")
+            } footer: {
+                Text("Shows usage on the left and time until reset on the right. Volume, music, and live activities take priority.")
+            }
+            .disabled(!showClaudeUsageTab)
+
+            Section {
+                Picker("Browser", selection: $claudePreferredBrowser) {
+                    ForEach(ClaudeBrowserPreference.allCases) { browser in
+                        Text(browser.rawValue).tag(browser)
+                    }
+                }
+                Picker("Polling interval", selection: $claudePollingInterval) {
+                    Text("1 minute").tag(1)
+                    Text("5 minutes").tag(5)
+                    Text("15 minutes").tag(15)
+                    Text("30 minutes").tag(30)
+                }
+            } header: {
+                Text("Configuration")
+            }
+            .disabled(!showClaudeUsageTab)
+
+            Section {
+                authStatusRow
+
+                HStack(spacing: 12) {
+                    if manager.isAuthenticated {
+                        Button("Re-authenticate") {
+                            Task { await manager.reauthenticate() }
+                        }
+                    } else {
+                        Button("Authenticate from Browser") {
+                            Task { await manager.authenticate() }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.effectiveAccent)
+                    }
+                    if manager.isAuthenticating {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+
+                HStack {
+                    Image(systemName: hasFullDiskAccess ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                        .foregroundStyle(hasFullDiskAccess ? .green : .orange)
+                    Text(hasFullDiskAccess ? "Full Disk Access granted" : "Full Disk Access required for auto-detect")
+                        .foregroundStyle(hasFullDiskAccess ? .primary : .secondary)
+                    Spacer()
+                    if !hasFullDiskAccess {
+                        Button("Grant…") {
+                            NSWorkspace.shared.open(
+                                URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
+                            )
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+
+                if let fetched = manager.lastFetched {
+                    Text("Last updated \(fetched.formatted(.relative(presentation: .named)))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Authentication")
+            } footer: {
+                Text("Reads your browser session cookie directly — no password stored. Requires Full Disk Access to detect the cookie automatically.")
+            }
+            .disabled(!showClaudeUsageTab)
+
+            Section {
+                TextField("sk-ant-sid02-…", text: $manualSessionKey)
+                    .font(.system(.caption, design: .monospaced))
+                Button("Save Session Key") {
+                    Task {
+                        await manager.authenticateManually(sessionKey: manualSessionKey)
+                        manualSessionKey = ""
+                    }
+                }
+                .disabled(manualSessionKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || manager.isAuthenticating)
+            } header: {
+                Text("Manual Entry")
+            } footer: {
+                Text("If auto-detect fails, open claude.ai → DevTools (⌥⌘I) → Application → Cookies → copy the value of 'sessionKey' and paste it above.")
+            }
+            .disabled(!showClaudeUsageTab)
+        }
+        .formStyle(.grouped)
+        .accentColor(.effectiveAccent)
+        .navigationTitle("Claude Usage")
+        .task {
+            hasFullDiskAccess = checkFullDiskAccess()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            hasFullDiskAccess = checkFullDiskAccess()
+        }
+    }
+
+    private func checkFullDiskAccess() -> Bool {
+        let path = NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db"
+        return FileManager.default.isReadableFile(atPath: path)
+    }
+
+    @ViewBuilder
+    private var authStatusRow: some View {
+        HStack(spacing: 8) {
+            switch manager.authState {
+            case .unauthenticated:
+                Image(systemName: "person.slash").foregroundStyle(.secondary)
+                Text("Not authenticated").foregroundStyle(.secondary)
+            case .authenticated:
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Text("Authenticated")
+            case .expired:
+                Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.orange)
+                Text("Session expired — re-authenticate").foregroundStyle(.orange)
+            case .error(let msg):
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.red)
+                Text(msg).foregroundStyle(.red).lineLimit(2)
+            }
+        }
     }
 }
 

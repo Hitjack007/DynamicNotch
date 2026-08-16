@@ -29,6 +29,7 @@ public enum NotchViews {
     case shelf
     case thermal
     case systemStats
+    case claudeUsage
 }
 
 enum SettingsEnum {

@@ -113,7 +113,7 @@ struct SystemStatsView: View {
     }
 }
 
-private struct StatBar: View {
+struct StatBar: View {
     let fraction: Double
     let color: Color
 
