@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>DynamicNotch</title>
+    <link>https://hitjack007.github.io/DynamicNotch/appcast.xml</link>
+    <description>DynamicNotch releases</description>
+    <language>en</language>
+
+    <!-- Add a new <item> block here for each release. Example:
+
+    <item>
+      <title>Version 1.0.0</title>
+      <pubDate>Sat, 16 Aug 2025 00:00:00 +0000</pubDate>
+      <sparkle:version>1</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v1.0.0/DynamicNotch.dmg"
+        sparkle:edSignature="PASTE_SIGNATURE_FROM_sign_update_HERE"
+        length="PASTE_FILE_SIZE_IN_BYTES_HERE"
+        type="application/octet-stream"/>
+    </item>
+
+    To get the edSignature and length, run:
+      /path/to/Sparkle/bin/sign_update DynamicNotch.dmg
+
+    -->
+
+  </channel>
+</rss>

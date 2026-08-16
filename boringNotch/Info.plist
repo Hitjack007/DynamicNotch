@@ -20,9 +20,9 @@
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://TheBoredTeam.github.io/boring.notch/appcast.xml</string>
+	<string>https://hitjack007.github.io/DynamicNotch/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>B1Y47t8C/v8ImurYA+9arEsuCrpxwJSviekiflMElbI=</string>
+	<string>6xY6JsEkEG2HPn7hPwS457+wIYZ96Yc7NLR88xZsFPg=</string>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict/>
