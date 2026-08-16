@@ -1871,6 +1871,19 @@ struct Advanced: View {
             } header: {
                 Text("Window Behavior")
             }
+            Section {
+                HStack {
+                    Text("Version")
+                    Spacer()
+                    Text(Bundle.main.releaseVersionNumber ?? "—")
+                        .foregroundStyle(.secondary)
+                    Text("(\(Bundle.main.buildVersionNumber ?? "—"))")
+                        .foregroundStyle(.tertiary)
+                        .font(.caption)
+                }
+            } header: {
+                Text("About")
+            }
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Advanced")

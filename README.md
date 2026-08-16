@@ -34,7 +34,7 @@ Make your MacBook's notch actually useful. DynamicNotch turns the notch into a l
 2. Open the DMG and drag **DynamicNotch** to your Applications folder
 3. Before opening, run this once in Terminal to clear the macOS security warning:
    ```bash
-   xattr -dr com.apple.quarantine /Applications/boringNotch.app
+   xattr -dr com.apple.quarantine /Applications/DynamicNotch.app
    ```
 4. Open the app — your notch is now alive
 

@@ -31,6 +31,11 @@ if ! command -v gh &>/dev/null; then
     exit 1
 fi
 
+if ! command -v create-dmg &>/dev/null; then
+    echo "Error: create-dmg not found. Install with: brew install create-dmg"
+    exit 1
+fi
+
 SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -name "sign_update" -path "*/sparkle/*" 2>/dev/null | head -1)
 if [ -z "$SPARKLE_BIN" ]; then
     echo "Error: Sparkle sign_update not found. Open the project in Xcode once to resolve packages."
@@ -95,12 +100,19 @@ rm -f "$DMG_PATH"
 STAGING="/tmp/DynamicNotch-staging-$$"
 mkdir -p "$STAGING"
 cp -R "$APP_PATH" "$STAGING/"
-hdiutil create \
-    -volname "DynamicNotch" \
-    -srcfolder "$STAGING" \
-    -ov \
-    -format UDZO \
-    "$DMG_PATH" 2>&1 | grep -v "^hdiutil:" || true
+
+create-dmg \
+    --volname "DynamicNotch" \
+    --window-pos 200 120 \
+    --window-size 660 400 \
+    --icon-size 128 \
+    --icon "DynamicNotch.app" 180 185 \
+    --hide-extension "DynamicNotch.app" \
+    --app-drop-link 480 185 \
+    --no-internet-enable \
+    "$DMG_PATH" \
+    "$STAGING/" 2>&1 | grep -v "^$" || true
+
 rm -rf "$STAGING"
 echo "  Created: $DMG_PATH ($(du -sh "$DMG_PATH" | cut -f1))"
 
