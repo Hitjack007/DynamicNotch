@@ -17,6 +17,7 @@ struct ClaudeUsageLiveActivity: View {
     var body: some View {
         HStack(spacing: 0) {
             leftIndicator
+                .padding(.trailing, 4)
             Rectangle()
                 .fill(.black)
                 .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
