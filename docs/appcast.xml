@@ -25,5 +25,18 @@
 
     -->
 
+
+    <item>
+      <title>Version 1.0.0</title>
+      <pubDate>Sun, 16 Aug 2026 01:50:21 +0000</pubDate>
+      <sparkle:version>202608161347</sparkle:version>
+      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v1.0.0/DynamicNotch-1.0.0.dmg"
+        sparkle:edSignature="wbPvvdGbOilbIYP/KJLSL38EJI23zmvE7H3oEGor7gOGvETsPujgQqvToCdlb7QbkSMRqFSlXH2jtTDGZmxwAg=="
+        length="10108292"
+        type="application/octet-stream"/>
+    </item>
+
   </channel>
 </rss>
