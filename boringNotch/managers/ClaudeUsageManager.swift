@@ -24,6 +24,7 @@ final class ClaudeUsageManager: ObservableObject {
     @Published var windowResetsAt: Date?
     @Published var lastFetched: Date?
     @Published var isAuthenticating: Bool = false
+    @Published var availableLimitGroups: [String] = []  // debug: all group names from last response
 
     var isAuthenticated: Bool { authState == .authenticated }
 
@@ -194,14 +195,26 @@ final class ClaudeUsageManager: ObservableObject {
         // The `limits` array is the authoritative source — each entry has `percent` (0–100),
         // `resets_at`, `group` ("session"/"weekly"), and `is_active`.
         if let limits = json["limits"] as? [[String: Any]], !limits.isEmpty {
-            let active = limits.filter { ($0["is_active"] as? Bool) == true }
-            let pool = active.isEmpty ? limits : active
-            let best = pool.max { ($0["percent"] as? Int ?? 0) < ($1["percent"] as? Int ?? 0) }
+            availableLimitGroups = limits.compactMap { $0["group"] as? String }
+
+            // JSON percent may arrive as Int or Double — handle both
+            func pctValue(_ d: [String: Any]) -> Double {
+                if let v = d["percent"] as? Double { return v }
+                if let v = d["percent"] as? Int { return Double(v) }
+                return 0
+            }
+
+            // Always prefer the 5-hour session limit regardless of is_active —
+            // is_active just marks the currently binding constraint, not what to display.
+            // Fall back to highest-percent limit when no session-type entry exists.
+            let sessionKeywords = ["session", "five", "hour"]
+            let best = limits.first {
+                let g = ($0["group"] as? String ?? "").lowercased()
+                return sessionKeywords.contains { g.contains($0) }
+            } ?? limits.max { pctValue($0) < pctValue($1) }
 
             if let limit = best {
-                if let pct = limit["percent"] as? Int {
-                    usagePercent = min(Double(pct) / 100.0, 1.0)
-                }
+                usagePercent = min(pctValue(limit) / 100.0, 1.0)
                 limitKind = (limit["group"] as? String ?? "")
                     .replacingOccurrences(of: "_", with: " ")
                     .capitalized
