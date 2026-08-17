@@ -30,7 +30,7 @@ struct TabSelectionView: View {
         ]
         if showThermalTab     { result.append(TabModel(label: "Thermal", icon: "thermometer.medium",    view: .thermal)) }
         if showSystemStatsTab { result.append(TabModel(label: "Stats",   icon: "cpu",                  view: .systemStats)) }
-        if showClaudeUsageTab { result.append(TabModel(label: "Claude",  icon: "brain.head.profile",   view: .claudeUsage)) }
+        if showClaudeUsageTab { result.append(TabModel(label: "Claude",  icon: "apple.intelligence",   view: .claudeUsage)) }
         return result
     }
 

@@ -27,53 +27,59 @@ struct SettingsView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTab) {
-                NavigationLink(value: "General") {
-                    Label("General", systemImage: "gear")
+                Section("Notch") {
+                    NavigationLink(value: "General") {
+                        Label("General", systemImage: "gear")
+                    }
+                    NavigationLink(value: "Appearance") {
+                        Label("Appearance", systemImage: "paintbrush")
+                    }
                 }
-                NavigationLink(value: "Appearance") {
-                    Label("Appearance", systemImage: "eye")
+
+                Section("Features") {
+                    NavigationLink(value: "Media") {
+                        Label("Media", systemImage: "play.laptopcomputer")
+                    }
+                    NavigationLink(value: "Calendar") {
+                        Label("Calendar", systemImage: "calendar")
+                    }
+                    NavigationLink(value: "HUD") {
+                        Label("HUDs", systemImage: "dial.medium.fill")
+                    }
+                    NavigationLink(value: "Battery") {
+                        Label("Battery", systemImage: "battery.100.bolt")
+                    }
+                    NavigationLink(value: "Thermal") {
+                        Label("Thermal", systemImage: "thermometer.medium")
+                    }
+                    NavigationLink(value: "SystemStats") {
+                        Label("System Stats", systemImage: "cpu")
+                    }
+                    NavigationLink(value: "Caffeine") {
+                        Label("Caffeine", systemImage: "cup.and.saucer")
+                    }
+                    NavigationLink(value: "ClaudeUsage") {
+                        Label("Claude Usage", systemImage: "apple.intelligence")
+                    }
+                    NavigationLink(value: "Shelf") {
+                        Label("Shelf", systemImage: "books.vertical")
+                    }
                 }
-                NavigationLink(value: "Media") {
-                    Label("Media", systemImage: "play.laptopcomputer")
-                }
-                NavigationLink(value: "Calendar") {
-                    Label("Calendar", systemImage: "calendar")
-                }
-                NavigationLink(value: "HUD") {
-                    Label("HUDs", systemImage: "dial.medium.fill")
-                }
-                NavigationLink(value: "Battery") {
-                    Label("Battery", systemImage: "battery.100.bolt")
-                }
-                NavigationLink(value: "Thermal") {
-                    Label("Thermal", systemImage: "thermometer.medium")
-                }
-                NavigationLink(value: "SystemStats") {
-                    Label("System Stats", systemImage: "cpu")
-                }
-                NavigationLink(value: "Caffeine") {
-                    Label("Caffeine", systemImage: "cup.and.saucer")
-                }
-                NavigationLink(value: "ClaudeUsage") {
-                    Label("Claude Usage", systemImage: "brain.head.profile")
-                }
-//                NavigationLink(value: "Downloads") {
-//                    Label("Downloads", systemImage: "square.and.arrow.down")
-//                }
-                NavigationLink(value: "Shelf") {
-                    Label("Shelf", systemImage: "books.vertical")
-                }
-                NavigationLink(value: "Shortcuts") {
-                    Label("Shortcuts", systemImage: "keyboard")
-                }
-                // NavigationLink(value: "Extensions") {
-                //     Label("Extensions", systemImage: "puzzlepiece.extension")
-                // }
-                NavigationLink(value: "Advanced") {
-                    Label("Advanced", systemImage: "gearshape.2")
+
+                Section("App") {
+                    NavigationLink(value: "Shortcuts") {
+                        Label("Shortcuts", systemImage: "keyboard")
+                    }
+                    NavigationLink(value: "Advanced") {
+                        Label("Advanced", systemImage: "gearshape.2")
+                    }
+                    NavigationLink(value: "About") {
+                        Label("About", systemImage: "info.circle")
+                    }
                 }
             }
             .listStyle(SidebarListStyle())
+            .scrollBounceBehavior(.basedOnSize)
             .tint(.effectiveAccent)
             .toolbar(removing: .sidebarToggle)
             .navigationSplitViewColumnWidth(200)
@@ -104,10 +110,12 @@ struct SettingsView: View {
                     Shelf()
                 case "Shortcuts":
                     Shortcuts()
-                case "Extensions":
-                    GeneralSettings()
                 case "Advanced":
                     Advanced()
+                case "About":
+                    if let ctrl = updaterController {
+                        AboutSettings(updater: ctrl.updater)
+                    }
                 default:
                     GeneralSettings()
                 }
@@ -293,8 +301,6 @@ struct GeneralSettings: View {
             }
                 .disabled(!openNotchOnHover)
             if enableGestures {
-                Toggle("Change media with horizontal gestures", isOn: .constant(false))
-                    .disabled(true)
                 Defaults.Toggle(key: .closeGestureEnabled) {
                     Text("Close gesture")
                 }
@@ -653,6 +659,60 @@ struct Media: View {
             }
             
             Section {
+                Toggle(
+                    "Show music live activity",
+                    isOn: $coordinator.musicLiveActivityEnabled.animation()
+                )
+                Toggle("Show sneak peek on playback changes", isOn: $enableSneakPeek)
+                Picker("Sneak Peek Style", selection: $sneakPeekStyles) {
+                    ForEach(SneakPeekStyle.allCases) { style in
+                        Text(style.rawValue).tag(style)
+                    }
+                }
+                HStack {
+                    Stepper(value: $waitInterval, in: 0...10, step: 1) {
+                        HStack {
+                            Text("Media inactivity timeout")
+                            Spacer()
+                            Text("\(Defaults[.waitInterval], specifier: "%.0f") seconds")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                Picker(
+                    selection: $hideNotchOption,
+                    label:
+                        HStack {
+                            Text("Full screen behavior")
+                            customBadge(text: "Beta")
+                        }
+                ) {
+                    Text("Hide for all apps").tag(HideNotchOption.always)
+                    Text("Hide for media app only").tag(
+                        HideNotchOption.nowPlayingOnly)
+                    Text("Never hide").tag(HideNotchOption.never)
+                }
+            } header: {
+                Text("Live Activity")
+            }
+
+            Section {
+                MusicSlotConfigurationView()
+                Defaults.Toggle(key: .enableLyrics) {
+                    HStack {
+                        Text("Show lyrics below artist name")
+                        customBadge(text: "Beta")
+                    }
+                }
+            } header: {
+                Text("Media controls")
+            } footer: {
+                Text("Customize which controls appear in the music player. Volume expands when active.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section {
                 Defaults.Toggle(key: .useResponsiveSpectrogram) {
                     Text("Responsive spectrogram")
                 }
@@ -748,60 +808,6 @@ struct Media: View {
                 Text("Spectrogram exclusions — Apps")
             } footer: {
                 Text("The responsive spectrogram is disabled for these apps by bundle identifier (e.g. com.google.Chrome, com.apple.Safari).")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section {
-                Toggle(
-                    "Show music live activity",
-                    isOn: $coordinator.musicLiveActivityEnabled.animation()
-                )
-                Toggle("Show sneak peek on playback changes", isOn: $enableSneakPeek)
-                Picker("Sneak Peek Style", selection: $sneakPeekStyles) {
-                    ForEach(SneakPeekStyle.allCases) { style in
-                        Text(style.rawValue).tag(style)
-                    }
-                }
-                HStack {
-                    Stepper(value: $waitInterval, in: 0...10, step: 1) {
-                        HStack {
-                            Text("Media inactivity timeout")
-                            Spacer()
-                            Text("\(Defaults[.waitInterval], specifier: "%.0f") seconds")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                Picker(
-                    selection: $hideNotchOption,
-                    label:
-                        HStack {
-                            Text("Full screen behavior")
-                            customBadge(text: "Beta")
-                        }
-                ) {
-                    Text("Hide for all apps").tag(HideNotchOption.always)
-                    Text("Hide for media app only").tag(
-                        HideNotchOption.nowPlayingOnly)
-                    Text("Never hide").tag(HideNotchOption.never)
-                }
-            } header: {
-                Text("Media playback live activity")
-            }
-            
-            Section {
-                MusicSlotConfigurationView()
-                Defaults.Toggle(key: .enableLyrics) {
-                    HStack {
-                        Text("Show lyrics below artist name")
-                        customBadge(text: "Beta")
-                    }
-                }
-            } header: {
-                Text("Media controls")
-            }  footer: {
-                Text("Customize which controls appear in the music player. Volume expands when active.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1070,78 +1076,171 @@ func lighterColor(from nsColor: NSColor, amount: CGFloat = 0.14) -> Color {
     return Color(red: Double(nr), green: Double(ng), blue: Double(nb), opacity: Double(a))
 }
 
-struct About: View {
-    @State private var showBuildNumber: Bool = false
-    let updaterController: SPUStandardUpdaterController
-    @Environment(\.openWindow) var openWindow
-    var body: some View {
-        VStack {
-            Form {
-                Section {
-                    HStack {
-                        Text("Release name")
-                        Spacer()
-                        Text(Defaults[.releaseName])
-                            .foregroundStyle(.secondary)
-                    }
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        if showBuildNumber {
-                            Text("(\(Bundle.main.buildVersionNumber ?? ""))")
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(Bundle.main.releaseVersionNumber ?? "unkown")
-                            .foregroundStyle(.secondary)
-                    }
-                    .onTapGesture {
-                        withAnimation {
-                            showBuildNumber.toggle()
-                        }
-                    }
-                } header: {
-                    Text("Version info")
-                }
+struct AboutSettings: View {
+    private let updater: SPUUpdater
 
-                HStack(spacing: 30) {
-                    Spacer(minLength: 0)
-                    Button {
-                        if let url = URL(string: "https://github.com/TheBoredTeam/boring.notch") {
-                            NSWorkspace.shared.open(url)
+    @ObservedObject private var checkVM: CheckForUpdatesViewModel
+    @State private var automaticallyChecksForUpdates: Bool
+    @State private var automaticallyDownloadsUpdates: Bool
+    @State private var releaseNotes: String? = nil
+    @State private var isLoadingNotes = false
+    @State private var showBuildNumber = false
+
+    init(updater: SPUUpdater) {
+        self.updater = updater
+        self.checkVM = CheckForUpdatesViewModel(updater: updater)
+        self._automaticallyChecksForUpdates = State(initialValue: updater.automaticallyChecksForUpdates)
+        self._automaticallyDownloadsUpdates = State(initialValue: updater.automaticallyDownloadsUpdates)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                HStack(spacing: 16) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 64, height: 64)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("DynamicNotch")
+                            .font(.headline)
+
+                        Text("The Dynamic Island — but on your Mac")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: 4) {
+                            Text("Version \(Bundle.main.releaseVersionNumber ?? "—")")
+                                .foregroundStyle(.secondary)
+                            if showBuildNumber {
+                                Text("(\(Bundle.main.buildVersionNumber ?? "—"))")
+                                    .foregroundStyle(.tertiary)
+                                    .font(.caption)
+                            }
                         }
-                    } label: {
-                        VStack(spacing: 5) {
-                            Image("Github")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 18)
-                            Text("GitHub")
+                        .onTapGesture {
+                            withAnimation { showBuildNumber.toggle() }
                         }
-                        .contentShape(Rectangle())
+
                     }
-                    Spacer(minLength: 0)
+
+                    Spacer()
                 }
-                .buttonStyle(PlainButtonStyle())
+                .padding(.vertical, 4)
             }
-            VStack(spacing: 0) {
-                Divider()
-                Text("Made with 🫶🏻 by not so boring not.people")
+
+            Section {
+                Toggle("Automatically check for updates", isOn: $automaticallyChecksForUpdates)
+                    .onChange(of: automaticallyChecksForUpdates) { _, newValue in
+                        updater.automaticallyChecksForUpdates = newValue
+                    }
+
+                Toggle("Automatically download updates", isOn: $automaticallyDownloadsUpdates)
+                    .disabled(!automaticallyChecksForUpdates)
+                    .onChange(of: automaticallyDownloadsUpdates) { _, newValue in
+                        updater.automaticallyDownloadsUpdates = newValue
+                    }
+
+                HStack {
+                    Button("Check for Updates…") {
+                        updater.checkForUpdates()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.effectiveAccent)
+                    .disabled(!checkVM.canCheckForUpdates)
+                    Spacer()
+                }
+            } header: {
+                Text("Software Updates")
+            }
+
+            Section {
+                if isLoadingNotes {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .padding(.vertical, 8)
+                        Spacer()
+                    }
+                } else if let notes = releaseNotes, !notes.isEmpty {
+                    Group {
+                        if let attributed = try? AttributedString(
+                            markdown: notes,
+                            options: AttributedString.MarkdownParsingOptions(
+                                interpretedSyntax: .inlineOnlyPreservingWhitespace
+                            )
+                        ) {
+                            Text(attributed)
+                        } else {
+                            Text(notes)
+                        }
+                    }
+                    .font(.callout)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Release notes unavailable.")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                HStack {
+                    Text("What's New in \(Bundle.main.releaseVersionNumber ?? "—")")
+                    Spacer()
+                    Button("All Releases") {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch/releases")!)
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
-                    .padding(.top, 5)
-                    .padding(.bottom, 7)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 10)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .center)
-        }
-        .toolbar {
-            //            Button("Welcome window") {
-            //                openWindow(id: "onboarding")
-            //            }
-            //            .controlSize(.extraLarge)
-            CheckForUpdatesView(updater: updaterController.updater)
+
+            Section {
+                LabeledContent("Repository") {
+                    Button("View on GitHub") {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch")!)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+                LabeledContent("Feedback") {
+                    Button("Report an Issue") {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch/issues/new")!)
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+            } header: {
+                Text("Links")
+            }
         }
         .navigationTitle("About")
+        .accentColor(.effectiveAccent)
+        .task { await fetchReleaseNotes() }
+    }
+
+    @MainActor
+    private func fetchReleaseNotes() async {
+        guard let version = Bundle.main.releaseVersionNumber else { return }
+        isLoadingNotes = true
+        defer { isLoadingNotes = false }
+
+        let tag = "v\(version)"
+        guard let url = URL(string: "https://api.github.com/repos/Hitjack007/DynamicNotch/releases/tags/\(tag)") else { return }
+
+        var request = URLRequest(url: url)
+        request.setValue("application/vnd.github.v3+json", forHTTPHeaderField: "Accept")
+        request.timeoutInterval = 10
+
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let body = json["body"] as? String else { return }
+
+        releaseNotes = body
     }
 }
 
@@ -1407,17 +1506,7 @@ struct Appearance: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Default(.mirrorShape) var mirrorShape
     @Default(.sliderColor) var sliderColor
-    @Default(.useMusicVisualizer) var useMusicVisualizer
-    @Default(.customVisualizers) var customVisualizers
-    @Default(.selectedVisualizer) var selectedVisualizer
 
-    let icons: [String] = ["logo2"]
-    @State private var selectedIcon: String = "logo2"
-    @State private var selectedListVisualizer: CustomVisualizer? = nil
-    @State private var isPresented: Bool = false
-    @State private var name: String = ""
-    @State private var url: String = ""
-    @State private var speed: CGFloat = 1.0
     var body: some View {
         Form {
             Section {
@@ -1446,180 +1535,6 @@ struct Appearance: View {
                 }
             } header: {
                 Text("Media")
-            }
-
-            Section {
-                Toggle(
-                    "Use music visualizer spectrogram",
-                    isOn: $useMusicVisualizer.animation()
-                )
-                .disabled(true)
-                if !useMusicVisualizer {
-                    if customVisualizers.count > 0 {
-                        Picker(
-                            "Selected animation",
-                            selection: $selectedVisualizer
-                        ) {
-                            ForEach(
-                                customVisualizers,
-                                id: \.self
-                            ) { visualizer in
-                                Text(visualizer.name)
-                                    .tag(visualizer)
-                            }
-                        }
-                    } else {
-                        HStack {
-                            Text("Selected animation")
-                            Spacer()
-                            Text("No custom animation available")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            } header: {
-                HStack {
-                    Text("Custom music live activity animation")
-                    customBadge(text: "Coming soon")
-                }
-            }
-
-            Section {
-                List {
-                    ForEach(customVisualizers, id: \.self) { visualizer in
-                        HStack {
-                            LottieView(
-                                url: visualizer.url, speed: visualizer.speed,
-                                loopMode: .loop
-                            )
-                            .frame(width: 30, height: 30, alignment: .center)
-                            Text(visualizer.name)
-                            Spacer(minLength: 0)
-                            if selectedVisualizer == visualizer {
-                                Text("selected")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.trailing, 8)
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .padding(.vertical, 2)
-                        .background(
-                            selectedListVisualizer != nil
-                                ? selectedListVisualizer == visualizer
-                                    ? Color.effectiveAccent : Color.clear : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 5)
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if selectedListVisualizer == visualizer {
-                                selectedListVisualizer = nil
-                                return
-                            }
-                            selectedListVisualizer = visualizer
-                        }
-                    }
-                }
-                .safeAreaPadding(
-                    EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0)
-                )
-                .frame(minHeight: 120)
-                .actionBar {
-                    HStack(spacing: 5) {
-                        Button {
-                            name = ""
-                            url = ""
-                            speed = 1.0
-                            isPresented.toggle()
-                        } label: {
-                            Image(systemName: "plus")
-                                .foregroundStyle(.secondary)
-                                .contentShape(Rectangle())
-                        }
-                        Divider()
-                        Button {
-                            if selectedListVisualizer != nil {
-                                let visualizer = selectedListVisualizer!
-                                selectedListVisualizer = nil
-                                customVisualizers.remove(
-                                    at: customVisualizers.firstIndex(of: visualizer)!)
-                                if visualizer == selectedVisualizer && customVisualizers.count > 0 {
-                                    selectedVisualizer = customVisualizers[0]
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "minus")
-                                .foregroundStyle(.secondary)
-                                .contentShape(Rectangle())
-                        }
-                    }
-                }
-                .controlSize(.small)
-                .buttonStyle(PlainButtonStyle())
-                .overlay {
-                    if customVisualizers.isEmpty {
-                        Text("No custom visualizer")
-                            .foregroundStyle(Color(.secondaryLabelColor))
-                            .padding(.bottom, 22)
-                    }
-                }
-                .sheet(isPresented: $isPresented) {
-                    VStack(alignment: .leading) {
-                        Text("Add new visualizer")
-                            .font(.largeTitle.bold())
-                            .padding(.vertical)
-                        TextField("Name", text: $name)
-                        TextField("Lottie JSON URL", text: $url)
-                        HStack {
-                            Text("Speed")
-                            Spacer(minLength: 80)
-                            Text("\(speed, specifier: "%.1f")s")
-                                .multilineTextAlignment(.trailing)
-                                .foregroundStyle(.secondary)
-                            Slider(value: $speed, in: 0...2, step: 0.1)
-                        }
-                        .padding(.vertical)
-                        HStack {
-                            Button {
-                                isPresented.toggle()
-                            } label: {
-                                Text("Cancel")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
-
-                            Button {
-                                let visualizer: CustomVisualizer = .init(
-                                    UUID: UUID(),
-                                    name: name,
-                                    url: URL(string: url)!,
-                                    speed: speed
-                                )
-
-                                if !customVisualizers.contains(visualizer) {
-                                    customVisualizers.append(visualizer)
-                                }
-
-                                isPresented.toggle()
-                            } label: {
-                                Text("Add")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                            }
-                            .buttonStyle(BorderedProminentButtonStyle())
-                        }
-                    }
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .controlSize(.extraLarge)
-                    .padding()
-                }
-            } header: {
-                HStack(spacing: 0) {
-                    Text("Custom vizualizers (Lottie)")
-                    if !Defaults[.customVisualizers].isEmpty {
-                        Text(" – \(Defaults[.customVisualizers].count)")
-                            .foregroundStyle(.secondary)
-                    }
-                }
             }
 
             Section {
@@ -1664,9 +1579,7 @@ struct Advanced: View {
     
     @State private var customAccentColor: Color = .accentColor
     @State private var selectedPresetColor: PresetAccentColor? = nil
-    let icons: [String] = ["logo2"]
-    @State private var selectedIcon: String = "logo2"
-    
+
     // macOS accent colors
     enum PresetAccentColor: String, CaseIterable, Identifiable {
         case blue = "Blue"
@@ -1815,50 +1728,6 @@ struct Advanced: View {
             }
             
             Section {
-                HStack {
-                    ForEach(icons, id: \.self) { icon in
-                        Spacer()
-                        VStack {
-                            Image(icon)
-                                .resizable()
-                                .frame(width: 80, height: 80)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20, style: .circular)
-                                        .strokeBorder(
-                                            icon == selectedIcon ? Color.effectiveAccent : .clear,
-                                            lineWidth: 2.5
-                                        )
-                                )
-
-                            Text("Default")
-                                .fontWeight(.medium)
-                                .font(.caption)
-                                .foregroundStyle(icon == selectedIcon ? .white : .secondary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 3)
-                                .background(
-                                    Capsule()
-                                        .fill(icon == selectedIcon ? Color.effectiveAccent : .clear)
-                                )
-                        }
-                        .onTapGesture {
-                            withAnimation {
-                                selectedIcon = icon
-                            }
-                            NSApp.applicationIconImage = NSImage(named: icon)
-                        }
-                        Spacer()
-                    }
-                }
-                .disabled(true)
-            } header: {
-                HStack {
-                    Text("App icon")
-                    customBadge(text: "Coming soon")
-                }
-            }
-            
-            Section {
                 Defaults.Toggle(key: .extendHoverArea) {
                     Text("Extend hover area")
                 }
@@ -1873,19 +1742,6 @@ struct Advanced: View {
                 }
             } header: {
                 Text("Window Behavior")
-            }
-            Section {
-                HStack {
-                    Text("Version")
-                    Spacer()
-                    Text(Bundle.main.releaseVersionNumber ?? "—")
-                        .foregroundStyle(.secondary)
-                    Text("(\(Bundle.main.buildVersionNumber ?? "—"))")
-                        .foregroundStyle(.tertiary)
-                        .font(.caption)
-                }
-            } header: {
-                Text("About")
             }
         }
         .accentColor(.effectiveAccent)
@@ -1998,6 +1854,8 @@ struct Shortcuts: View {
             }
             Section {
                 KeyboardShortcuts.Recorder("Toggle Notch Open:", name: .toggleNotchOpen)
+            } header: {
+                Text("Notch")
             }
         }
         .accentColor(.effectiveAccent)
