@@ -328,4 +328,8 @@ extension Defaults.Keys {
     static let showCaffeineButton      = Key<Bool>("showCaffeineButton", default: false)
     static let caffeineDefaultDuration = Key<Int>("caffeineDefaultDuration", default: 0)
     static let caffeineKeepAppsActive  = Key<Bool>("caffeineKeepAppsActive", default: false)
+
+    // MARK: Idle Notch Widgets
+    static let idleNotchLeftWidget  = Key<IdleNotchWidget>("idleNotchLeftWidget",  default: .none)
+    static let idleNotchRightWidget = Key<IdleNotchWidget>("idleNotchRightWidget", default: .none)
 }

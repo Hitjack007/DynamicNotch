@@ -49,6 +49,9 @@ struct SettingsView: View {
                     NavigationLink(value: "Battery") {
                         Label("Battery", systemImage: "battery.100.bolt")
                     }
+                    NavigationLink(value: "Downloads") {
+                        Label("Downloads", systemImage: "arrow.down.circle")
+                    }
                     NavigationLink(value: "Thermal") {
                         Label("Thermal", systemImage: "thermometer.medium")
                     }
@@ -98,6 +101,8 @@ struct SettingsView: View {
                     HUD()
                 case "Battery":
                     Charge()
+                case "Downloads":
+                    Downloads()
                 case "Thermal":
                     ThermalSettings()
                 case "SystemStats":
@@ -395,85 +400,48 @@ struct Charge: View {
     }
 }
 
-//struct Downloads: View {
-//    @Default(.selectedDownloadIndicatorStyle) var selectedDownloadIndicatorStyle
-//    @Default(.selectedDownloadIconStyle) var selectedDownloadIconStyle
-//    var body: some View {
-//        Form {
-//            warningBadge("We don't support downloads yet", "It will be supported later on.")
-//            Section {
-//                Defaults.Toggle(key: .enableDownloadListener) {
-//                    Text("Show download progress")
-//                }
-//                    .disabled(true)
-//                Defaults.Toggle(key: .enableSafariDownloads) {
-//                    Text("Enable Safari Downloads")
-//                }
-//                    .disabled(!Defaults[.enableDownloadListener])
-//                Picker("Download indicator style", selection: $selectedDownloadIndicatorStyle) {
-//                    Text("Progress bar")
-//                        .tag(DownloadIndicatorStyle.progress)
-//                    Text("Percentage")
-//                        .tag(DownloadIndicatorStyle.percentage)
-//                }
-//                Picker("Download icon style", selection: $selectedDownloadIconStyle) {
-//                    Text("Only app icon")
-//                        .tag(DownloadIconStyle.onlyAppIcon)
-//                    Text("Only download icon")
-//                        .tag(DownloadIconStyle.onlyIcon)
-//                    Text("Both")
-//                        .tag(DownloadIconStyle.iconAndAppIcon)
-//                }
-//
-//            } header: {
-//                HStack {
-//                    Text("Download indicators")
-//                    comingSoonTag()
-//                }
-//            }
-//            Section {
-//                List {
-//                    ForEach([].indices, id: \.self) { index in
-//                        Text("\(index)")
-//                    }
-//                }
-//                .frame(minHeight: 96)
-//                .overlay {
-//                    if true {
-//                        Text("No excluded apps")
-//                            .foregroundStyle(Color(.secondaryLabelColor))
-//                    }
-//                }
-//                .actionBar(padding: 0) {
-//                    Group {
-//                        Button {
-//                        } label: {
-//                            Image(systemName: "plus")
-//                                .frame(width: 25, height: 16, alignment: .center)
-//                                .contentShape(Rectangle())
-//                                .foregroundStyle(.secondary)
-//                        }
-//
-//                        Divider()
-//                        Button {
-//                        } label: {
-//                            Image(systemName: "minus")
-//                                .frame(width: 20, height: 16, alignment: .center)
-//                                .contentShape(Rectangle())
-//                                .foregroundStyle(.secondary)
-//                        }
-//                    }
-//                }
-//            } header: {
-//                HStack(spacing: 4) {
-//                    Text("Exclude apps")
-//                    comingSoonTag()
-//                }
-//            }
-//        }
-//        .navigationTitle("Downloads")
-//    }
-//}
+struct Downloads: View {
+    @Default(.enableDownloadListener) var enableDownloadListener
+    @Default(.enableSafariDownloads) var enableSafariDownloads
+    @ObservedObject private var downloadManager = DownloadManager.shared
+
+    var body: some View {
+        Form {
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Show download progress")
+                            .font(.headline)
+                        Text("Monitors your Downloads folder and shows a live progress ring in the closed notch while files are downloading.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 40)
+                    Defaults.Toggle("", key: .enableDownloadListener)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .controlSize(.large)
+                        .onChange(of: enableDownloadListener) { _, enabled in
+                            if enabled { downloadManager.start() } else { downloadManager.stop() }
+                        }
+                }
+                Defaults.Toggle(key: .enableSafariDownloads) {
+                    Text("Monitor Safari downloads")
+                }
+                .disabled(!enableDownloadListener)
+            } header: {
+                Text("Download Monitor")
+            } footer: {
+                Text("Safari .download bundles show a real progress ring. Chrome .crdownload files show an indeterminate spinner until complete.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accentColor(.effectiveAccent)
+        .navigationTitle("Downloads")
+    }
+}
 
 struct HUD: View {
     @EnvironmentObject var vm: BoringViewModel
@@ -1555,6 +1523,16 @@ struct Appearance: View {
                 HStack {
                     Text("Additional features")
                 }
+            }
+
+            Section {
+                IdleWidgetConfigurationView()
+            } header: {
+                Text("Idle Notch Widgets")
+            } footer: {
+                Text("Shown in the closed notch when nothing is playing. Drag widgets onto the slots, or tap a chip to fill the next empty slot. Tap a filled slot to clear it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .accentColor(.effectiveAccent)

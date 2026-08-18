@@ -70,3 +70,28 @@ enum SliderColorEnum: String, CaseIterable, Defaults.Serializable {
     case albumArt = "Match album art"
     case accent = "Accent color"
 }
+
+enum IdleNotchWidget: String, CaseIterable, Identifiable, Codable, Defaults.Serializable {
+    case none        = "None"
+    case batteryMac  = "Mac Battery"
+    case bluetooth   = "Bluetooth"
+    case nextEvent   = "Next Event"
+    case temperature = "Temperature"
+    case claudeUsage = "Claude"
+    case time        = "Clock"
+
+    var id: String { rawValue }
+    var label: String { rawValue }
+
+    var iconName: String {
+        switch self {
+        case .none:        return "xmark"
+        case .batteryMac:  return "battery.100"
+        case .bluetooth:   return "headphones"
+        case .nextEvent:   return "calendar"
+        case .temperature: return "thermometer.medium"
+        case .claudeUsage: return "apple.intelligence"
+        case .time:        return "clock"
+        }
+    }
+}

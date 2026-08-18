@@ -131,6 +131,12 @@
 		4DA88EE03031680B0095857C /* ClaudeUsageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */; };
 		4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE1303168190095857C /* ClaudeUsageView.swift */; };
 		4DA88EE4303168210095857C /* ClaudeUsageLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */; };
+		4DA8935E30345A010095857C /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8935D30345A010095857C /* DownloadManager.swift */; };
+		4DA8936030345AAE0095857C /* BluetoothBatteryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */; };
+		4DA8936230345AB90095857C /* AudioOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936130345AB90095857C /* AudioOutputManager.swift */; };
+		4DA8936430345AC30095857C /* DownloadLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936330345AC30095857C /* DownloadLiveActivity.swift */; };
+		4DA8936730345ADF0095857C /* IdleNotchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936630345ADF0095857C /* IdleNotchView.swift */; };
+		4DA8936930345AF40095857C /* IdleWidgetConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -335,6 +341,12 @@
 		4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageManager.swift; sourceTree = "<group>"; };
 		4DA88EE1303168190095857C /* ClaudeUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageView.swift; sourceTree = "<group>"; };
 		4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageLiveActivity.swift; sourceTree = "<group>"; };
+		4DA8935D30345A010095857C /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
+		4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothBatteryManager.swift; sourceTree = "<group>"; };
+		4DA8936130345AB90095857C /* AudioOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputManager.swift; sourceTree = "<group>"; };
+		4DA8936330345AC30095857C /* DownloadLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadLiveActivity.swift; sourceTree = "<group>"; };
+		4DA8936630345ADF0095857C /* IdleNotchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleNotchView.swift; sourceTree = "<group>"; };
+		4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleWidgetConfigurationView.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -576,6 +588,7 @@
 				4D73E19D301EB0490084A6A1 /* Thermal */,
 				4DA88E313024633A0095857C /* SystemStats */,
 				4DA88ED8303167B90095857C /* ClaudeUsage */,
+				4DA8936530345ADF0095857C /* IdleNotch */,
 			);
 			path = components;
 			sourceTree = "<group>";
@@ -600,6 +613,9 @@
 				4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */,
 				4DA88E32302463510095857C /* SystemStatsManager.swift */,
 				4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */,
+				4DA8935D30345A010095857C /* DownloadManager.swift */,
+				4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */,
+				4DA8936130345AB90095857C /* AudioOutputManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -776,6 +792,14 @@
 			path = ClaudeUsage;
 			sourceTree = "<group>";
 		};
+		4DA8936530345ADF0095857C /* IdleNotch */ = {
+			isa = PBXGroup;
+			children = (
+				4DA8936630345ADF0095857C /* IdleNotchView.swift */,
+			);
+			path = IdleNotch;
+			sourceTree = "<group>";
+		};
 		9A0887332C7AFF7E00C160EA /* Tabs */ = {
 			isa = PBXGroup;
 			children = (
@@ -866,6 +890,7 @@
 				B1D6FD422C6603730015F173 /* SoftwareUpdater.swift */,
 				B1B112902C6A572100093D8F /* EditPanelView.swift */,
 				B1C448972C972CC4001F0858 /* ListItemPopover.swift */,
+				4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -880,6 +905,7 @@
 				B1D365CF2C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift */,
 				14E9FEA92C70BF610062E83F /* DownloadView.swift */,
 				B172AABF2C95DA0B001623F1 /* InlineHUD.swift */,
+				4DA8936330345AC30095857C /* DownloadLiveActivity.swift */,
 			);
 			path = "Live activities";
 			sourceTree = "<group>";
@@ -1141,6 +1167,7 @@
 				4D73E1A5301EB0920084A6A1 /* ThermalView.swift in Sources */,
 				4DA88E193021E6F70095857C /* EnvelopeFollower.swift in Sources */,
 				4DA88E173021E6EF0095857C /* MelFilterbank.swift in Sources */,
+				4DA8936430345AC30095857C /* DownloadLiveActivity.swift in Sources */,
 				5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */,
 				14C08BC12C8E03AD000F8AA0 /* NSImage+Extensions.swift in Sources */,
 				149E0B9A2C737D40006418B1 /* WebcamView.swift in Sources */,
@@ -1167,6 +1194,7 @@
 				14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */,
 				14D570BC2C5E98EB0011E668 /* generic.swift in Sources */,
 				4DA88E1F302304200095857C /* SpectralTilt.swift in Sources */,
+				4DA8936730345ADF0095857C /* IdleNotchView.swift in Sources */,
 				118EBE272E92DE8400D54B5A /* NSMenu+AssociatedObject.swift in Sources */,
 				B1CE8CFE2C6F659400DD9871 /* KeyboardShortcutsHelper.swift in Sources */,
 				14D570C62C5F38210011E668 /* BoringHeader.swift in Sources */,
@@ -1190,12 +1218,16 @@
 				1132E5142E777B920068732D /* YouTubeMusicNetworking.swift in Sources */,
 				1132E5122E777B6E0068732D /* YouTubeMusicModels.swift in Sources */,
 				11CFC65F2E097F2F00748C80 /* OnboardingView.swift in Sources */,
+				4DA8936930345AF40095857C /* IdleWidgetConfigurationView.swift in Sources */,
 				14CEF4162C5CAED300855D72 /* boringNotchApp.swift in Sources */,
+				4DA8936030345AAE0095857C /* BluetoothBatteryManager.swift in Sources */,
 				4D73E19F301EB06C0084A6A1 /* SMCConnection.swift in Sources */,
 				B17266DF2C64DFA00031BA0D /* BundleInfos.swift in Sources */,
 				118EBE3B2E9720C500D54B5A /* ShelfStateViewModel.swift in Sources */,
 				11F747CE2EC75CEA00F841DB /* DragPreviewView.swift in Sources */,
 				F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */,
+				4DA8935E30345A010095857C /* DownloadManager.swift in Sources */,
+				4DA8936230345AB90095857C /* AudioOutputManager.swift in Sources */,
 				B10348D92C74E56000475897 /* ConditionalModifier.swift in Sources */,
 				118D1FD12E98FF5F00A2FF63 /* SharingStateManager.swift in Sources */,
 				14D570C22C5EAFBF0011E668 /* EmptyState.swift in Sources */,

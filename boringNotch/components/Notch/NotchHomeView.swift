@@ -185,15 +185,20 @@ struct MusicControlsView: View {
                         let v = scalar.value
                         return v >= 0x0600 && v <= 0x06FF
                     }
-                    MarqueeText(
-                        .constant(line),
-                        font: .subheadline,
-                        nsFont: .subheadline,
-                        textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
-                        frameWidth: width
-                    )
-                    .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .subheadline).pointSize) : .subheadline)
-                    .lineLimit(1)
+                    HStack(spacing: 3) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 7, weight: .light))
+                            .foregroundStyle(.gray.opacity(0.5))
+                        MarqueeText(
+                            .constant(line),
+                            font: .subheadline,
+                            nsFont: .subheadline,
+                            textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
+                            frameWidth: width - 14
+                        )
+                        .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .subheadline).pointSize) : .subheadline)
+                        .lineLimit(1)
+                    }
                     .opacity(musicManager.isPlaying ? 1 : 0)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
@@ -229,14 +234,19 @@ struct MusicControlsView: View {
     private var slotToolbar: some View {
         let slots = activeSlots
         return HStack(spacing: 6) {
-            ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
-                slotView(for: slot)
-                    .frame(alignment: .center)
+            // Configurable playback slots
+            HStack(spacing: 6) {
+                ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
+                    slotView(for: slot)
+                        .frame(alignment: .center)
+                }
             }
+            .disabled(musicManager.isPlayerIdle)
+            .opacity(musicManager.isPlayerIdle ? 0.35 : 1)
+            // Locked output-switcher always last
+            AudioOutputSlotButton()
         }
         .frame(maxWidth: .infinity, alignment: .center)
-        .disabled(musicManager.isPlayerIdle)
-        .opacity(musicManager.isPlayerIdle ? 0.35 : 1)
     }
 
     private var activeSlots: [MusicControlButton] {
@@ -431,6 +441,66 @@ struct VolumeControlView: View {
         } else {
             return "speaker.3.fill"
         }
+    }
+}
+
+// MARK: - Audio Output Controls
+
+struct AudioOutputSlotButton: View {
+    @ObservedObject private var audioManager = AudioOutputManager.shared
+    @State private var showPicker = false
+
+    var body: some View {
+        Button {
+            audioManager.refresh()
+            showPicker.toggle()
+        } label: {
+            Image(systemName: "airplayaudio")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(showPicker ? Color.effectiveAccent : Color.primary)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .popover(isPresented: $showPicker, arrowEdge: .bottom) {
+            AudioOutputPickerView()
+        }
+    }
+}
+
+struct AudioOutputPickerView: View {
+    @ObservedObject private var audioManager = AudioOutputManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Output Device")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 14)
+                .padding(.top, 12)
+                .padding(.bottom, 6)
+            Divider()
+            ForEach(audioManager.outputDevices) { device in
+                Button {
+                    audioManager.setDefault(device.id)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: audioManager.currentDeviceID == device.id ? "checkmark" : "speaker.wave.2")
+                            .font(.system(size: 11))
+                            .frame(width: 14)
+                            .foregroundStyle(audioManager.currentDeviceID == device.id ? Color.effectiveAccent : .secondary)
+                        Text(device.name)
+                            .font(.callout)
+                            .foregroundStyle(audioManager.currentDeviceID == device.id ? Color.effectiveAccent : .primary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .frame(width: 250)
+        .padding(.bottom, 8)
     }
 }
 

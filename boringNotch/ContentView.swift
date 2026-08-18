@@ -45,6 +45,9 @@ struct ContentView: View {
     @Default(.showSystemStatsTab) var showSystemStatsTab
     @Default(.showClaudeUsageTab) var showClaudeUsageTab
     @Default(.claudeUsageInNotch) var claudeUsageInNotch
+    @Default(.idleNotchLeftWidget) var idleNotchLeftWidget
+    @Default(.idleNotchRightWidget) var idleNotchRightWidget
+    @ObservedObject var downloadManager = DownloadManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
     private let animationSpring = Animation.interactiveSpring(response: 0.38, dampingFraction: 0.8, blendDuration: 0)
@@ -80,6 +83,10 @@ struct ContentView: View {
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
+            && !musicManager.isPlaying && downloadManager.hasActiveDownloads && !vm.hideOnClosed
+        {
+            chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 8) + 20)
+        } else if !coordinator.expandingView.show && vm.notchState == .closed
             && !musicManager.isPlaying && Defaults[.showNotHumanFace]
             && !vm.hideOnClosed
         {
@@ -87,6 +94,12 @@ struct ContentView: View {
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && claudeUsageInNotch && showClaudeUsageTab
             && claudeManager.isAuthenticated && !vm.hideOnClosed
+        {
+            chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
+        } else if !coordinator.expandingView.show && vm.notchState == .closed
+            && !musicManager.isPlaying
+            && (idleNotchLeftWidget != .none || idleNotchRightWidget != .none)
+            && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         }
@@ -333,12 +346,22 @@ struct ContentView: View {
                       } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && musicManager.isPlaying && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed
+                          && !musicManager.isPlaying && downloadManager.hasActiveDownloads && !vm.hideOnClosed {
+                          DownloadLiveActivity()
+                              .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
                           && claudeUsageInNotch && showClaudeUsageTab
                           && claudeManager.isAuthenticated && !vm.hideOnClosed {
                           ClaudeUsageLiveActivity()
+                              .frame(alignment: .center)
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed
+                          && !musicManager.isPlaying
+                          && (idleNotchLeftWidget != .none || idleNotchRightWidget != .none)
+                          && !vm.hideOnClosed {
+                          IdleNotchView()
                               .frame(alignment: .center)
                        } else if vm.notchState == .open {
                            BoringHeader()
