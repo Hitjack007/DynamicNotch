@@ -116,5 +116,18 @@
         type="application/octet-stream"/>
     </item>
 
+
+    <item>
+      <title>Version 1.4</title>
+      <pubDate>Tue, 18 Aug 2026 09:43:45 +0000</pubDate>
+      <sparkle:version>202608182141</sparkle:version>
+      <sparkle:shortVersionString>1.4</sparkle:shortVersionString>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v1.4/DynamicNotch-1.4.dmg"
+        sparkle:edSignature="YEtamyPUnQONgWEZzMGXcNW1f31tvHiteOFOrwVJtd6ijhtZGIEtB3XKA8oJggg3xRoemPfbb5Wd4LZxHm+TCA=="
+        length="9437625"
+        type="application/octet-stream"/>
+    </item>
+
   </channel>
 </rss>
