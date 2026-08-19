@@ -115,6 +115,11 @@ final class DownloadManager: ObservableObject {
            let plist = try? PropertyListSerialization.propertyList(
                from: data, options: [], format: nil
            ) as? [String: Any] {
+            // DownloadEntryDateFinishedKey is set when Safari marks a download done (cancelled, errored, or complete).
+            // Completed downloads have their bundle removed by Safari, so any bundle still present with this
+            // key set is a cancelled/failed download — don't show it.
+            if plist["DownloadEntryDateFinishedKey"] != nil { return nil }
+
             let name = (plist["DownloadEntryPath"] as? String)
                 .flatMap { URL(fileURLWithPath: $0).lastPathComponent } ?? baseName
             let received = plist["DownloadEntryProgressBytesSoFar"] as? Int64 ?? 0

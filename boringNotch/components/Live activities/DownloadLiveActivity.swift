@@ -57,6 +57,17 @@ struct DownloadLiveActivity: View {
                 .foregroundStyle(.white)
         }
         .frame(width: indicatorSize, height: indicatorSize)
+        .overlay(alignment: .topTrailing) {
+            let count = downloadManager.activeDownloads.count
+            if count > 1 {
+                Text("\(count)")
+                    .font(.system(size: 6, weight: .bold, design: .rounded))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 2.5)
+                    .background(Color.white, in: Capsule())
+                    .offset(x: 3, y: -3)
+            }
+        }
     }
 
     private func fileLabel(for dl: ActiveDownload) -> some View {
