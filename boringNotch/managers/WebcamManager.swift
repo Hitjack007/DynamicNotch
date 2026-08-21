@@ -113,18 +113,20 @@ class WebcamManager: NSObject, ObservableObject {
         }
     }
     
-    /// Checks if any camera devices are available and sets up capture session if needed
+    /// Checks if any camera devices are available and sets up capture session if needed.
+    /// Always dispatches AVCapture work to sessionQueue so it's safe to call from any thread.
     func checkCameraAvailability() {
-        let availableDevices = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.external, .builtInWideAngleCamera],
-            mediaType: .video,
-            position: .unspecified
-        ).devices
-        
-        let hasAvailableDevices = !availableDevices.isEmpty
-        
-        DispatchQueue.main.async {
-            self.cameraAvailable = hasAvailableDevices
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            let availableDevices = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.external, .builtInWideAngleCamera],
+                mediaType: .video,
+                position: .unspecified
+            ).devices
+            let hasAvailableDevices = !availableDevices.isEmpty
+            DispatchQueue.main.async {
+                self.cameraAvailable = hasAvailableDevices
+            }
         }
     }
     
@@ -249,10 +251,7 @@ class WebcamManager: NSObject, ObservableObject {
 
     @objc private func deviceWasConnected(notification: Notification) {
         NSLog("Camera device was connected")
-        sessionQueue.async { [weak self] in
-            guard let self = self else { return }
-            self.checkCameraAvailability()
-        }
+        checkCameraAvailability()
     }
 
     private func updateSessionState() {
