@@ -451,7 +451,8 @@ struct HUD: View {
     @Default(.hudReplacement) var hudReplacement
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @State private var accessibilityAuthorized = false
-    
+    @State private var showHUDCustomizer = false
+
     var body: some View {
         Form {
             Section {
@@ -471,7 +472,25 @@ struct HUD: View {
                     .controlSize(.large)
                     .disabled(!accessibilityAuthorized)
                 }
-                
+
+                if hudReplacement {
+                    Button {
+                        showHUDCustomizer = true
+                    } label: {
+                        HStack {
+                            Text("Customize HUD types")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.footnote)
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .sheet(isPresented: $showHUDCustomizer) {
+                        HUDCustomizerSheet()
+                    }
+                }
+
                 if !accessibilityAuthorized {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Accessibility access is required to replace the system HUD.")
@@ -1870,6 +1889,45 @@ func customBadge(text: String) -> some View {
         .padding(.horizontal, 6)
         .background(Color(nsColor: .secondarySystemFill))
         .clipShape(.capsule)
+}
+
+struct HUDCustomizerSheet: View {
+    @Default(.hudVolume) var hudVolume
+    @Default(.hudBrightness) var hudBrightness
+    @Default(.hudBacklight) var hudBacklight
+    // TODO: Add "Microphone Mute" toggle here (using Defaults[.hudMic]) once mic mute
+    // detection is wired up — see sneakPeekEvent in BoringViewCoordinator.swift.
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("HUD Types")
+                    .font(.headline)
+                Spacer()
+                Button("Done") { dismiss() }
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding()
+
+            Divider()
+
+            Form {
+                Toggle("Volume", isOn: $hudVolume)
+                Toggle("Display Brightness", isOn: $hudBrightness)
+                Toggle("Keyboard Brightness", isOn: $hudBacklight)
+
+                Button("Reset to Defaults") {
+                    hudVolume = true
+                    hudBrightness = true
+                    hudBacklight = true
+                }
+                .foregroundStyle(.red)
+            }
+            .formStyle(.grouped)
+        }
+        .frame(width: 340, height: 280)
+    }
 }
 
 func warningBadge(_ text: String, _ description: String) -> some View {

@@ -180,6 +180,11 @@ class BoringViewCoordinator: ObservableObject {
         }
     }
     
+    // TODO: sneakPeekEvent is never registered as an observer — mic mute detection
+    // is unimplemented. To wire it up: add a CoreAudio/AVCaptureDevice observer that
+    // posts a notification with SharedSneakPeek(show:, type: "mic", value:, icon:),
+    // register this method via NotificationCenter.default.addObserver in init(),
+    // then re-add the "Microphone Mute" toggle in HUDCustomizerSheet (see SettingsView.swift).
     @objc func sneakPeekEvent(_ notification: Notification) {
         let decoder = JSONDecoder()
         if let decodedData = try? decoder.decode(
@@ -220,6 +225,9 @@ class BoringViewCoordinator: ObservableObject {
             if !Defaults[.hudReplacement] {
                 return
             }
+            if !isHUDTypeEnabled(type) {
+                return
+            }
         }
         Task { @MainActor in
             withAnimation(.smooth) {
@@ -232,6 +240,16 @@ class BoringViewCoordinator: ObservableObject {
 
         if type == .mic {
             currentMicStatus = value == 1
+        }
+    }
+
+    private func isHUDTypeEnabled(_ type: SneakContentType) -> Bool {
+        switch type {
+        case .volume: return Defaults[.hudVolume]
+        case .brightness: return Defaults[.hudBrightness]
+        case .backlight: return Defaults[.hudBacklight]
+        case .mic: return Defaults[.hudMic]
+        default: return true
         }
     }
 

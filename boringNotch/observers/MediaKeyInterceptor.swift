@@ -189,16 +189,24 @@ final class MediaKeyInterceptor {
             return Unmanaged.passUnretained(cgEvent)
         }
 
-        // Swallow keyUp for known keys so BezelServices never receives either half of the pair.
-        // Only act on keyDown to avoid double-firing.
-        guard keyDown else {
-            return nil
-        }
-
         let flags = nsEvent.modifierFlags
         let option = flags.contains(.option)
         let shift = flags.contains(.shift)
         let command = flags.contains(.command)
+
+        // Swallow keyUp for known keys so BezelServices never receives either half of the pair.
+        // Pass through if this type's custom HUD is disabled so the system handles it.
+        guard keyDown else {
+            if !isCustomHUDEnabled(for: keyType, command: command) {
+                return Unmanaged.passUnretained(cgEvent)
+            }
+            return nil
+        }
+
+        if !isCustomHUDEnabled(for: keyType, command: command) {
+            logger.fault("[MediaKeys] custom HUD disabled for \(String(describing: keyType), privacy: .public) — passing through")
+            return Unmanaged.passUnretained(cgEvent)
+        }
 
         logger.fault("[MediaKeys] sysDefined keyCode=\(keyCode) keyDown=true → handling \(String(describing: keyType), privacy: .public)")
 
@@ -212,12 +220,26 @@ final class MediaKeyInterceptor {
         return nil
     }
 
+    private func isCustomHUDEnabled(for keyType: NXKeyType, command: Bool) -> Bool {
+        guard Defaults[.hudReplacement] else { return false }
+        switch keyType {
+        case .soundUp, .soundDown: return Defaults[.hudVolume]
+        case .mute: return Defaults[.hudMic]
+        case .brightnessUp, .brightnessDown: return command ? Defaults[.hudBacklight] : Defaults[.hudBrightness]
+        case .keyboardBrightnessUp, .keyboardBrightnessDown: return Defaults[.hudBacklight]
+        }
+    }
+
     private func handleBrightnessKeyEvent(_ cgEvent: CGEvent) -> Unmanaged<CGEvent>? {
         let rawCode = cgEvent.getIntegerValueField(.keyboardEventKeycode)
         let isBrightnessUp   = rawCode == 0x71 || rawCode == 0x90
         let isBrightnessDown = rawCode == 0x6B || rawCode == 0x91
 
         guard isBrightnessUp || isBrightnessDown else {
+            return Unmanaged.passUnretained(cgEvent)
+        }
+
+        guard Defaults[.hudReplacement] && Defaults[.hudBrightness] else {
             return Unmanaged.passUnretained(cgEvent)
         }
 
@@ -397,6 +419,9 @@ final class MediaKeyInterceptor {
     // Safe to call from any thread — uses only thread-safe CGWindowList and CGS APIs.
     @discardableResult
     private func checkForOSDWindow() -> Bool {
+        guard Defaults[.hudReplacement] && (Defaults[.hudBrightness] || Defaults[.hudBacklight]) else {
+            return false
+        }
         let windowList = CGWindowListCopyWindowInfo(
             [.optionOnScreenOnly, .excludeDesktopElements],
             kCGNullWindowID

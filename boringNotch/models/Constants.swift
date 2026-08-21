@@ -253,6 +253,13 @@ extension Defaults.Keys {
     
     // MARK: HUD
     static let hudReplacement = Key<Bool>("hudReplacement", default: false)
+    static let hudVolume = Key<Bool>("hudVolume", default: true)
+    static let hudBrightness = Key<Bool>("hudBrightness", default: true)
+    static let hudBacklight = Key<Bool>("hudBacklight", default: true)
+    // hudMic is dormant — mic detection is not yet wired up. Keep the key so the
+    // preference persists once the feature is implemented (see sneakPeekEvent in
+    // BoringViewCoordinator.swift for where to add the observer).
+    static let hudMic = Key<Bool>("hudMic", default: true)
     static let inlineHUD = Key<Bool>("inlineHUD", default: false)
     static let enableGradient = Key<Bool>("enableGradient", default: false)
     static let systemEventIndicatorShadow = Key<Bool>("systemEventIndicatorShadow", default: false)
