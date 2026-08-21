@@ -37,6 +37,9 @@ struct SettingsView: View {
                 }
 
                 Section("Features") {
+                    NavigationLink(value: "Displays") {
+                        Label("Displays", systemImage: "display.2")
+                    }
                     NavigationLink(value: "Media") {
                         Label("Media", systemImage: "play.laptopcomputer")
                     }
@@ -91,6 +94,8 @@ struct SettingsView: View {
                 switch selectedTab {
                 case "General":
                     GeneralSettings()
+                case "Displays":
+                    DisplaysSettings()
                 case "Appearance":
                     Appearance()
                 case "Media":
@@ -148,10 +153,6 @@ struct SettingsView: View {
 }
 
 struct GeneralSettings: View {
-    @State private var screens: [(uuid: String, name: String)] = NSScreen.screens.compactMap { screen in
-        guard let uuid = screen.displayUUID else { return nil }
-        return (uuid, screen.localizedName)
-    }
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject var coordinator = BoringViewCoordinator.shared
 
@@ -163,8 +164,6 @@ struct GeneralSettings: View {
     @Default(.nonNotchHeightMode) var nonNotchHeightMode
     @Default(.notchHeight) var notchHeight
     @Default(.notchHeightMode) var notchHeightMode
-    @Default(.showOnAllDisplays) var showOnAllDisplays
-    @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
     @Default(.enableGestures) var enableGestures
     @Default(.openNotchOnHover) var openNotchOnHover
     
@@ -180,34 +179,6 @@ struct GeneralSettings: View {
                 }
                 .tint(.effectiveAccent)
                 LaunchAtLogin.Toggle("Launch at login")
-                Defaults.Toggle(key: .showOnAllDisplays) {
-                    Text("Show on all displays")
-                }
-                .onChange(of: showOnAllDisplays) {
-                    NotificationCenter.default.post(
-                        name: Notification.Name.showOnAllDisplaysChanged, object: nil)
-                }
-                Picker("Preferred display", selection: $coordinator.preferredScreenUUID) {
-                    ForEach(screens, id: \.uuid) { screen in
-                        Text(screen.name).tag(screen.uuid as String?)
-                    }
-                }
-                .onChange(of: NSScreen.screens) {
-                    screens = NSScreen.screens.compactMap { screen in
-                        guard let uuid = screen.displayUUID else { return nil }
-                        return (uuid, screen.localizedName)
-                    }
-                }
-                .disabled(showOnAllDisplays)
-                
-                Defaults.Toggle(key: .automaticallySwitchDisplay) {
-                    Text("Automatically switch displays")
-                }
-                    .onChange(of: automaticallySwitchDisplay) {
-                        NotificationCenter.default.post(
-                            name: Notification.Name.automaticallySwitchDisplayChanged, object: nil)
-                    }
-                    .disabled(showOnAllDisplays)
             } header: {
                 Text("System features")
             }
@@ -571,6 +542,7 @@ struct HUD: View {
                 Text("Closed Notch")
             }
             .disabled(!Defaults[.hudReplacement])
+
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("HUDs")
@@ -1237,6 +1209,8 @@ struct Shelf: View {
     @Default(.quickShareProvider) var quickShareProvider
     @Default(.expandedDragDetection) var expandedDragDetection: Bool
     @Default(.shelfItemExpiry) var shelfItemExpiry: ShelfItemExpiry
+    @Default(.clipboardHistoryEnabled) var clipboardHistoryEnabled: Bool
+    @Default(.clipboardHistoryLimit) var clipboardHistoryLimit: Int
     @StateObject private var quickShareService = QuickShareService.shared
 
     private var selectedProvider: QuickShareProvider? {
@@ -1334,13 +1308,41 @@ struct Shelf: View {
                     .padding(.vertical, 4)
                 }
                 // Providers are always enabled; user can pick default service above.
-                
+
             } header: {
                 HStack {
                     Text("Quick Share")
                 }
             } footer: {
                 Text("Choose which service to use when sharing files from the shelf. Click the shelf button to select files, or drag files onto it to share immediately.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Section {
+                Defaults.Toggle(key: .clipboardHistoryEnabled) {
+                    Text("Capture clipboard history")
+                }
+                if clipboardHistoryEnabled {
+                    Picker("Maximum items", selection: $clipboardHistoryLimit) {
+                        Text("10").tag(10)
+                        Text("20").tag(20)
+                        Text("50").tag(50)
+                        Text("100").tag(100)
+                        Text("Unlimited").tag(0)
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: clipboardHistoryLimit) {
+                        ShelfStateViewModel.shared.trimClipboardHistory()
+                    }
+                    Button("Clear clipboard history", role: .destructive) {
+                        ShelfStateViewModel.shared.clearClipboardHistory()
+                    }
+                }
+            } header: {
+                Text("Clipboard History")
+            } footer: {
+                Text("Automatically captures text, links, and images you copy. Items appear in the shelf with a clipboard badge.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -1535,21 +1537,12 @@ struct Appearance: View {
                     Text("Square")
                         .tag(MirrorShapeEnum.rectangle)
                 }
-                Defaults.Toggle(key: .showNotHumanFace) {
-                    Text("Show cool face animation while inactive")
-                }
             } header: {
                 HStack {
                     Text("Additional features")
                 }
-            }
-
-            Section {
-                IdleWidgetConfigurationView()
-            } header: {
-                Text("Idle Notch Widgets")
             } footer: {
-                Text("Shown in the closed notch when nothing is playing. Drag widgets onto the slots, or tap a chip to fill the next empty slot. Tap a filled slot to clear it.")
+                Text("Live activities and idle widgets are now configured per-display in the Displays section.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1564,6 +1557,141 @@ struct Appearance: View {
         }
 
         return false
+    }
+}
+
+// MARK: - Displays Settings
+
+struct DisplaysSettings: View {
+    @State private var screens: [(uuid: String, name: String)] = []
+    @State private var selectedUUID: String = ""
+    @ObservedObject private var coordinator = BoringViewCoordinator.shared
+    @Default(.showOnAllDisplays) var showOnAllDisplays
+    @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .showOnAllDisplays) {
+                    Text("Show on all displays")
+                }
+                .onChange(of: showOnAllDisplays) {
+                    NotificationCenter.default.post(
+                        name: Notification.Name.showOnAllDisplaysChanged, object: nil)
+                }
+                Picker("Preferred display", selection: $coordinator.preferredScreenUUID) {
+                    ForEach(screens, id: \.uuid) { screen in
+                        Text(screen.name).tag(screen.uuid as String?)
+                    }
+                }
+                .disabled(showOnAllDisplays)
+                Defaults.Toggle(key: .automaticallySwitchDisplay) {
+                    Text("Automatically switch displays")
+                }
+                .onChange(of: automaticallySwitchDisplay) {
+                    NotificationCenter.default.post(
+                        name: Notification.Name.automaticallySwitchDisplayChanged, object: nil)
+                }
+                .disabled(showOnAllDisplays)
+                Picker("Show HUD on", selection: Binding(
+                    get: { Defaults[.hudDisplayPolicy] },
+                    set: { Defaults[.hudDisplayPolicy] = $0 }
+                )) {
+                    ForEach(HUDDisplayPolicy.allCases) { policy in
+                        Text(policy.rawValue).tag(policy)
+                    }
+                }
+                .pickerStyle(.menu)
+            } header: {
+                Text("Multi-Display")
+            }
+
+            if screens.count > 1 {
+                Section {
+                    Picker("Configure for", selection: $selectedUUID) {
+                        ForEach(screens, id: \.uuid) { screen in
+                            Text(screen.name).tag(screen.uuid)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Per-Display Settings")
+                }
+            }
+
+            if !selectedUUID.isEmpty {
+                PerDisplaySettings(screenUUID: selectedUUID)
+            }
+        }
+        .accentColor(.effectiveAccent)
+        .navigationTitle("Displays")
+        .onAppear { refreshScreens() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)) { _ in
+            Task { @MainActor in
+                // Small delay so Sidecar/AirPlay has time to resolve its display name
+                try? await Task.sleep(for: .milliseconds(500))
+                refreshScreens()
+            }
+        }
+    }
+
+    private func refreshScreens() {
+        screens = NSScreen.screens.compactMap { screen in
+            guard let uuid = screen.displayUUID else { return nil }
+            return (uuid, screen.localizedName)
+        }
+        if selectedUUID.isEmpty || !screens.map(\.uuid).contains(selectedUUID) {
+            selectedUUID = screens.first?.uuid ?? ""
+        }
+    }
+}
+
+struct PerDisplaySettings: View {
+    let screenUUID: String
+    @Default(.perScreenConfigs) private var perScreenConfigs
+
+    private var config: PerScreenConfig {
+        Defaults[.perScreenConfigs][screenUUID] ?? PerScreenConfig()
+    }
+
+    private func binding<T>(_ keyPath: WritableKeyPath<PerScreenConfig, T>) -> Binding<T> {
+        Binding(
+            get: { Defaults[.perScreenConfigs][screenUUID]?[keyPath: keyPath]
+                    ?? PerScreenConfig()[keyPath: keyPath] },
+            set: { newValue in
+                var c = Defaults[.perScreenConfigs][screenUUID] ?? PerScreenConfig()
+                c[keyPath: keyPath] = newValue
+                Defaults[.perScreenConfigs][screenUUID] = c
+            }
+        )
+    }
+
+    var body: some View {
+        Section {
+            Toggle("Music live activity", isOn: binding(\.musicLiveActivityEnabled))
+            Toggle("Download live activity", isOn: binding(\.downloadLiveActivityEnabled))
+            Toggle("Face animation while idle", isOn: binding(\.showFaceAnimation))
+            Toggle("Claude usage indicator", isOn: binding(\.claudeUsageInNotch))
+        } header: {
+            Text("Live Activities")
+        } footer: {
+            Text("Controls what appears in the closed notch on this display.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+
+        Section {
+            IdleWidgetConfigurationView(
+                leftWidget: binding(\.idleLeftWidget),
+                rightWidget: binding(\.idleRightWidget)
+            )
+        } header: {
+            Text("Idle Widgets")
+        } footer: {
+            Text("Shown when nothing is playing and no live activity is active.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
     }
 }
 

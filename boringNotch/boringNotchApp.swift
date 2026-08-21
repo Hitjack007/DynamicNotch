@@ -438,6 +438,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         previousScreens = NSScreen.screens
+
+        _ = ClipboardManager.shared
     }
 
     private func checkForAppTranslocation() {
@@ -486,7 +488,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if screensChanged {
             DispatchQueue.main.async { [weak self] in
-                self?.cleanupWindows()
                 self?.adjustWindowPosition()
                 self?.setupDragDetectors()
             }

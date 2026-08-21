@@ -15,11 +15,12 @@ extension NSScreen {
             return nil
         }
         let displayID = CGDirectDisplayID(number.uint32Value)
-        guard let uuid = CGDisplayCreateUUIDFromDisplayID(displayID) else {
-            return nil
+        if let uuid = CGDisplayCreateUUIDFromDisplayID(displayID) {
+            return CFUUIDCreateString(nil, uuid.takeRetainedValue()) as String
         }
-        let uuidString = CFUUIDCreateString(nil, uuid.takeRetainedValue()) as String
-        return uuidString
+        // Virtual displays (Sidecar, AirPlay) may not have a persistent CGDisplayUUID.
+        // Fall back to the numeric display ID so they still receive a notch window.
+        return "virtual-\(displayID)"
     }
     
     /// Find a screen by its UUID

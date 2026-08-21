@@ -32,17 +32,10 @@ final class ShelfStateViewModel: ObservableObject {
 
     func add(_ newItems: [ShelfItem]) {
         guard !newItems.isEmpty else { return }
-        var merged = items
-        // Deduplicate by identityKey while preserving order (existing first)
-        var seen: Set<String> = Set(merged.map { $0.identityKey })
-        for it in newItems {
-            let key = it.identityKey
-            if !seen.contains(key) {
-                merged.append(it)
-                seen.insert(key)
-            }
-        }
-        items = merged
+        let existingKeys = Set(items.map { $0.identityKey })
+        let toInsert = newItems.filter { !existingKeys.contains($0.identityKey) }
+        guard !toInsert.isEmpty else { return }
+        items.insert(contentsOf: toInsert, at: 0)
     }
 
     func remove(_ item: ShelfItem) {
@@ -88,6 +81,34 @@ final class ShelfStateViewModel: ObservableObject {
                 self?.add(dropped)
                 self?.isLoading = false
             }
+        }
+    }
+
+    // MARK: - Clipboard history
+
+    func addClipboardItem(_ item: ShelfItem) {
+        let key = item.identityKey
+        guard !items.contains(where: { $0.identityKey == key }) else { return }
+        items.insert(item, at: 0)
+        trimClipboardHistory()
+    }
+
+    func clearClipboardHistory() {
+        for item in items.filter({ $0.source == .clipboard }) {
+            remove(item)
+        }
+    }
+
+    func trimClipboardHistory() {
+        let limit = Defaults[.clipboardHistoryLimit]
+        guard limit > 0 else { return }
+        let clipboardItems = items.filter { $0.source == .clipboard }
+        guard clipboardItems.count > limit else { return }
+        // Remove oldest clipboard items first (earlier dateAdded)
+        let sorted = clipboardItems.sorted { $0.dateAdded < $1.dateAdded }
+        let excess = clipboardItems.count - limit
+        for item in sorted.prefix(excess) {
+            remove(item)
         }
     }
 
