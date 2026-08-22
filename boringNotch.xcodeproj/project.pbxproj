@@ -105,6 +105,7 @@
 		14E9FEAA2C70BF610062E83F /* DownloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E9FEA92C70BF610062E83F /* DownloadView.swift */; };
 		14E9FEAE2C7325770062E83F /* Button+Bouncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E9FEAD2C7325770062E83F /* Button+Bouncing.swift */; };
 		14FC6E502C7DED5600C7BEA5 /* DataTypes+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FC6E4F2C7DED5600C7BEA5 /* DataTypes+Extensions.swift */; };
+		4D319FA93039073300D4AE2F /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D319FA83039073300D4AE2F /* ClipboardManager.swift */; };
 		4D73E19F301EB06C0084A6A1 /* SMCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E19E301EB06C0084A6A1 /* SMCConnection.swift */; };
 		4D73E1A1301EB0750084A6A1 /* SMCKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A0301EB0750084A6A1 /* SMCKeys.swift */; };
 		4D73E1A3301EB0870084A6A1 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */; };
@@ -314,6 +315,7 @@
 		14E9FEA92C70BF610062E83F /* DownloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadView.swift; sourceTree = "<group>"; };
 		14E9FEAD2C7325770062E83F /* Button+Bouncing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Button+Bouncing.swift"; sourceTree = "<group>"; };
 		14FC6E4F2C7DED5600C7BEA5 /* DataTypes+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DataTypes+Extensions.swift"; sourceTree = "<group>"; };
+		4D319FA83039073300D4AE2F /* ClipboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardManager.swift; sourceTree = "<group>"; };
 		4D73E19E301EB06C0084A6A1 /* SMCConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCConnection.swift; sourceTree = "<group>"; };
 		4D73E1A0301EB0750084A6A1 /* SMCKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCKeys.swift; sourceTree = "<group>"; };
 		4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalManager.swift; sourceTree = "<group>"; };
@@ -616,6 +618,7 @@
 				4DA8935D30345A010095857C /* DownloadManager.swift */,
 				4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */,
 				4DA8936130345AB90095857C /* AudioOutputManager.swift */,
+				4D319FA83039073300D4AE2F /* ClipboardManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -1155,6 +1158,7 @@
 				14288DE82C6E01C800B9F80C /* ProgressIndicator.swift in Sources */,
 				1113ABC52E80E27000EC13B2 /* ShelfItemView.swift in Sources */,
 				4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */,
+				4D319FA93039073300D4AE2F /* ClipboardManager.swift in Sources */,
 				1113ABC62E80E27000EC13B2 /* ShelfPersistenceService.swift in Sources */,
 				1113ABC82E80E27000EC13B2 /* ShelfItem.swift in Sources */,
 				4DA88EDE303167E90095857C /* ChromeCookieReader.swift in Sources */,

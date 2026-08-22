@@ -8,6 +8,11 @@
 import AppKit
 import Foundation
 
+enum ShelfItemSource: String, Codable, Sendable {
+    case dropped
+    case clipboard
+}
+
 enum ShelfItemKind: Codable, Equatable, Sendable {
     case file(bookmark: Data)
     case text(string: String)
@@ -54,24 +59,25 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
     var kind: ShelfItemKind
     var isTemporary: Bool
     var dateAdded: Date
+    var source: ShelfItemSource
 
-    init(id: UUID = UUID(), kind: ShelfItemKind, isTemporary: Bool = false) {
+    init(id: UUID = UUID(), kind: ShelfItemKind, isTemporary: Bool = false, source: ShelfItemSource = .dropped) {
         self.id = id
         self.kind = kind
         self.isTemporary = isTemporary
+        self.source = source
         self.dateAdded = Date()
     }
 
-    enum CodingKeys: CodingKey { case id, kind, isTemporary, dateAdded }
+    enum CodingKeys: CodingKey { case id, kind, isTemporary, dateAdded, source }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id          = try c.decode(UUID.self,         forKey: .id)
         kind        = try c.decode(ShelfItemKind.self, forKey: .kind)
         isTemporary = try c.decode(Bool.self,          forKey: .isTemporary)
-        // Older persisted items won't have dateAdded; treat them as added right now
-        // so they won't expire until a full interval has elapsed from today.
         dateAdded   = (try? c.decodeIfPresent(Date.self, forKey: .dateAdded)) ?? Date()
+        source      = (try? c.decodeIfPresent(ShelfItemSource.self, forKey: .source)) ?? .dropped
     }
 
     func encode(to encoder: Encoder) throws {
@@ -80,6 +86,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
         try c.encode(kind,        forKey: .kind)
         try c.encode(isTemporary, forKey: .isTemporary)
         try c.encode(dateAdded,   forKey: .dateAdded)
+        try c.encode(source,      forKey: .source)
     }
     
     var displayName: String {

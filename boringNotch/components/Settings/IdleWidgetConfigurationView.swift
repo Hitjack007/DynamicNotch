@@ -3,8 +3,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct IdleWidgetConfigurationView: View {
-    @Default(.idleNotchLeftWidget) private var leftWidget
-    @Default(.idleNotchRightWidget) private var rightWidget
+    @Binding var leftWidget: IdleNotchWidget
+    @Binding var rightWidget: IdleNotchWidget
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

@@ -33,14 +33,15 @@ class BoringViewModel: NSObject, ObservableObject {
     @Published var isBatteryPopoverActive: Bool = false
 
     @Published var screenUUID: String?
+    @Published var screenConfig: PerScreenConfig = PerScreenConfig()
 
     @Published var notchSize: CGSize = getClosedNotchSize()
     @Published var closedNotchSize: CGSize = getClosedNotchSize()
-    
+
     let webcamManager = WebcamManager.shared
     @Published var isCameraExpanded: Bool = false
     @Published var isRequestingAuthorization: Bool = false
-    
+
     deinit {
         destroy()
     }
@@ -54,7 +55,7 @@ class BoringViewModel: NSObject, ObservableObject {
         animation = animationLibrary.animation
 
         super.init()
-        
+
         self.screenUUID = screenUUID
         notchSize = getClosedNotchSize(screenUUID: screenUUID)
         closedNotchSize = notchSize
@@ -65,8 +66,43 @@ class BoringViewModel: NSObject, ObservableObject {
             }
             .assign(to: \.anyDropZoneTargeting, on: self)
             .store(in: &cancellables)
-        
+
+        setupScreenConfig(screenUUID: screenUUID)
         setupDetectorObserver()
+    }
+
+    // MARK: - Per-screen config
+
+    private func setupScreenConfig(screenUUID: String?) {
+        guard let uuid = screenUUID else { return }
+
+        // Seed from global settings the first time this screen is seen
+        if Defaults[.perScreenConfigs][uuid] == nil {
+            Defaults[.perScreenConfigs][uuid] = PerScreenConfig(
+                idleLeftWidget: Defaults[.idleNotchLeftWidget],
+                idleRightWidget: Defaults[.idleNotchRightWidget],
+                musicLiveActivityEnabled: true,
+                downloadLiveActivityEnabled: true,
+                showFaceAnimation: Defaults[.showNotHumanFace],
+                claudeUsageInNotch: Defaults[.claudeUsageInNotch]
+            )
+        }
+        screenConfig = Defaults[.perScreenConfigs][uuid] ?? PerScreenConfig()
+
+        Defaults.publisher(.perScreenConfigs)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] change in
+                guard let self = self, let uuid = self.screenUUID else { return }
+                self.screenConfig = change.newValue[uuid] ?? PerScreenConfig()
+            }
+            .store(in: &cancellables)
+    }
+
+    func updateScreenConfig(_ update: (inout PerScreenConfig) -> Void) {
+        guard let uuid = screenUUID else { return }
+        var config = Defaults[.perScreenConfigs][uuid] ?? PerScreenConfig()
+        update(&config)
+        Defaults[.perScreenConfigs][uuid] = config
     }
     
     private func setupDetectorObserver() {

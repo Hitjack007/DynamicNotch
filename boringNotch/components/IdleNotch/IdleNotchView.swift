@@ -3,19 +3,17 @@ import Defaults
 
 struct IdleNotchView: View {
     @EnvironmentObject var vm: BoringViewModel
-    @Default(.idleNotchLeftWidget) var leftWidget
-    @Default(.idleNotchRightWidget) var rightWidget
 
     var indicatorSize: CGFloat { max(0, vm.effectiveClosedNotchHeight - 12) }
 
     var body: some View {
         HStack(spacing: 0) {
-            widgetView(for: leftWidget)
+            widgetView(for: vm.screenConfig.idleLeftWidget)
                 .padding(.trailing, 4)
             Rectangle()
                 .fill(.black)
                 .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
-            widgetView(for: rightWidget)
+            widgetView(for: vm.screenConfig.idleRightWidget)
                 .padding(.leading, 4)
         }
         .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)

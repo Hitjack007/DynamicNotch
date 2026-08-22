@@ -54,6 +54,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var windows: [String: NSWindow] = [:] // UUID -> NSWindow
     var viewModels: [String: BoringViewModel] = [:] // UUID -> BoringViewModel
     var window: NSWindow?
+    // Single-display mode only. In showOnAllDisplays mode use viewModels[uuid] instead.
+    // Any new feature targeting a notch window must branch on Defaults[.showOnAllDisplays].
     let vm: BoringViewModel = .init()
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     var quickShareService = QuickShareService.shared
@@ -311,9 +313,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(
             forName: Notification.Name.automaticallySwitchDisplayChanged, object: nil, queue: nil
         ) { [weak self] _ in
-            guard let self = self, let window = self.window else { return }
             Task { @MainActor in
-                window.alphaValue = self.coordinator.selectedScreenUUID == self.coordinator.preferredScreenUUID ? 1 : 0
+                self?.adjustWindowPosition(changeAlpha: true)
             }
         }
 

@@ -40,13 +40,9 @@ struct ContentView: View {
     @Default(.spectrogramAppExclusions) var spectrogramAppExclusions
     @ObservedObject var spectrumAnalyzer = SpectrumAnalyzer.shared
 
-    @Default(.showNotHumanFace) var showNotHumanFace
     @Default(.showThermalTab) var showThermalTab
     @Default(.showSystemStatsTab) var showSystemStatsTab
     @Default(.showClaudeUsageTab) var showClaudeUsageTab
-    @Default(.claudeUsageInNotch) var claudeUsageInNotch
-    @Default(.idleNotchLeftWidget) var idleNotchLeftWidget
-    @Default(.idleNotchRightWidget) var idleNotchRightWidget
     @ObservedObject var downloadManager = DownloadManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
@@ -54,6 +50,11 @@ struct ContentView: View {
 
     private let extendedHoverPadding: CGFloat = 30
     private let zeroHeightHoverPadding: CGFloat = 10
+
+    private var isHUDTargetedAtThisDisplay: Bool {
+        guard let target = coordinator.sneakPeekTargetUUID else { return true }
+        return target == vm.screenUUID
+    }
 
     private var topCornerRadius: CGFloat {
        ((vm.notchState == .open) && Defaults[.cornerRadiusScaling])
@@ -79,26 +80,27 @@ struct ContentView: View {
             chinWidth = 640
         } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
             && vm.notchState == .closed && musicManager.isPlaying
-            && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed
+            && vm.screenConfig.musicLiveActivityEnabled && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && !musicManager.isPlaying && downloadManager.hasActiveDownloads && !vm.hideOnClosed
+            && !musicManager.isPlaying && downloadManager.hasActiveDownloads
+            && vm.screenConfig.downloadLiveActivityEnabled && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 8) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && !musicManager.isPlaying && Defaults[.showNotHumanFace]
+            && !musicManager.isPlaying && vm.screenConfig.showFaceAnimation
             && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && claudeUsageInNotch && showClaudeUsageTab
+            && vm.screenConfig.claudeUsageInNotch && showClaudeUsageTab
             && claudeManager.isAuthenticated && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
             && !musicManager.isPlaying
-            && (idleNotchLeftWidget != .none || idleNotchRightWidget != .none)
+            && (vm.screenConfig.idleLeftWidget != .none || vm.screenConfig.idleRightWidget != .none)
             && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
@@ -309,7 +311,7 @@ struct ContentView: View {
                     .padding(.top, 40)
                     Spacer()
                 } else {
-                    if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed {
+                    if coordinator.sneakPeek.show && Defaults[.inlineHUD] && (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && vm.notchState == .closed && isHUDTargetedAtThisDisplay {
                         // User-triggered HUDs take priority over all passive notifications
                         InlineHUD(type: $coordinator.sneakPeek.type, value: $coordinator.sneakPeek.value, icon: $coordinator.sneakPeek.icon, hoverAnimation: $isHovering, gestureProgress: $gestureProgress)
                             .transition(.opacity)
@@ -343,23 +345,24 @@ struct ContentView: View {
                       } else if coordinator.thermalAlertShow && vm.notchState == .closed {
                           ThermalClosedAlert(temp: coordinator.thermalAlertTemp)
                               .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
-                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && musicManager.isPlaying && coordinator.musicLiveActivityEnabled && !vm.hideOnClosed {
+                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && musicManager.isPlaying && vm.screenConfig.musicLiveActivityEnabled && !vm.hideOnClosed {
                           MusicLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && !musicManager.isPlaying && downloadManager.hasActiveDownloads && !vm.hideOnClosed {
+                          && !musicManager.isPlaying && downloadManager.hasActiveDownloads
+                          && vm.screenConfig.downloadLiveActivityEnabled && !vm.hideOnClosed {
                           DownloadLiveActivity()
                               .frame(alignment: .center)
-                      } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && vm.screenConfig.showFaceAnimation && !vm.hideOnClosed {
                           BoringFaceAnimation()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && claudeUsageInNotch && showClaudeUsageTab
+                          && vm.screenConfig.claudeUsageInNotch && showClaudeUsageTab
                           && claudeManager.isAuthenticated && !vm.hideOnClosed {
                           ClaudeUsageLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
                           && !musicManager.isPlaying
-                          && (idleNotchLeftWidget != .none || idleNotchRightWidget != .none)
+                          && (vm.screenConfig.idleLeftWidget != .none || vm.screenConfig.idleRightWidget != .none)
                           && !vm.hideOnClosed {
                           IdleNotchView()
                               .frame(alignment: .center)
@@ -372,7 +375,7 @@ struct ContentView: View {
                        }
 
                       if coordinator.sneakPeek.show {
-                          if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed {
+                          if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed && isHUDTargetedAtThisDisplay {
                               SystemEventIndicatorModifier(
                                   eventType: $coordinator.sneakPeek.type,
                                   value: $coordinator.sneakPeek.value,

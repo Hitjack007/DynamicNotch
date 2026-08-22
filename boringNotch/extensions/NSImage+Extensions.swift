@@ -15,7 +15,12 @@ import CoreImage.CIFilterBuiltins
 
 extension NSImage {
 
-    
+    func pngData() -> Data? {
+        guard let tiff = tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff) else { return nil }
+        return rep.representation(using: .png, properties: [:])
+    }
+
     func averageColor(completion: @escaping (NSColor?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             guard let cgImage = self.cgImage(forProposedRect: nil, context: nil, hints: nil) else {

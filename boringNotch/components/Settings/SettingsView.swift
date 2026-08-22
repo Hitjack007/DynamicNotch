@@ -1586,7 +1586,7 @@ struct DisplaysSettings: View {
                 }
                 .disabled(showOnAllDisplays)
                 Defaults.Toggle(key: .automaticallySwitchDisplay) {
-                    Text("Automatically switch displays")
+                    Text("Fall back to main display if preferred is unavailable")
                 }
                 .onChange(of: automaticallySwitchDisplay) {
                     NotificationCenter.default.post(
@@ -1602,21 +1602,22 @@ struct DisplaysSettings: View {
                     }
                 }
                 .pickerStyle(.menu)
+                .disabled(!showOnAllDisplays)
             } header: {
                 Text("Multi-Display")
             }
 
-            if screens.count > 1 {
-                Section {
+            Section {
+                if screens.count > 1 {
                     Picker("Configure for", selection: $selectedUUID) {
                         ForEach(screens, id: \.uuid) { screen in
                             Text(screen.name).tag(screen.uuid)
                         }
                     }
                     .pickerStyle(.segmented)
-                } header: {
-                    Text("Per-Display Settings")
                 }
+            } header: {
+                Text("Per-Display Settings")
             }
 
             if !selectedUUID.isEmpty {

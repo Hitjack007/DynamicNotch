@@ -221,13 +221,29 @@ class BoringViewCoordinator: ObservableObject {
     ) {
         sneakPeekDuration = duration
         if type != .music {
-            // close()
             if !Defaults[.hudReplacement] {
                 return
             }
             if !isHUDTypeEnabled(type) {
                 return
             }
+            // Route HUD to the correct display based on policy
+            if status {
+                switch Defaults[.hudDisplayPolicy] {
+                case .allDisplays:
+                    sneakPeekTargetUUID = nil
+                case .primaryDisplay:
+                    sneakPeekTargetUUID = NSScreen.main?.displayUUID
+                case .mouseDisplay:
+                    sneakPeekTargetUUID = NSScreen.screens
+                        .first(where: { $0.frame.contains(NSEvent.mouseLocation) })?
+                        .displayUUID
+                }
+            } else {
+                sneakPeekTargetUUID = nil
+            }
+        } else {
+            sneakPeekTargetUUID = nil
         }
         Task { @MainActor in
             withAnimation(.smooth) {
@@ -271,6 +287,9 @@ class BoringViewCoordinator: ObservableObject {
             }
         }
     }
+
+    // nil = show on all displays; set to a UUID to target a single display
+    @Published var sneakPeekTargetUUID: String? = nil
 
     @Published var sneakPeek: sneakPeek = .init() {
         didSet {

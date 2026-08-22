@@ -166,6 +166,25 @@ enum OptionKeyAction: String, CaseIterable, Identifiable, Defaults.Serializable 
     var id: String { self.rawValue }
 }
 
+// MARK: - Per-Display Configuration
+
+struct PerScreenConfig: Codable, Defaults.Serializable {
+    var idleLeftWidget: IdleNotchWidget = .none
+    var idleRightWidget: IdleNotchWidget = .none
+    var musicLiveActivityEnabled: Bool = true
+    var downloadLiveActivityEnabled: Bool = true
+    var showFaceAnimation: Bool = false
+    var claudeUsageInNotch: Bool = false
+}
+
+enum HUDDisplayPolicy: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case allDisplays   = "All Displays"
+    case primaryDisplay = "Primary Display"
+    case mouseDisplay  = "Display with Mouse"
+
+    var id: String { rawValue }
+}
+
 extension Defaults.Keys {
     // MARK: General
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
@@ -330,6 +349,15 @@ extension Defaults.Keys {
     static let claudeClosedNotchShowRing = Key<Bool>("claudeClosedNotchShowRing", default: true)
     static let claudePreferredBrowser  = Key<ClaudeBrowserPreference>("claudePreferredBrowser", default: .auto)
     static let claudePollingInterval   = Key<Int>("claudePollingInterval", default: 5)
+
+    // MARK: Per-Display
+    static let perScreenConfigs = Key<[String: PerScreenConfig]>("perScreenConfigs", default: [:])
+    static let hudDisplayPolicy = Key<HUDDisplayPolicy>("hudDisplayPolicy", default: .allDisplays)
+
+    // MARK: Clipboard History
+    static let clipboardHistoryEnabled = Key<Bool>("clipboardHistoryEnabled", default: false)
+    /// 0 = unlimited
+    static let clipboardHistoryLimit   = Key<Int>("clipboardHistoryLimit", default: 20)
 
     // MARK: Caffeine
     static let showCaffeineButton      = Key<Bool>("showCaffeineButton", default: false)

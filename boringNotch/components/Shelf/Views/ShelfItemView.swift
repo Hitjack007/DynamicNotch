@@ -101,6 +101,16 @@ struct ShelfItemView: View {
             .frame(width: 56, height: 56)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 2)
+            .overlay(alignment: .topLeading) {
+                if item.source == .clipboard {
+                    Image(systemName: "clipboard.fill")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .padding(3)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 4))
+                        .offset(x: -4, y: -4)
+                }
+            }
     }
 
     private var textView: some View {
