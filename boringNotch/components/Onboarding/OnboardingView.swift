@@ -18,6 +18,7 @@ enum OnboardingStep {
     case accessibilityPermission
     case bluetoothPermission
     case screenRecordingPermission
+    case spectrogramSetup
     case fullDiskAccessPermission
     case musicPermission
     case finished
@@ -162,11 +163,21 @@ struct OnboardingView: View {
                         Task {
                             await requestScreenRecordingPermission()
                             withAnimation(.easeInOut(duration: 0.6)) {
-                                step = .fullDiskAccessPermission
+                                step = .spectrogramSetup
                             }
                         }
                     },
                     onSkip: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .spectrogramSetup
+                        }
+                    }
+                )
+                .transition(.opacity)
+
+            case .spectrogramSetup:
+                SpectrogramSetupView(
+                    onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
                             step = .fullDiskAccessPermission
                         }
