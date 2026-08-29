@@ -53,10 +53,10 @@ For developers who want to build it themselves:
 ```bash
 git clone https://github.com/Hitjack007/DynamicNotch.git
 cd DynamicNotch
-open boringNotch.xcodeproj
+open dynamicNotch.xcodeproj
 ```
 
-In Xcode, set your own development team under **Signing & Capabilities** for both `boringNotch` and `BoringNotchXPCHelper`, then press **Cmd + R**.
+In Xcode, set your own development team under **Signing & Capabilities** for both `dynamicNotch` and `BoringNotchXPCHelper`, then press **Cmd + R**.
 
 ---
 

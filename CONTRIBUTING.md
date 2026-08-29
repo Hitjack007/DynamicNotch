@@ -1,38 +1,31 @@
 # Contributing
 
-Thank you for taking the time to contribute! ❤️
+Thank you for taking the time to contribute!
 
 These guidelines help streamline the contribution process for everyone involved. By following them, you'll make it easier for maintainers to review your work and collaborate with you effectively.
 
-You can contribute in many ways: writing code, improving documentation, reporting bugs, requesting features, or creating tutorials and blog posts. Every contribution, large or small, helps make Boring Notch better.
+You can contribute in many ways: writing code, improving documentation, reporting bugs, requesting features, or creating tutorials. Every contribution, large or small, helps make DynamicNotch better.
 
 ## Table of Contents
 
-- [Localizations](#localizations)
 - [Contributing Code](#contributing-code)
   - [Before You Start](#before-you-start)
   - [Setting Up Your Environment](#setting-up-your-environment)
   - [Making Changes](#making-changes)
   - [Pull Requests](#pull-requests)
-<!-- - [Code Style Guidelines](#code-style-guidelines) -->
 - [Reporting Bugs](#reporting-bugs)
 - [Feature Requests](#feature-requests)
 - [Getting Help](#getting-help)
-
-## Localizations
-
-Please submit all translations to [Crowdin](https://crowdin.com/project/boring-notch). New strings added to the `dev` branch from code changes will sync automatically to Crowdin, and Crowdin will automatically open a new PR with translations to allow us to integrate them.
 
 ## Contributing Code
 
 ### Before You Start
 
 - **Check existing issues**: Before creating a new issue or starting work, search existing issues to avoid duplicates.
-- **Discuss major changes**: For significant features or major changes, please open an issue first to discuss your approach with maintainers and the community.
-<!-- - **Review the code style**: Familiarize yourself with our code style guidelines below to ensure consistency. -->
+- **Discuss major changes**: For significant features or major changes, please open an issue first to discuss your approach with maintainers.
 
 > [!IMPORTANT]
-> All code contributions must be based on the `dev` branch, not `main`. Documentation changes should be based on `main` instead.
+> All code contributions must be based on the `main` branch.
 
 ### Setting Up Your Environment
 
@@ -40,18 +33,17 @@ Please submit all translations to [Crowdin](https://crowdin.com/project/boring-n
 
 2. **Clone your fork**:
    ```bash
-   git clone https://github.com/{your-username}/boring.notch.git
-   cd boring.notch
+   git clone https://github.com/{your-username}/DynamicNotch.git
+   cd DynamicNotch
    ```
    Replace `{your-username}` with your GitHub username.
 
-3. **Switch to the `dev` branch**:
+3. **Open the project**:
    ```bash
-   git checkout dev
+   open dynamicNotch.xcodeproj
    ```
-   All code contributions must be based on the `dev` branch, not `main`. Documentation changes should be based on `main` instead.
 
-5. **Create a new feature branch**:
+4. **Create a new feature branch**:
    ```bash
    git checkout -b feature/{your-feature-name}
    ```
@@ -59,7 +51,7 @@ Please submit all translations to [Crowdin](https://crowdin.com/project/boring-n
 
 ### Making Changes
 
-1. **Make your changes**: Implement your feature or bug fix. Write clean, well-documented code <!-- following the project's style guidelines. -->
+1. **Make your changes**: Implement your feature or bug fix. Write clean, well-documented code.
 
 2. **Test your changes**: Ensure your changes work as expected and don't break existing functionality.
 
@@ -71,7 +63,7 @@ Please submit all translations to [Crowdin](https://crowdin.com/project/boring-n
    Write clear, concise commit messages that explain what your changes do and why.
 
 4. **Keep your branch up to date**:
-   Regularly sync your branch with the latest changes from the `dev` branch to avoid conflicts.
+   Regularly sync your branch with the latest changes from `main` to avoid conflicts.
 
 5. **Push to your fork**:
    ```bash
@@ -80,7 +72,7 @@ Please submit all translations to [Crowdin](https://crowdin.com/project/boring-n
 
 ### Pull Requests
 
-1. **Create a pull request**: Go to the original repository and click "New Pull Request." Select your feature branch and set the base branch to `dev`.
+1. **Create a pull request**: Go to the original repository and click "New Pull Request." Select your feature branch and set the base branch to `main`.
 
 2. **Write a detailed description**: Your PR should include:
    - A clear title summarizing the changes
@@ -91,14 +83,6 @@ Please submit all translations to [Crowdin](https://crowdin.com/project/boring-n
 3. **Respond to feedback**: Maintainers may request changes.
 
 4. **Be patient**: Reviews take time. Maintainers will get to your PR as soon as they can.
-
-<!-- ## Code Style Guidelines
-
-- Follow the existing code style and conventions used in the project
-- Write clear, self-documenting code with meaningful variable and function names
-- Add comments for complex logic or non-obvious implementations
-- Ensure your code is properly formatted before committing
-- Remove any debugging code, console logs, or commented-out code before submitting -->
 
 ## Reporting Bugs
 
@@ -126,8 +110,7 @@ If you need help or have questions:
 - Check the project documentation
 - Search existing issues for similar questions
 - Open a new issue with the "question" label
-- Join our [community Discord server](https://discord.com/servers/boring-notch-1269588937320566815)
 
 ---
 
-Thank you for contributing to Boring Notch! Your efforts help make this project better for everyone. 🎉
+Thank you for contributing to DynamicNotch! Your efforts help make this project better for everyone.

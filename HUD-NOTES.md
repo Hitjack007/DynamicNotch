@@ -1,8 +1,8 @@
-# How boring.notch Replaces System HUDs
+# How DynamicNotch Replaces System HUDs
 
 ## Overview
 
-When you press volume or brightness keys, macOS normally shows a translucent overlay HUD via BezelServices. boring.notch replaces this entirely by (1) intercepting the key event before the system sees it, (2) applying the change itself, and (3) displaying its own in-notch HUD.
+When you press volume or brightness keys, macOS normally shows a translucent overlay HUD via BezelServices. DynamicNotch replaces this entirely by (1) intercepting the key event before the system sees it, (2) applying the change itself, and (3) displaying its own in-notch HUD.
 
 ---
 

@@ -1,4 +1,4 @@
-# boring.notch — Codebase Notes
+# DynamicNotch — Codebase Notes
 
 A comprehensive reference for understanding, navigating, and extending the project.
 
@@ -6,7 +6,7 @@ A comprehensive reference for understanding, navigating, and extending the proje
 
 ## What It Does
 
-boring.notch is a macOS menu-bar utility that transforms the notch (or the menu bar area on non-notch Macs) into an interactive panel. When hovered or swiped it expands to show music controls, a file shelf, calendar, webcam mirror, battery info, and system HUDs (volume/brightness). It also replaces macOS's native volume/brightness HUD overlays.
+DynamicNotch is a macOS utility that transforms the notch (or the menu bar area on non-notch Macs) into an interactive panel. When hovered or swiped it expands to show music controls, a file shelf, calendar, webcam mirror, battery info, and system HUDs (volume/brightness). It also replaces macOS's native volume/brightness HUD overlays.
 
 ---
 
