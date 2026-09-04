@@ -210,6 +210,20 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .onChange(of: vm.isAudioPickerActive) {
+                        if !vm.isAudioPickerActive && !isHovering && vm.notchState == .open && !SharingStateManager.shared.preventNotchClose {
+                            hoverTask?.cancel()
+                            hoverTask = Task {
+                                try? await Task.sleep(for: .milliseconds(100))
+                                guard !Task.isCancelled else { return }
+                                await MainActor.run {
+                                    if !self.vm.isAudioPickerActive && !self.isHovering && self.vm.notchState == .open && !SharingStateManager.shared.preventNotchClose {
+                                        self.vm.close()
+                                    }
+                                }
+                            }
+                        }
+                    }
                     .sensoryFeedback(.alignment, trigger: haptics)
                     .contextMenu {
                         Button("Settings") {
@@ -704,7 +718,7 @@ struct ContentView: View {
                         self.isHovering = false
                     }
                     
-                    if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !SharingStateManager.shared.preventNotchClose {
+                    if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !self.vm.isAudioPickerActive && !SharingStateManager.shared.preventNotchClose {
                         self.vm.close()
                     }
                 }

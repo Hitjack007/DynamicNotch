@@ -447,6 +447,7 @@ struct VolumeControlView: View {
 // MARK: - Audio Output Controls
 
 struct AudioOutputSlotButton: View {
+    @EnvironmentObject private var vm: BoringViewModel
     @ObservedObject private var audioManager = AudioOutputManager.shared
     @State private var showPicker = false
 
@@ -462,6 +463,9 @@ struct AudioOutputSlotButton: View {
         .buttonStyle(PlainButtonStyle())
         .popover(isPresented: $showPicker, arrowEdge: .bottom) {
             AudioOutputPickerView()
+        }
+        .onChange(of: showPicker) { _, active in
+            vm.isAudioPickerActive = active
         }
     }
 }

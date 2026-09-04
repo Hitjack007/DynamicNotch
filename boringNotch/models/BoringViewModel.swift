@@ -31,6 +31,7 @@ class BoringViewModel: NSObject, ObservableObject {
     @Published var edgeAutoOpenActive: Bool = false
     @Published var isHoveringCalendar: Bool = false
     @Published var isBatteryPopoverActive: Bool = false
+    @Published var isAudioPickerActive: Bool = false
 
     @Published var screenUUID: String?
     @Published var screenConfig: PerScreenConfig = PerScreenConfig()
@@ -242,6 +243,7 @@ class BoringViewModel: NSObject, ObservableObject {
         self.closedNotchSize = self.notchSize
         self.notchState = .closed
         self.isBatteryPopoverActive = false
+        self.isAudioPickerActive = false
         self.coordinator.sneakPeek.show = false
         self.edgeAutoOpenActive = false
 
