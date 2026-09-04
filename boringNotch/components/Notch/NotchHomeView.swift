@@ -454,6 +454,9 @@ struct AudioOutputSlotButton: View {
     var body: some View {
         Button {
             audioManager.refresh()
+            if !showPicker {
+                NSApp.activate(ignoringOtherApps: true)
+            }
             showPicker.toggle()
         } label: {
             Image(systemName: "airplayaudio")
@@ -466,11 +469,12 @@ struct AudioOutputSlotButton: View {
         }
         .onChange(of: showPicker) { _, active in
             vm.isAudioPickerActive = active
-            if active {
-                NSApp.activate(ignoringOtherApps: true)
-            } else {
+            if !active {
                 NSApp.deactivate()
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+            showPicker = false
         }
     }
 }
