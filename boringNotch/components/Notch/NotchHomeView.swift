@@ -528,23 +528,6 @@ struct AudioOutputPickerView: View {
                 }
                 .buttonStyle(.plain)
             }
-            if !audioManager.dormantAirPlayDevices.isEmpty {
-                Divider()
-                ForEach(audioManager.dormantAirPlayDevices) { device in
-                    HStack(spacing: 8) {
-                        Image(systemName: "airplayaudio")
-                            .font(.system(size: 11))
-                            .frame(width: 14)
-                            .foregroundStyle(.tertiary)
-                        Text(device.name)
-                            .font(.callout)
-                            .foregroundStyle(.tertiary)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 7)
-                }
-            }
         }
         .frame(width: 250)
         .padding(.bottom, 8)
