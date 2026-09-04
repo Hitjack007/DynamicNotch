@@ -450,6 +450,8 @@ struct AudioOutputSlotButton: View {
     @EnvironmentObject private var vm: BoringViewModel
     @ObservedObject private var audioManager = AudioOutputManager.shared
     @State private var showPicker = false
+    @State private var globalMonitor: Any?
+    @State private var localMonitor: Any?
 
     var body: some View {
         Button {
@@ -469,12 +471,25 @@ struct AudioOutputSlotButton: View {
         }
         .onChange(of: showPicker) { _, active in
             vm.isAudioPickerActive = active
-            if !active {
+            if active {
+                // Dismiss on click in any other app
+                globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { _ in
+                    showPicker = false
+                }
+                // Dismiss on click in notch itself (outside the popover window)
+                localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { event in
+                    // Popover's NSWindow is not NSPanel — keep open if click is inside it
+                    if let window = event.window, !(window is NSPanel) { return event }
+                    showPicker = false
+                    return event
+                }
+            } else {
+                globalMonitor.map(NSEvent.removeMonitor)
+                globalMonitor = nil
+                localMonitor.map(NSEvent.removeMonitor)
+                localMonitor = nil
                 NSApp.deactivate()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
-            showPicker = false
         }
     }
 }
