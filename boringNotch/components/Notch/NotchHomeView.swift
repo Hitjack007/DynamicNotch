@@ -498,7 +498,6 @@ struct AudioOutputSlotButton: View {
 
 struct AudioOutputPickerView: View {
     @ObservedObject private var audioManager = AudioOutputManager.shared
-    @ObservedObject private var connector = AirPlayConnector.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -532,28 +531,18 @@ struct AudioOutputPickerView: View {
             if !audioManager.dormantAirPlayDevices.isEmpty {
                 Divider()
                 ForEach(audioManager.dormantAirPlayDevices) { device in
-                    let isConnecting = connector.connectingDevices.contains(device.id)
-                    Button {
-                        Task { await AirPlayConnector.shared.connect(to: device) }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "airplayaudio")
-                                .font(.system(size: 11))
-                                .frame(width: 14)
-                                .foregroundStyle(isConnecting ? Color.primary : Color.secondary)
-                            Text(device.name)
-                                .font(.callout)
-                                .foregroundStyle(isConnecting ? Color.primary : Color.secondary)
-                            Spacer()
-                            if isConnecting {
-                                ProgressView().controlSize(.mini)
-                            }
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .contentShape(Rectangle())
+                    HStack(spacing: 8) {
+                        Image(systemName: "airplayaudio")
+                            .font(.system(size: 11))
+                            .frame(width: 14)
+                            .foregroundStyle(.tertiary)
+                        Text(device.name)
+                            .font(.callout)
+                            .foregroundStyle(.tertiary)
+                        Spacer()
                     }
-                    .buttonStyle(.plain)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
                 }
             }
         }

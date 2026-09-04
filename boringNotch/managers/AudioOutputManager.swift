@@ -7,10 +7,9 @@ struct AudioOutputDevice: Identifiable, Equatable {
     let name: String
 }
 
-struct DormantAirPlayDevice: Identifiable {
+struct DormantAirPlayDevice: Identifiable, Equatable {
     let id: String
     let name: String
-    let endpoint: NWEndpoint
 }
 
 @MainActor
@@ -23,8 +22,8 @@ final class AudioOutputManager: ObservableObject {
 
     private var raopBrowser: NWBrowser?
     private var airplayBrowser: NWBrowser?
-    private var raopResults: [String: NWEndpoint] = [:]
-    private var airplayResults: [String: NWEndpoint] = [:]
+    private var raopNames: Set<String> = []
+    private var airplayNames: Set<String> = []
 
     private init() {
         refresh()
@@ -72,7 +71,7 @@ final class AudioOutputManager: ObservableObject {
     }
 
     private func handleBrowseResults(_ results: Set<NWBrowser.Result>, serviceType: String) {
-        var map: [String: NWEndpoint] = [:]
+        var names: Set<String> = []
         for result in results {
             guard case let .service(name: svcName, type: _, domain: _, interface: _) = result.endpoint else { continue }
             let displayName: String
@@ -83,26 +82,23 @@ final class AudioOutputManager: ObservableObject {
                 displayName = svcName
             }
             guard !displayName.isEmpty else { continue }
-            map[displayName] = result.endpoint
+            names.insert(displayName)
         }
         if serviceType == "_raop._tcp" {
-            raopResults = map
+            raopNames = names
         } else {
-            airplayResults = map
+            airplayNames = names
         }
         updateDormantDevices()
     }
 
     private func updateDormantDevices() {
-        // Merge both maps; prefer _airplay._tcp endpoint when present
-        var allBonjour: [String: NWEndpoint] = raopResults
-        for (name, endpoint) in airplayResults { allBonjour[name] = endpoint }
-
+        let allBonjour = airplayNames.union(raopNames)
         let activeNames = Set(outputDevices.map { $0.name.lowercased() })
         dormantAirPlayDevices = allBonjour
-            .filter { !activeNames.contains($0.key.lowercased()) }
-            .sorted { $0.key < $1.key }
-            .map { DormantAirPlayDevice(id: $0.key, name: $0.key, endpoint: $0.value) }
+            .filter { !activeNames.contains($0.lowercased()) }
+            .sorted()
+            .map { DormantAirPlayDevice(id: $0, name: $0) }
     }
 
     // MARK: - Private
