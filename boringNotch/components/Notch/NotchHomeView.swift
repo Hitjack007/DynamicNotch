@@ -478,8 +478,10 @@ struct AudioOutputSlotButton: View {
                 }
                 // Dismiss on click in notch itself (outside the popover window)
                 localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { event in
-                    // Popover's NSWindow is not NSPanel — keep open if click is inside it
-                    if let window = event.window, !(window is NSPanel) { return event }
+                    // NSPopover creates a private _NSPopoverWindow (NSPanel subclass) —
+                    // keep open when the click is inside it
+                    let cls = event.window.map { String(describing: type(of: $0)) } ?? ""
+                    if cls.contains("Popover") { return event }
                     showPicker = false
                     return event
                 }
