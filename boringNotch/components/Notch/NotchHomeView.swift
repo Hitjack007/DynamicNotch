@@ -466,6 +466,11 @@ struct AudioOutputSlotButton: View {
         }
         .onChange(of: showPicker) { _, active in
             vm.isAudioPickerActive = active
+            if active {
+                NSApp.activate(ignoringOtherApps: true)
+            } else {
+                NSApp.deactivate()
+            }
         }
     }
 }
