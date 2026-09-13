@@ -243,8 +243,8 @@ struct MusicControlsView: View {
             }
             .disabled(musicManager.isPlayerIdle)
             .opacity(musicManager.isPlayerIdle ? 0.35 : 1)
-            // Locked output-switcher always last
-            AudioOutputSlotButton()
+            // TODO: audio output picker — re-enable once HomePod waking is solved
+            // AudioOutputSlotButton()
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -445,6 +445,7 @@ struct VolumeControlView: View {
 }
 
 // MARK: - Audio Output Controls
+#if false // TODO: re-enable once HomePod waking is solved
 
 struct AudioOutputSlotButton: View {
     @EnvironmentObject private var vm: BoringViewModel
@@ -561,6 +562,7 @@ struct AudioOutputPickerView: View {
         .padding(.bottom, 8)
     }
 }
+#endif
 
 // MARK: - Main View
 
