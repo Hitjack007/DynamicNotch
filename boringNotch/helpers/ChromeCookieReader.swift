@@ -2,7 +2,7 @@
 //  ChromeCookieReader.swift
 //  boringNotch
 //
-//  Reads claude.ai session cookies from Chromium-based browsers (Chrome, Brave, Edge).
+//  Reads session cookies from Chromium-based browsers (Chrome, Brave, Edge).
 //
 //  Cookie values are AES-128-CBC encrypted with a key derived (PBKDF2-SHA1,
 //  1003 iterations, 16-byte key, salt "saltysalt") from a password stored in
@@ -49,10 +49,10 @@ struct ChromeCookieReader {
         findCookie(named: "sessionKey", variant: variant)
     }
 
-    static func findCookie(named cookieName: String, variant: ChromeVariant) -> String? {
+    static func findCookie(named cookieName: String, variant: ChromeVariant, domain: String = "claude.ai") -> String? {
         guard let password = keychainPassword(for: variant),
               let key = deriveKey(from: password) else { return nil }
-        return readEncryptedCookie(named: cookieName, variant: variant, key: key)
+        return readEncryptedCookie(named: cookieName, variant: variant, key: key, domain: domain)
     }
 
     // MARK: - Keychain
@@ -95,7 +95,7 @@ struct ChromeCookieReader {
 
     // MARK: - SQLite
 
-    private static func readEncryptedCookie(named cookieName: String, variant: ChromeVariant, key: Data) -> String? {
+    private static func readEncryptedCookie(named cookieName: String, variant: ChromeVariant, key: Data, domain: String) -> String? {
         guard FileManager.default.fileExists(atPath: variant.cookiePath) else { return nil }
 
         // Copy to avoid locking conflict with a running browser instance
@@ -110,7 +110,7 @@ struct ChromeCookieReader {
 
         let sql = """
             SELECT encrypted_value FROM cookies
-            WHERE host_key LIKE '%claude.ai%' AND name='\(cookieName)'
+            WHERE host_key LIKE '%\(domain)%' AND name='\(cookieName)'
             ORDER BY creation_utc DESC LIMIT 1
             """
         var stmt: OpaquePointer?

@@ -106,6 +106,9 @@
 		14E9FEAE2C7325770062E83F /* Button+Bouncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E9FEAD2C7325770062E83F /* Button+Bouncing.swift */; };
 		14FC6E502C7DED5600C7BEA5 /* DataTypes+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FC6E4F2C7DED5600C7BEA5 /* DataTypes+Extensions.swift */; };
 		4D319FA93039073300D4AE2F /* ClipboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D319FA83039073300D4AE2F /* ClipboardManager.swift */; };
+		4D426D123057B6EB00DDF2C2 /* ChatGPTUsageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D426D113057B6EB00DDF2C2 /* ChatGPTUsageManager.swift */; };
+		4D426D1B3057B87300DDF2C2 /* AIUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D426D1A3057B87300DDF2C2 /* AIUsageView.swift */; };
+		4D426D1C3057B87300DDF2C2 /* AIUsageLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D426D193057B87300DDF2C2 /* AIUsageLiveActivity.swift */; };
 		4D73E19F301EB06C0084A6A1 /* SMCConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E19E301EB06C0084A6A1 /* SMCConnection.swift */; };
 		4D73E1A1301EB0750084A6A1 /* SMCKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A0301EB0750084A6A1 /* SMCKeys.swift */; };
 		4D73E1A3301EB0870084A6A1 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */; };
@@ -130,8 +133,6 @@
 		4DA88EDC303167D20095857C /* SafariCookieReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDB303167D20095857C /* SafariCookieReader.swift */; };
 		4DA88EDE303167E90095857C /* ChromeCookieReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDD303167E90095857C /* ChromeCookieReader.swift */; };
 		4DA88EE03031680B0095857C /* ClaudeUsageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */; };
-		4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE1303168190095857C /* ClaudeUsageView.swift */; };
-		4DA88EE4303168210095857C /* ClaudeUsageLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */; };
 		4DA8935E30345A010095857C /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8935D30345A010095857C /* DownloadManager.swift */; };
 		4DA8936030345AAE0095857C /* BluetoothBatteryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */; };
 		4DA8936230345AB90095857C /* AudioOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936130345AB90095857C /* AudioOutputManager.swift */; };
@@ -318,6 +319,9 @@
 		14E9FEAD2C7325770062E83F /* Button+Bouncing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Button+Bouncing.swift"; sourceTree = "<group>"; };
 		14FC6E4F2C7DED5600C7BEA5 /* DataTypes+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DataTypes+Extensions.swift"; sourceTree = "<group>"; };
 		4D319FA83039073300D4AE2F /* ClipboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardManager.swift; sourceTree = "<group>"; };
+		4D426D113057B6EB00DDF2C2 /* ChatGPTUsageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTUsageManager.swift; sourceTree = "<group>"; };
+		4D426D193057B87300DDF2C2 /* AIUsageLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageLiveActivity.swift; sourceTree = "<group>"; };
+		4D426D1A3057B87300DDF2C2 /* AIUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageView.swift; sourceTree = "<group>"; };
 		4D73E19E301EB06C0084A6A1 /* SMCConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCConnection.swift; sourceTree = "<group>"; };
 		4D73E1A0301EB0750084A6A1 /* SMCKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCKeys.swift; sourceTree = "<group>"; };
 		4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalManager.swift; sourceTree = "<group>"; };
@@ -343,8 +347,6 @@
 		4DA88EDB303167D20095857C /* SafariCookieReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariCookieReader.swift; sourceTree = "<group>"; };
 		4DA88EDD303167E90095857C /* ChromeCookieReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromeCookieReader.swift; sourceTree = "<group>"; };
 		4DA88EDF3031680B0095857C /* ClaudeUsageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageManager.swift; sourceTree = "<group>"; };
-		4DA88EE1303168190095857C /* ClaudeUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageView.swift; sourceTree = "<group>"; };
-		4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageLiveActivity.swift; sourceTree = "<group>"; };
 		4DA8935D30345A010095857C /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothBatteryManager.swift; sourceTree = "<group>"; };
 		4DA8936130345AB90095857C /* AudioOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputManager.swift; sourceTree = "<group>"; };
@@ -574,6 +576,8 @@
 		1471639B2C5D362F0068B555 /* components */ = {
 			isa = PBXGroup;
 			children = (
+				4D426D193057B87300DDF2C2 /* AIUsageLiveActivity.swift */,
+				4D426D1A3057B87300DDF2C2 /* AIUsageView.swift */,
 				B141C23B2CA5F50900AC8CC8 /* Onboarding */,
 				B1C448992C97375A001F0858 /* Tips */,
 				14C08BB72C8DE49E000F8AA0 /* Calendar */,
@@ -624,6 +628,7 @@
 				4DA8935F30345AAE0095857C /* BluetoothBatteryManager.swift */,
 				4DA8936130345AB90095857C /* AudioOutputManager.swift */,
 				4D319FA83039073300D4AE2F /* ClipboardManager.swift */,
+				4D426D113057B6EB00DDF2C2 /* ChatGPTUsageManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -794,8 +799,6 @@
 		4DA88ED8303167B90095857C /* ClaudeUsage */ = {
 			isa = PBXGroup;
 			children = (
-				4DA88EE1303168190095857C /* ClaudeUsageView.swift */,
-				4DA88EE3303168210095857C /* ClaudeUsageLiveActivity.swift */,
 			);
 			path = ClaudeUsage;
 			sourceTree = "<group>";
@@ -1142,6 +1145,8 @@
 				B1D365D02C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift in Sources */,
 				1194E87C2EA19E09009C82D6 /* ImageProcessingService.swift in Sources */,
 				1194E8872EA6DDA7009C82D6 /* BoringNotchSkyLightWindow.swift in Sources */,
+				4D426D1B3057B87300DDF2C2 /* AIUsageView.swift in Sources */,
+				4D426D1C3057B87300DDF2C2 /* AIUsageLiveActivity.swift in Sources */,
 				4DA88EDC303167D20095857C /* SafariCookieReader.swift in Sources */,
 				14D570CB2C5F4B2C0011E668 /* BatteryStatusViewModel.swift in Sources */,
 				9A0887322C7A693000C160EA /* TabButton.swift in Sources */,
@@ -1163,7 +1168,6 @@
 				B1C974342C642B6D0000E707 /* MarqueeTextView.swift in Sources */,
 				14288DE82C6E01C800B9F80C /* ProgressIndicator.swift in Sources */,
 				1113ABC52E80E27000EC13B2 /* ShelfItemView.swift in Sources */,
-				4DA88EE2303168190095857C /* ClaudeUsageView.swift in Sources */,
 				4D319FA93039073300D4AE2F /* ClipboardManager.swift in Sources */,
 				1113ABC62E80E27000EC13B2 /* ShelfPersistenceService.swift in Sources */,
 				1113ABC82E80E27000EC13B2 /* ShelfItem.swift in Sources */,
@@ -1182,12 +1186,12 @@
 				14C08BC12C8E03AD000F8AA0 /* NSImage+Extensions.swift in Sources */,
 				149E0B9A2C737D40006418B1 /* WebcamView.swift in Sources */,
 				1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */,
+				4D426D123057B6EB00DDF2C2 /* ChatGPTUsageManager.swift in Sources */,
 				B1B112932C6A577E00093D8F /* MouseTracker.swift in Sources */,
 				B1C448962C9712C4001F0858 /* ActionBar.swift in Sources */,
 				118EBE312E9717DB00D54B5A /* URL+SecurityScoped.swift in Sources */,
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
-				4DA88EE4303168210095857C /* ClaudeUsageLiveActivity.swift in Sources */,
 				111BEA612ED09B1B0079DD4E /* NSScreen+UUID.swift in Sources */,
 				4DDCD26C304AC3F200390EB8 /* AirPlayConnector.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,

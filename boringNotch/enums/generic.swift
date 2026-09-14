@@ -29,7 +29,7 @@ public enum NotchViews {
     case shelf
     case thermal
     case systemStats
-    case claudeUsage
+    case aiUsage
 }
 
 enum SettingsEnum {
@@ -77,7 +77,7 @@ enum IdleNotchWidget: String, CaseIterable, Identifiable, Codable, Defaults.Seri
     case bluetooth   = "Bluetooth"
     case nextEvent   = "Next Event"
     case temperature = "Temperature"
-    case claudeUsage = "Claude"
+    case aiUsage     = "AI Usage"
     case time        = "Clock"
 
     var id: String { rawValue }
@@ -90,7 +90,7 @@ enum IdleNotchWidget: String, CaseIterable, Identifiable, Codable, Defaults.Seri
         case .bluetooth:   return "headphones"
         case .nextEvent:   return "calendar"
         case .temperature: return "thermometer.medium"
-        case .claudeUsage: return "apple.intelligence"
+        case .aiUsage:     return "apple.intelligence"
         case .time:        return "clock"
         }
     }

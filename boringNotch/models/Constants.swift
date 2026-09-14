@@ -108,12 +108,19 @@ extension Notification.Name {
 }
 
 // Media controller types for selection in settings
-enum ClaudeBrowserPreference: String, CaseIterable, Identifiable, Defaults.Serializable {
+enum AIBrowserPreference: String, CaseIterable, Identifiable, Defaults.Serializable {
     case auto   = "Auto"
     case safari = "Safari"
     case chrome = "Chrome"
     case brave  = "Brave"
     case edge   = "Edge"
+
+    var id: String { rawValue }
+}
+
+enum AIUsageProvider: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case claude  = "Claude"
+    case chatgpt = "ChatGPT"
 
     var id: String { rawValue }
 }
@@ -174,7 +181,7 @@ struct PerScreenConfig: Codable, Defaults.Serializable {
     var musicLiveActivityEnabled: Bool = true
     var downloadLiveActivityEnabled: Bool = true
     var showFaceAnimation: Bool = false
-    var claudeUsageInNotch: Bool = false
+    var aiUsageInNotch: Bool = false
 }
 
 enum HUDDisplayPolicy: String, CaseIterable, Identifiable, Defaults.Serializable {
@@ -343,12 +350,14 @@ extension Defaults.Keys {
     static let fanCurvePreset = Key<FanCurvePreset>("fanCurvePreset", default: .appleDefault)
     static let thermalNotchPresets = Key<[FanCurvePreset]>("thermalNotchPresets", default: [.appleDefault, .maxSpeed, .ramp80])
 
-    // MARK: Claude Usage
-    static let showClaudeUsageTab      = Key<Bool>("showClaudeUsageTab", default: false)
-    static let claudeUsageInNotch      = Key<Bool>("claudeUsageInNotch", default: false)
-    static let claudeClosedNotchShowRing = Key<Bool>("claudeClosedNotchShowRing", default: true)
-    static let claudePreferredBrowser  = Key<ClaudeBrowserPreference>("claudePreferredBrowser", default: .auto)
-    static let claudePollingInterval   = Key<Int>("claudePollingInterval", default: 5)
+    // MARK: AI Usage
+    static let showAIUsageTab              = Key<Bool>("showAIUsageTab", default: false)
+    static let aiUsageProvider             = Key<AIUsageProvider>("aiUsageProvider", default: .claude)
+    static let aiUsageInNotch              = Key<Bool>("aiUsageInNotch", default: false)
+    static let aiUsageClosedNotchShowRing  = Key<Bool>("aiUsageClosedNotchShowRing", default: true)
+    static let aiUsagePollingInterval      = Key<Int>("aiUsagePollingInterval", default: 5)
+    static let claudePreferredBrowser      = Key<AIBrowserPreference>("claudePreferredBrowser", default: .auto)
+    static let chatgptPreferredBrowser     = Key<AIBrowserPreference>("chatgptPreferredBrowser", default: .auto)
 
     // MARK: Per-Display
     static let perScreenConfigs = Key<[String: PerScreenConfig]>("perScreenConfigs", default: [:])

@@ -85,7 +85,7 @@ class BoringViewModel: NSObject, ObservableObject {
                 musicLiveActivityEnabled: true,
                 downloadLiveActivityEnabled: true,
                 showFaceAnimation: Defaults[.showNotHumanFace],
-                claudeUsageInNotch: Defaults[.claudeUsageInNotch]
+                aiUsageInNotch: Defaults[.aiUsageInNotch]
             )
         }
         screenConfig = Defaults[.perScreenConfigs][uuid] ?? PerScreenConfig()

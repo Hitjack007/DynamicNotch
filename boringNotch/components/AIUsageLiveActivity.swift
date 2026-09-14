@@ -1,18 +1,20 @@
 //
-//  ClaudeUsageLiveActivity.swift
+//  AIUsageLiveActivity.swift
 //  boringNotch
 //
-//  Compact closed-notch live activity for Claude usage.
+//  Compact closed-notch live activity for AI usage (Claude or ChatGPT).
 //  Layout: [ring OR %] [black notch center] [time remaining]
 //
 
 import Defaults
 import SwiftUI
 
-struct ClaudeUsageLiveActivity: View {
+struct AIUsageLiveActivity: View {
     @EnvironmentObject var vm: BoringViewModel
-    @ObservedObject private var manager = ClaudeUsageManager.shared
-    @Default(.claudeClosedNotchShowRing) var showRing
+    @ObservedObject private var claudeManager = ClaudeUsageManager.shared
+    @ObservedObject private var chatgptManager = ChatGPTUsageManager.shared
+    @Default(.aiUsageProvider) var aiUsageProvider
+    @Default(.aiUsageClosedNotchShowRing) var showRing
 
     var body: some View {
         HStack(spacing: 0) {
@@ -27,6 +29,14 @@ struct ClaudeUsageLiveActivity: View {
     }
 
     private var indicatorSize: CGFloat { max(0, vm.effectiveClosedNotchHeight - 12) }
+
+    private var usagePercent: Double {
+        aiUsageProvider == .claude ? claudeManager.usagePercent : chatgptManager.usagePercent
+    }
+
+    private var compactTimeUntilReset: String {
+        aiUsageProvider == .claude ? claudeManager.compactTimeUntilReset : chatgptManager.compactTimeUntilReset
+    }
 
     // MARK: - Left: ring or %
 
@@ -44,29 +54,29 @@ struct ClaudeUsageLiveActivity: View {
             Circle()
                 .stroke(Color.white.opacity(0.15), lineWidth: 2)
             Circle()
-                .trim(from: 0, to: manager.usagePercent)
+                .trim(from: 0, to: usagePercent)
                 .stroke(usageColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.smooth, value: manager.usagePercent)
+                .animation(.smooth, value: usagePercent)
         }
         .frame(width: indicatorSize, height: indicatorSize)
     }
 
     private var percentLabel: some View {
-        Text("\(Int((manager.usagePercent * 100).rounded()))%")
+        Text("\(Int((usagePercent * 100).rounded()))%")
             .font(.system(size: 9, weight: .semibold, design: .rounded).monospacedDigit())
             .foregroundStyle(usageColor)
             .frame(width: indicatorSize)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .animation(.smooth, value: manager.usagePercent)
+            .animation(.smooth, value: usagePercent)
     }
 
     // MARK: - Right: time remaining
 
     private var rightIndicator: some View {
         TimelineView(.periodic(from: Date(), by: 60)) { _ in
-            Text(manager.compactTimeUntilReset)
+            Text(compactTimeUntilReset)
                 .font(.system(size: 9, weight: .regular, design: .rounded).monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: indicatorSize)
@@ -78,7 +88,7 @@ struct ClaudeUsageLiveActivity: View {
     // MARK: - Helpers
 
     private var usageColor: Color {
-        switch manager.usagePercent * 100 {
+        switch usagePercent * 100 {
         case ..<75: return .white
         case ..<90: return .orange
         default:    return .red

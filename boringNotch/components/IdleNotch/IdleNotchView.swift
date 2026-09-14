@@ -32,8 +32,8 @@ struct IdleNotchView: View {
             NextEventIdleWidget(size: indicatorSize)
         case .temperature:
             TemperatureIdleWidget(size: indicatorSize)
-        case .claudeUsage:
-            ClaudeUsageIdleWidget(size: indicatorSize)
+        case .aiUsage:
+            AIUsageIdleWidget(size: indicatorSize)
         case .time:
             TimeIdleWidget(size: indicatorSize)
         }
@@ -177,23 +177,33 @@ struct TemperatureIdleWidget: View {
     }
 }
 
-// MARK: - Claude Usage Widget
+// MARK: - AI Usage Widget
 
-struct ClaudeUsageIdleWidget: View {
-    @ObservedObject private var manager = ClaudeUsageManager.shared
+struct AIUsageIdleWidget: View {
+    @ObservedObject private var claudeManager = ClaudeUsageManager.shared
+    @ObservedObject private var chatgptManager = ChatGPTUsageManager.shared
+    @Default(.aiUsageProvider) var aiUsageProvider
     let size: CGFloat
+
+    private var usagePercent: Double {
+        aiUsageProvider == .claude ? claudeManager.usagePercent : chatgptManager.usagePercent
+    }
+
+    private var isAuthenticated: Bool {
+        aiUsageProvider == .claude ? claudeManager.isAuthenticated : chatgptManager.isAuthenticated
+    }
 
     var body: some View {
         Group {
-            if manager.isAuthenticated {
+            if isAuthenticated {
                 ZStack {
                     Circle()
                         .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
                     Circle()
-                        .trim(from: 0, to: manager.usagePercent)
+                        .trim(from: 0, to: usagePercent)
                         .stroke(usageColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                        .animation(.smooth, value: manager.usagePercent)
+                        .animation(.smooth, value: usagePercent)
                     Image(systemName: "apple.intelligence")
                         .font(.system(size: size * 0.38))
                         .foregroundStyle(usageColor)
@@ -208,7 +218,7 @@ struct ClaudeUsageIdleWidget: View {
     }
 
     private var usageColor: Color {
-        let pct = manager.usagePercent * 100
+        let pct = usagePercent * 100
         if pct >= 90 { return .red }
         if pct >= 75 { return .orange }
         return .white

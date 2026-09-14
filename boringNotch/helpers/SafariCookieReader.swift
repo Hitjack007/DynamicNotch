@@ -23,7 +23,7 @@ struct SafariCookieReader {
         findCookie(named: "sessionKey")
     }
 
-    static func findCookie(named cookieName: String) -> String? {
+    static func findCookie(named cookieName: String, domain: String = "claude.ai") -> String? {
         // Safari is sandboxed; its cookie store lives in the container on modern macOS.
         // Try the container path first, then fall back to the legacy location.
         let home = NSHomeDirectory()
@@ -33,14 +33,14 @@ struct SafariCookieReader {
         ]
         for path in candidates {
             guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { continue }
-            if let result = parseFile(data, cookieName: cookieName) { return result }
+            if let result = parseFile(data, cookieName: cookieName, domain: domain) { return result }
         }
         return nil
     }
 
     // MARK: - File
 
-    private static func parseFile(_ data: Data, cookieName: String) -> String? {
+    private static func parseFile(_ data: Data, cookieName: String, domain: String) -> String? {
         guard data.count >= 8,
               String(bytes: data[0..<4], encoding: .ascii) == "cook" else { return nil }
 
@@ -56,7 +56,7 @@ struct SafariCookieReader {
 
         for size in sizes {
             guard cursor + size <= data.count else { break }
-            if let found = parsePage(Data(data[cursor..<(cursor + size)]), cookieName: cookieName) { return found }
+            if let found = parsePage(Data(data[cursor..<(cursor + size)]), cookieName: cookieName, domain: domain) { return found }
             cursor += size
         }
         return nil
@@ -64,29 +64,29 @@ struct SafariCookieReader {
 
     // MARK: - Page
 
-    private static func parsePage(_ page: Data, cookieName: String) -> String? {
+    private static func parsePage(_ page: Data, cookieName: String, domain: String) -> String? {
         guard page.count >= 8 else { return nil }
         let count = Int(le32(page, 4))
         for i in 0..<count {
             let idx = 8 + i * 4
             guard idx + 4 <= page.count else { break }
             let offset = Int(le32(page, idx))
-            if let found = parseCookie(page, at: offset, cookieName: cookieName) { return found }
+            if let found = parseCookie(page, at: offset, cookieName: cookieName, domain: domain) { return found }
         }
         return nil
     }
 
     // MARK: - Cookie record
 
-    private static func parseCookie(_ page: Data, at base: Int, cookieName: String) -> String? {
+    private static func parseCookie(_ page: Data, at base: Int, cookieName: String, domain: String) -> String? {
         guard base + 56 <= page.count else { return nil }
 
         let domainOff = Int(le32(page, base + 16))
         let nameOff   = Int(le32(page, base + 20))
         let valueOff  = Int(le32(page, base + 28))
 
-        guard let domain = cstr(page, base + domainOff), domain.contains("claude.ai") else { return nil }
-        guard let name   = cstr(page, base + nameOff),   name == cookieName             else { return nil }
+        guard let cookieDomain = cstr(page, base + domainOff), cookieDomain.contains(domain) else { return nil }
+        guard let name         = cstr(page, base + nameOff),   name == cookieName             else { return nil }
         return cstr(page, base + valueOff)
     }
 
@@ -100,10 +100,16 @@ struct SafariCookieReader {
     }
 
     private static func le32(_ data: Data, _ offset: Int) -> UInt32 {
-        data[offset..<(offset + 4)].withUnsafeBytes { $0.load(as: UInt32.self).littleEndian }
+        UInt32(data[offset])
+            | UInt32(data[offset + 1]) << 8
+            | UInt32(data[offset + 2]) << 16
+            | UInt32(data[offset + 3]) << 24
     }
 
     private static func be32(_ data: Data, _ offset: Int) -> UInt32 {
-        data[offset..<(offset + 4)].withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        UInt32(data[offset]) << 24
+            | UInt32(data[offset + 1]) << 16
+            | UInt32(data[offset + 2]) << 8
+            | UInt32(data[offset + 3])
     }
 }

@@ -54,7 +54,7 @@ final class ClaudeUsageManager: ObservableObject {
         if KeychainHelper.load(account: "claude.sessionKey") != nil {
             authState = .authenticated
         }
-        if Defaults[.showClaudeUsageTab] {
+        if Defaults[.showAIUsageTab] && Defaults[.aiUsageProvider] == .claude {
             start()
         }
     }
@@ -66,7 +66,7 @@ final class ClaudeUsageManager: ObservableObject {
         pollingTask = Task { [weak self] in
             while !Task.isCancelled {
                 await self?.refreshNow()
-                let minutes = Defaults[.claudePollingInterval]
+                let minutes = Defaults[.aiUsagePollingInterval]
                 try? await Task.sleep(for: .seconds(minutes * 60))
             }
         }
@@ -137,10 +137,6 @@ final class ClaudeUsageManager: ObservableObject {
     }
 
     // MARK: - API
-    //
-    // TODO: Verify endpoints by capturing real claude.ai network traffic in
-    // browser devtools (Network tab → XHR/Fetch) while on claude.ai.
-    // Update parseUsage() field names to match the actual JSON response shape.
 
     private func discoverOrgID(sessionKey: String) async {
         guard let url = URL(string: "https://claude.ai/api/organizations") else { return }
@@ -248,11 +244,11 @@ final class ClaudeUsageManager: ObservableObject {
 
     // MARK: - Cookie harvesting
 
-    private func findSessionKey(for browser: ClaudeBrowserPreference) -> String? {
+    private func findSessionKey(for browser: AIBrowserPreference) -> String? {
         findCookie(named: "sessionKey", for: browser)
     }
 
-    private func findCookie(named name: String, for browser: ClaudeBrowserPreference) -> String? {
+    private func findCookie(named name: String, for browser: AIBrowserPreference) -> String? {
         switch browser {
         case .auto:
             return SafariCookieReader.findCookie(named: name)

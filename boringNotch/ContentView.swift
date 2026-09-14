@@ -24,6 +24,7 @@ struct ContentView: View {
     @ObservedObject var volumeManager = VolumeManager.shared
     @ObservedObject var thermalManager = ThermalManager.shared
     @ObservedObject var claudeManager = ClaudeUsageManager.shared
+    @ObservedObject var chatgptManager = ChatGPTUsageManager.shared
     @State private var hoverTask: Task<Void, Never>?
     @State private var isHovering: Bool = false
     @State private var anyDropDebounceTask: Task<Void, Never>?
@@ -42,7 +43,8 @@ struct ContentView: View {
 
     @Default(.showThermalTab) var showThermalTab
     @Default(.showSystemStatsTab) var showSystemStatsTab
-    @Default(.showClaudeUsageTab) var showClaudeUsageTab
+    @Default(.showAIUsageTab) var showAIUsageTab
+    @Default(.aiUsageProvider) var aiUsageProvider
     @ObservedObject var downloadManager = DownloadManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
@@ -54,6 +56,10 @@ struct ContentView: View {
     private var isHUDTargetedAtThisDisplay: Bool {
         guard let target = coordinator.sneakPeekTargetUUID else { return true }
         return target == vm.screenUUID
+    }
+
+    private var activeAIManagerAuthenticated: Bool {
+        aiUsageProvider == .claude ? claudeManager.isAuthenticated : chatgptManager.isAuthenticated
     }
 
     private var topCornerRadius: CGFloat {
@@ -94,8 +100,8 @@ struct ContentView: View {
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && vm.screenConfig.claudeUsageInNotch && showClaudeUsageTab
-            && claudeManager.isAuthenticated && !vm.hideOnClosed
+            && vm.screenConfig.aiUsageInNotch && showAIUsageTab
+            && activeAIManagerAuthenticated && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
@@ -116,7 +122,7 @@ struct ContentView: View {
             let scaleFactor = 1.0 + gestureProgress * 0.01
             return max(0.6, scaleFactor)
         }()
-        
+
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
                 let mainLayout = NotchLayout()
@@ -145,13 +151,13 @@ struct ContentView: View {
                         .bottom,
                         vm.effectiveClosedNotchHeight == 0 ? 10 : 0
                     )
-                
+
                 mainLayout
                     .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
                     .conditionalModifier(true) { view in
                         let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
-                        
+
                         return view
                             .animation(vm.notchState == .open ? openAnimation : closeAnimation, value: vm.notchState)
                             .animation(.smooth, value: gestureProgress)
@@ -232,11 +238,6 @@ struct ContentView: View {
                             }
                         }
                         .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
-                        //                    Button("Edit") { // Doesnt work....
-                        //                        let dn = DynamicNotch(content: EditPanelView())
-                        //                        dn.toggle()
-                        //                    }
-                        //                    .keyboardShortcut("E", modifiers: .command)
                     }
                 if vm.chinHeight > 0 {
                     Rectangle()
@@ -298,14 +299,29 @@ struct ContentView: View {
                 coordinator.currentView = .home
             }
         }
-        .onChange(of: showClaudeUsageTab) { _, enabled in
+        .onChange(of: showAIUsageTab) { _, enabled in
             if enabled {
+                if aiUsageProvider == .claude {
+                    ClaudeUsageManager.shared.start()
+                } else {
+                    ChatGPTUsageManager.shared.start()
+                }
+            } else {
+                ClaudeUsageManager.shared.stop()
+                ChatGPTUsageManager.shared.stop()
+                if coordinator.currentView == .aiUsage {
+                    coordinator.currentView = .home
+                }
+            }
+        }
+        .onChange(of: aiUsageProvider) { _, provider in
+            guard showAIUsageTab else { return }
+            if provider == .claude {
+                ChatGPTUsageManager.shared.stop()
                 ClaudeUsageManager.shared.start()
             } else {
                 ClaudeUsageManager.shared.stop()
-                if coordinator.currentView == .claudeUsage {
-                    coordinator.currentView = .home
-                }
+                ChatGPTUsageManager.shared.start()
             }
         }
     }
@@ -370,9 +386,9 @@ struct ContentView: View {
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && vm.screenConfig.showFaceAnimation && !vm.hideOnClosed {
                           BoringFaceAnimation()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && vm.screenConfig.claudeUsageInNotch && showClaudeUsageTab
-                          && claudeManager.isAuthenticated && !vm.hideOnClosed {
-                          ClaudeUsageLiveActivity()
+                          && vm.screenConfig.aiUsageInNotch && showAIUsageTab
+                          && activeAIManagerAuthenticated && !vm.hideOnClosed {
+                          AIUsageLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
                           && !musicManager.isPlaying
@@ -441,8 +457,8 @@ struct ContentView: View {
                         ThermalView()
                     case .systemStats:
                         SystemStatsView()
-                    case .claudeUsage:
-                        ClaudeUsageView()
+                    case .aiUsage:
+                        AIUsageView()
                     }
                 }
                 .transition(
@@ -682,29 +698,29 @@ struct ContentView: View {
     private func handleHover(_ hovering: Bool) {
         if coordinator.firstLaunch { return }
         hoverTask?.cancel()
-        
+
         if hovering {
             withAnimation(animationSpring) {
                 isHovering = true
             }
-            
+
             if vm.notchState == .closed && Defaults[.enableHaptics] {
                 haptics.toggle()
             }
-            
+
             guard vm.notchState == .closed,
                   !coordinator.sneakPeek.show,
                   Defaults[.openNotchOnHover] else { return }
-            
+
             hoverTask = Task {
                 try? await Task.sleep(for: .seconds(Defaults[.minimumHoverDuration]))
                 guard !Task.isCancelled else { return }
-                
+
                 await MainActor.run {
                     guard self.vm.notchState == .closed,
                           self.isHovering,
                           !self.coordinator.sneakPeek.show else { return }
-                    
+
                     self.doOpen()
                 }
             }
@@ -712,12 +728,12 @@ struct ContentView: View {
             hoverTask = Task {
                 try? await Task.sleep(for: .milliseconds(100))
                 guard !Task.isCancelled else { return }
-                
+
                 await MainActor.run {
                     withAnimation(animationSpring) {
                         self.isHovering = false
                     }
-                    
+
                     if self.vm.notchState == .open && !self.vm.isBatteryPopoverActive && !self.vm.isAudioPickerActive && !SharingStateManager.shared.preventNotchClose {
                         self.vm.close()
                     }
@@ -768,7 +784,7 @@ struct ContentView: View {
             withAnimation(animationSpring) {
                 isHovering = false
             }
-            if !SharingStateManager.shared.preventNotchClose { 
+            if !SharingStateManager.shared.preventNotchClose {
                 gestureProgress = .zero
                 vm.close()
             }
