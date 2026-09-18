@@ -11,6 +11,18 @@ import Defaults
 import KeyboardShortcuts
 import Sparkle
 import SwiftUI
+import os
+
+/// Ordered timeline of app-launch milestones, tagged with elapsed time since process init.
+/// If the app is ever killed during launch, the last line printed here is the last thing
+/// that happened before it died — check Console.app filtered to subsystem/category "AppLaunch".
+private let launchLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.app", category: "AppLaunch")
+private let launchStart = Date()
+
+func logLaunchStep(_ step: String) {
+    let elapsedMs = Date().timeIntervalSince(launchStart) * 1000
+    launchLogger.notice("🚀 [Launch +\(String(format: "%6.1f", elapsedMs), privacy: .public)ms] \(step, privacy: .public)")
+}
 
 @main
 struct DynamicNotchApp: App {
@@ -21,11 +33,15 @@ struct DynamicNotchApp: App {
     let updaterController: SPUStandardUpdaterController
 
     init() {
+        logLaunchStep("App init() started")
+
         updaterController = SPUStandardUpdaterController(
             startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        logLaunchStep("Sparkle updater controller created")
 
         // Initialize the settings window controller with the updater controller
         SettingsWindowController.shared.setUpdaterController(updaterController)
+        logLaunchStep("Settings window controller configured")
     }
 
     var body: some Scene {
@@ -75,6 +91,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // If the app dies WITHOUT this line appearing beforehand, it was killed
+        // externally (Xcode Stop, jetsam, watchdog) rather than quitting normally.
+        logLaunchStep("applicationWillTerminate — graceful shutdown")
+
         NotificationCenter.default.removeObserver(self)
         if let observer = screenLockedObserver {
             DistributedNotificationCenter.default().removeObserver(observer)
@@ -283,7 +303,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        logLaunchStep("applicationDidFinishLaunching started")
+
         checkForAppTranslocation()
+        logLaunchStep("Translocation check passed")
 
         NotificationCenter.default.addObserver(
             self,
@@ -337,6 +360,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        logLaunchStep("Screen/display notification observers registered")
+
         // Use closure-based observers for DistributedNotificationCenter and keep tokens for removal
         screenLockedObserver = DistributedNotificationCenter.default().addObserver(
             forName: NSNotification.Name(rawValue: "com.apple.screenIsLocked"),
@@ -353,6 +378,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     self?.onScreenUnlocked(notification)
                 }
         }
+
+        logLaunchStep("Screen lock/unlock observers registered")
 
         KeyboardShortcuts.onKeyDown(for: .toggleSneakPeek) { [weak self] in
             guard let self = self else { return }
@@ -413,6 +440,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        logLaunchStep("Keyboard shortcuts registered")
+
         if !Defaults[.showOnAllDisplays] {
             let viewModel = self.vm
             let window = createBoringNotchWindow(
@@ -423,7 +452,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             adjustWindowPosition(changeAlpha: true)
         }
 
+        logLaunchStep("Notch window(s) created and positioned")
+
         setupDragDetectors()
+        logLaunchStep("Drag detectors set up")
 
         if coordinator.firstLaunch {
             DispatchQueue.main.async {
@@ -438,9 +470,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
+        logLaunchStep("Onboarding check complete (firstLaunch=\(coordinator.firstLaunch))")
+
         previousScreens = NSScreen.screens
 
         _ = ClipboardManager.shared
+
+        logLaunchStep("applicationDidFinishLaunching finished")
     }
 
     private func checkForAppTranslocation() {
