@@ -28,6 +28,10 @@ struct AlbumArtView: View {
     @ObservedObject var vm: BoringViewModel
     let albumArtNamespace: Namespace.ID
 
+    private var artSize: CGSize {
+        vm.notchState == .open ? MusicPlayerImageSizes.size.opened : MusicPlayerImageSizes.size.closed
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if Defaults[.lightingEffect] {
@@ -35,11 +39,14 @@ struct AlbumArtView: View {
             }
             albumArtButton
         }
+        .frame(width: artSize.width, height: artSize.height)
     }
 
     private var albumArtBackground: some View {
         Image(nsImage: musicManager.albumArt)
             .resizable()
+            .scaledToFill()
+            .frame(width: artSize.width, height: artSize.height)
             .clipped()
             .clipShape(
                 RoundedRectangle(
@@ -47,7 +54,6 @@ struct AlbumArtView: View {
                         ? MusicPlayerImageSizes.cornerRadiusInset.opened
                         : MusicPlayerImageSizes.cornerRadiusInset.closed)
             )
-            .aspectRatio(1, contentMode: .fit)
             .scaleEffect(x: 1.3, y: 1.4)
             .rotationEffect(.degrees(92))
             .blur(radius: 40)
@@ -73,12 +79,12 @@ struct AlbumArtView: View {
 
     private var albumArtDarkOverlay: some View {
         Rectangle()
-            .aspectRatio(1, contentMode: .fit)
+            .frame(width: artSize.width, height: artSize.height)
             .foregroundColor(Color.black)
             .opacity(musicManager.isPlaying ? 0 : 0.8)
             .blur(radius: 50)
     }
-                
+
 
     private var albumArtImage: some View {
         ZStack {
@@ -94,7 +100,7 @@ struct AlbumArtView: View {
                     .scaledToFill()
             }
         }
-        .aspectRatio(1, contentMode: .fit)
+        .frame(width: artSize.width, height: artSize.height)
         .matchedGeometryEffect(id: "albumArt", in: albumArtNamespace)
         .clipped()
         .clipShape(
