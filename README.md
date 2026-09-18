@@ -84,6 +84,21 @@ In Xcode, set your own development team under **Signing & Capabilities** for bot
 
 ---
 
+## Contributing
+
+Contributions are welcome — code, documentation, bug reports, feature requests, translations.
+
+Two documents to read before you start:
+
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** — how to set up, branch, commit, and open a pull request
+- **[AI_AGENTS.md](./AI_AGENTS.md)** — the AI agent policy. AI-assisted contributions are accepted, with requirements around disclosure, testing, and which parts of the codebase agents may touch
+
+If you are using a coding agent, read both. If your agent reads files on its own, point it at [AGENTS.md](./AGENTS.md).
+
+Security issues go through [SECURITY.md](./SECURITY.md) rather than the public issue tracker.
+
+---
+
 ## Credits
 
 DynamicNotch is a fork of [boring.notch](https://github.com/TheBoredTeam/boring.notch) by [TheBoredTeam](https://github.com/TheBoredTeam). Their work is the foundation of everything here.

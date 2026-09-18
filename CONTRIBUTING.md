@@ -6,6 +6,9 @@ These guidelines help streamline the contribution process for everyone involved.
 
 You can contribute in many ways: writing code, improving documentation, reporting bugs, requesting features, or creating tutorials. Every contribution, large or small, helps make DynamicNotch better.
 
+> [!IMPORTANT]
+> Using an AI coding agent or assistant? Read the **[AI Agent Policy](./AI_AGENTS.md)** as well. AI-assisted contributions are welcome, but they come with extra requirements around disclosure, testing, and which parts of the codebase agents may touch.
+
 ## Table of Contents
 
 - [Contributing Code](#contributing-code)
@@ -13,6 +16,7 @@ You can contribute in many ways: writing code, improving documentation, reportin
   - [Setting Up Your Environment](#setting-up-your-environment)
   - [Making Changes](#making-changes)
   - [Pull Requests](#pull-requests)
+- [Using AI Agents](#using-ai-agents)
 - [Reporting Bugs](#reporting-bugs)
 - [Feature Requests](#feature-requests)
 - [Getting Help](#getting-help)
@@ -79,10 +83,27 @@ You can contribute in many ways: writing code, improving documentation, reportin
    - A detailed description of what was changed and why
    - Reference to any related issues (e.g., "Fixes #123" or "Relates to #456")
    - Screenshots or screen recordings for UI changes
+   - A disclosure of any AI assistance, as described in the [AI Agent Policy](./AI_AGENTS.md#disclosure)
 
 3. **Respond to feedback**: Maintainers may request changes.
 
 4. **Be patient**: Reviews take time. Maintainers will get to your PR as soon as they can.
+
+## Using AI Agents
+
+AI-assisted contributions are accepted. The maintainer uses coding agents on this project, so it would be strange to ask you not to.
+
+The conditions, in brief:
+
+- **Disclose it** in your pull request — which tool, what it generated, and what you verified yourself
+- **Understand what you submit** — you must be able to explain every line without re-prompting the model
+- **Build it and run it** — an agent reporting a successful build is not a test result
+- **Keep to one concern per PR** — strip out the refactors the agent threw in along the way
+- **Respect the protected paths** — signing, entitlements, release scripts, the Xcode project file, CI, dependencies, private APIs, and anything touching credentials are off-limits without discussion first
+
+The full rules, including what agents are explicitly allowed to do, the licensing affirmations you are making, and what happens when the policy is ignored, are in **[AI_AGENTS.md](./AI_AGENTS.md)**.
+
+That document also contains a [Rules for Agents](./AI_AGENTS.md#rules-for-agents) section written for the agent itself — point your tool at it before you start.
 
 ## Reporting Bugs
 
@@ -93,6 +114,8 @@ When reporting bugs, please include:
 - Expected behavior vs. actual behavior
 - Screenshots or error messages if applicable
 - Your environment details (OS version, app version, etc.)
+
+Report only bugs you have personally reproduced. If a model helped you write the report, say so — see [AI-Written Issues and Feature Requests](./AI_AGENTS.md#ai-written-issues-and-feature-requests).
 
 ## Feature Requests
 
