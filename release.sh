@@ -81,7 +81,7 @@ MIN_OS_VERSION=$(xcodebuild -showBuildSettings \
     -project "$SCRIPT_DIR/dynamicNotch.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration Release 2>/dev/null \
-    | awk -F '= ' '/MACOSX_DEPLOYMENT_TARGET/ { print $2; exit }')
+    | awk -F '= ' '$1 ~ /^[[:space:]]*MACOSX_DEPLOYMENT_TARGET[[:space:]]*$/ { print $2; exit }')
 
 if [ -z "$MIN_OS_VERSION" ]; then
     echo "Error: Could not resolve MACOSX_DEPLOYMENT_TARGET from build settings."
