@@ -41,13 +41,15 @@ final class CaffeineManager: ObservableObject {
             self.timeRemaining = duration
 
             self.timeoutTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-                DispatchQueue.main.async { self?.deactivate() }
+                guard let self else { return }
+                DispatchQueue.main.async { self.deactivate() }
             }
 
             self.displayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                guard let self else { return }
                 DispatchQueue.main.async {
-                    guard let self, let timeoutTimer = self.timeoutTimer else {
-                        self?.displayTimer?.invalidate()
+                    guard let timeoutTimer = self.timeoutTimer else {
+                        self.displayTimer?.invalidate()
                         return
                     }
                     self.timeRemaining = max(0, timeoutTimer.fireDate.timeIntervalSinceNow)

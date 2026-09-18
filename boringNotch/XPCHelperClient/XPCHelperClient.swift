@@ -1,8 +1,8 @@
 import Foundation
 import Cocoa
-import AsyncXPCConnection
+@preconcurrency import AsyncXPCConnection
 
-final class XPCHelperClient: NSObject {
+final class XPCHelperClient: NSObject, @unchecked Sendable {
     nonisolated static let shared = XPCHelperClient()
     
     private let serviceName = "com.mark.dynamicnotch.BoringNotchXPCHelper"

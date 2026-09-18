@@ -71,7 +71,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
 
     enum CodingKeys: CodingKey { case id, kind, isTemporary, dateAdded, source }
 
-    init(from decoder: Decoder) throws {
+    nonisolated init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id          = try c.decode(UUID.self,         forKey: .id)
         kind        = try c.decode(ShelfItemKind.self, forKey: .kind)
@@ -80,7 +80,7 @@ struct ShelfItem: Identifiable, Codable, Equatable, Sendable {
         source      = (try? c.decodeIfPresent(ShelfItemSource.self, forKey: .source)) ?? .dropped
     }
 
-    func encode(to encoder: Encoder) throws {
+    nonisolated func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id,          forKey: .id)
         try c.encode(kind,        forKey: .kind)

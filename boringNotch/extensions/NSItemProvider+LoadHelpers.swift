@@ -10,6 +10,8 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 
+extension NSItemProvider: @retroactive @unchecked Sendable {}
+
 extension NSItemProvider {
     
     func extractItem() async -> URL? {

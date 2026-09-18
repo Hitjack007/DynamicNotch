@@ -33,9 +33,9 @@ final class AirPlayConnector: ObservableObject {
     private func sendRTSPOptions(to endpoint: NWEndpoint) async throws {
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             let conn = NWConnection(to: endpoint, using: .tcp)
-            var settled = false
+            nonisolated(unsafe) var settled = false
 
-            let settle: (Error?) -> Void = { err in
+            let settle: @Sendable (Error?) -> Void = { err in
                 guard !settled else { return }
                 settled = true
                 conn.cancel()
