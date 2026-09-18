@@ -1,6 +1,6 @@
 name: Update bug report version list
-
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
@@ -12,16 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Fetch release tags
         run: |
           gh release list --limit 10 --json tagName --jq '[.[].tagName]' > /tmp/releases.json
         env:
           GH_TOKEN: ${{ github.token }}
-
       - name: Update bug report version dropdown
         run: python3 .github/scripts/update_version_template.py /tmp/releases.json .github/ISSUE_TEMPLATE/1-bug-report-form.yml
-
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
