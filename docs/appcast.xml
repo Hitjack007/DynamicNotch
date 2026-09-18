@@ -169,5 +169,19 @@
         type="application/octet-stream"/>
     </item>
 
+
+    <item>
+      <title>Version 27.0</title>
+      <pubDate>Fri, 18 Sep 2026 06:06:25 +0000</pubDate>
+      <sparkle:version>202609181803</sparkle:version>
+      <sparkle:shortVersionString>27.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>MACOSX_DEPLOYMENT_TARGET</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v27.0/DynamicNotch-27.0.dmg"
+        sparkle:edSignature="Y2kP+lR155p0br56ntPDCA28w+bgg2Fuzn0B3aA90r8DvrZwiKGRopBTVfYuWvIg+oPPxp6tDpYFRiM10Dt8Cg=="
+        length="11544869"
+        type="application/octet-stream"/>
+    </item>
+
   </channel>
 </rss>
