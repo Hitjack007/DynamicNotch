@@ -7,9 +7,9 @@ VERSION="${1:?Usage: ./release.sh <version> \"<release notes>\"}"
 NOTES="${2:?Please provide release notes as the second argument}"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PBXPROJ="$SCRIPT_DIR/boringNotch.xcodeproj/project.pbxproj"
-SCHEME="boringNotch"
-APP_NAME="boringNotch"
+PBXPROJ="$SCRIPT_DIR/dynamicNotch.xcodeproj/project.pbxproj"
+SCHEME="DynamicNotch"
+APP_NAME="DynamicNotch"
 DMG_NAME="DynamicNotch-${VERSION}.dmg"
 ARCHIVE_PATH="/tmp/DynamicNotch-${VERSION}.xcarchive"
 DMG_PATH="/tmp/${DMG_NAME}"
@@ -70,7 +70,7 @@ PYEOF
 echo ""
 echo "→ Committing version bump..."
 cd "$SCRIPT_DIR"
-git add boringNotch.xcodeproj/project.pbxproj
+git add dynamicNotch.xcodeproj/project.pbxproj
 git commit -m "Bump version to ${VERSION}"
 
 # ── Resolve minimum supported macOS version ─────────────────────────────────
@@ -78,7 +78,7 @@ git commit -m "Bump version to ${VERSION}"
 echo ""
 echo "→ Resolving minimum macOS version from build settings..."
 MIN_OS_VERSION=$(xcodebuild -showBuildSettings \
-    -project "$SCRIPT_DIR/boringNotch.xcodeproj" \
+    -project "$SCRIPT_DIR/dynamicNotch.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration Release 2>/dev/null \
     | awk -F '= ' '/MACOSX_DEPLOYMENT_TARGET/ { print $2; exit }')
@@ -94,7 +94,7 @@ echo "  Minimum macOS version: $MIN_OS_VERSION"
 echo ""
 echo "→ Archiving (this takes a minute)..."
 xcodebuild archive \
-    -project "$SCRIPT_DIR/boringNotch.xcodeproj" \
+    -project "$SCRIPT_DIR/dynamicNotch.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration Release \
     -archivePath "$ARCHIVE_PATH" \
