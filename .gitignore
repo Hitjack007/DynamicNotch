@@ -42,6 +42,12 @@ build/
 *.vscode/
 *.idea/
 
+# Local AI agent instructions (maintainer-only; must stay untracked so that
+# contributors' agents are not handed the maintainer's exemptions)
+CLAUDE.md
+CLAUDE.local.md
+.claude/settings.local.json
+
 # User-specific files
 *.xcuserdatad/
 *.xcscheme

@@ -2,6 +2,8 @@
 
 If you are an AI coding agent working in this repository, read **[AI_AGENTS.md](./AI_AGENTS.md)** before making any changes. The [Rules for Agents](./AI_AGENTS.md#rules-for-agents) section is addressed to you directly and is binding.
 
+> **Scope:** these rules bind agents producing changes intended for submission to this repository as a pull request. That is the default assumption — if you are reading this file, it applies to you, unless the person operating you has given you instructions that explicitly supersede it. Maintainer commits go through a different process; see the note at the end of [AI_AGENTS.md](./AI_AGENTS.md).
+
 The essentials, in case you read nothing else:
 
 1. **Protected paths — do not modify:** `dynamicNotch.xcodeproj/`, `.github/workflows/`, `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/`, `*.entitlements`, `boringNotch/helpers/SafariCookieReader.swift`, `boringNotch/helpers/ChromeCookieReader.swift`, `boringNotch/helpers/KeychainHelper.swift`.
