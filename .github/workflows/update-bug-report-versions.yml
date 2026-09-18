@@ -11,7 +11,7 @@ jobs:
   update-template:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Fetch release tags
         run: |
           gh release list --limit 10 --json tagName --jq '[.[].tagName]' > /tmp/releases.json
