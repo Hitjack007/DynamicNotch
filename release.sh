@@ -15,6 +15,8 @@ ARCHIVE_PATH="/tmp/DynamicNotch-${VERSION}.xcarchive"
 DMG_PATH="/tmp/${DMG_NAME}"
 APPCAST="$SCRIPT_DIR/docs/appcast.xml"
 BUILD_NUM=$(date +%Y%m%d%H%M)
+TAP_REPO="Hitjack007/homebrew-dynamicnotch"
+CASK_NAME="dynamicnotch"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -185,6 +187,89 @@ echo "→ Creating GitHub release v${VERSION}..."
 gh release create "v${VERSION}" "$DMG_PATH" \
     --title "DynamicNotch v${VERSION}" \
     --notes "$NOTES"
+
+# ── Homebrew cask ────────────────────────────────────────────────────────────
+# Homebrew's `depends_on macos:` only accepts codename symbols, not raw version
+# numbers, so MIN_OS_VERSION (resolved above from MACOSX_DEPLOYMENT_TARGET) is
+# mapped to the matching symbol here. This keeps the cask's OS gate in sync
+# with Sparkle's sparkle:minimumSystemVersion instead of a hardcoded codename
+# that could go stale and let brew install a build the Mac can't run.
+
+echo ""
+echo "→ Resolving Homebrew macOS codename for ${MIN_OS_VERSION}..."
+MIN_OS_MAJOR="${MIN_OS_VERSION%%.*}"
+case "$MIN_OS_MAJOR" in
+    11) MACOS_CODENAME="big_sur" ;;
+    12) MACOS_CODENAME="monterey" ;;
+    13) MACOS_CODENAME="ventura" ;;
+    14) MACOS_CODENAME="sonoma" ;;
+    15) MACOS_CODENAME="sequoia" ;;
+    26) MACOS_CODENAME="tahoe" ;;
+    27) MACOS_CODENAME="golden_gate" ;;
+    *)
+        echo "Error: No Homebrew codename mapping for macOS major version ${MIN_OS_MAJOR}."
+        echo "Add it to the case statement in release.sh (check Homebrew's macos_version.rb"
+        echo "SYMBOLS table for the correct name) before releasing, so the cask doesn't"
+        echo "advertise an install that macOS refuses to run."
+        exit 1
+        ;;
+esac
+echo "  depends_on macos: :${MACOS_CODENAME}"
+
+echo ""
+echo "→ Publishing Homebrew cask to ${TAP_REPO}..."
+CASK_SHA256=$(shasum -a 256 "$DMG_PATH" | cut -d' ' -f1)
+TAP_CLONE="/tmp/homebrew-dynamicnotch-$$"
+rm -rf "$TAP_CLONE"
+gh repo clone "$TAP_REPO" "$TAP_CLONE" -- -q
+mkdir -p "$TAP_CLONE/Casks"
+
+cat > "$TAP_CLONE/Casks/${CASK_NAME}.rb" <<CASKEOF
+cask "${CASK_NAME}" do
+  version "${VERSION}"
+  sha256 "${CASK_SHA256}"
+
+  url "${DOWNLOAD_URL}"
+  name "DynamicNotch"
+  desc "Turns the MacBook notch into a live system dashboard"
+  homepage "https://github.com/Hitjack007/DynamicNotch"
+
+  livecheck do
+    url :url
+    strategy :github_latest
+  end
+
+  auto_updates true
+  depends_on macos: :${MACOS_CODENAME}
+
+  app "DynamicNotch.app"
+
+  postflight_steps do
+    if_path_exists "DynamicNotch.app", base: :appdir do
+      run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/DynamicNotch.app"]
+    end
+  end
+
+  uninstall quit: "com.mark.dynamicnotch"
+
+  zap trash: [
+    "~/Library/Application Scripts/com.mark.dynamicnotch/",
+    "~/Library/Containers/com.mark.dynamicnotch/",
+  ]
+end
+CASKEOF
+
+cd "$TAP_CLONE"
+git add "Casks/${CASK_NAME}.rb"
+if git diff --cached --quiet; then
+    echo "  No cask changes to publish"
+else
+    git commit -m "Update ${CASK_NAME} to v${VERSION}"
+    git push
+    echo "  Cask updated: v${VERSION}"
+fi
+cd "$SCRIPT_DIR"
+rm -rf "$TAP_CLONE"
 
 # ── Push everything ───────────────────────────────────────────────────────────
 

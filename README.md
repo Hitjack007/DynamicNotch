@@ -44,6 +44,8 @@ Because the minimum deployment target is macOS 15, **any version still runs on m
 
 ## Installation
 
+### Option 1: Download and Install Manually
+
 1. Download the latest **DynamicNotch.dmg** from the [Releases](https://github.com/Hitjack007/DynamicNotch/releases/latest) page
 2. Open the DMG and drag **DynamicNotch** to your Applications folder
 3. Before opening, run this once in Terminal to clear the macOS security warning:
@@ -51,6 +53,14 @@ Because the minimum deployment target is macOS 15, **any version still runs on m
    xattr -dr com.apple.quarantine /Applications/DynamicNotch.app
    ```
 4. Open the app — your notch is now alive
+
+### Option 2: Install via Homebrew
+
+You can also install using [Homebrew](https://brew.sh). The Homebrew installation automatically bypasses the macOS security warning described above.
+
+```bash
+brew install --cask hitjack007/dynamicnotch/dynamicnotch
+```
 
 ---
 
