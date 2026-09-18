@@ -73,6 +73,22 @@ cd "$SCRIPT_DIR"
 git add boringNotch.xcodeproj/project.pbxproj
 git commit -m "Bump version to ${VERSION}"
 
+# ── Resolve minimum supported macOS version ─────────────────────────────────
+
+echo ""
+echo "→ Resolving minimum macOS version from build settings..."
+MIN_OS_VERSION=$(xcodebuild -showBuildSettings \
+    -project "$SCRIPT_DIR/boringNotch.xcodeproj" \
+    -scheme "$SCHEME" \
+    -configuration Release 2>/dev/null \
+    | awk -F '= ' '/MACOSX_DEPLOYMENT_TARGET/ { print $2; exit }')
+
+if [ -z "$MIN_OS_VERSION" ]; then
+    echo "Error: Could not resolve MACOSX_DEPLOYMENT_TARGET from build settings."
+    exit 1
+fi
+echo "  Minimum macOS version: $MIN_OS_VERSION"
+
 # ── Archive ──────────────────────────────────────────────────────────────────
 
 echo ""
@@ -139,15 +155,16 @@ echo "→ Updating appcast.xml..."
 RELEASE_DATE=$(date -u "+%a, %d %b %Y %H:%M:%S +0000")
 DOWNLOAD_URL="https://github.com/Hitjack007/DynamicNotch/releases/download/v${VERSION}/${DMG_NAME}"
 
-python3 - "$APPCAST" "$VERSION" "$BUILD_NUM" "$RELEASE_DATE" "$DOWNLOAD_URL" "$ED_SIG" "$FILE_LEN" <<'PYEOF'
+python3 - "$APPCAST" "$VERSION" "$BUILD_NUM" "$RELEASE_DATE" "$DOWNLOAD_URL" "$ED_SIG" "$FILE_LEN" "$MIN_OS_VERSION" <<'PYEOF'
 import sys
-path, version, build, date, url, sig, length = sys.argv[1:]
+path, version, build, date, url, sig, length, min_os = sys.argv[1:]
 new_item = (
     f"\n    <item>\n"
     f"      <title>Version {version}</title>\n"
     f"      <pubDate>{date}</pubDate>\n"
     f"      <sparkle:version>{build}</sparkle:version>\n"
     f"      <sparkle:shortVersionString>{version}</sparkle:shortVersionString>\n"
+    f"      <sparkle:minimumSystemVersion>{min_os}</sparkle:minimumSystemVersion>\n"
     f"      <enclosure\n"
     f"        url=\"{url}\"\n"
     f"        sparkle:edSignature=\"{sig}\"\n"

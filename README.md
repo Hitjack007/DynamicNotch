@@ -23,8 +23,22 @@ Make your MacBook's notch actually useful. DynamicNotch turns the notch into a l
 
 ## Requirements
 
-- macOS **14 Sonoma** or later
-- MacBook with a notch (any Apple Silicon model, or Intel with notch display)
+- macOS **15 Sequoia** or later
+- Any Mac — DynamicNotch draws its own custom notch, so a physical notch display isn't required
+
+---
+
+## Versioning
+
+DynamicNotch's version number tracks the macOS version it's built and optimised for, not an independent app version:
+
+- **Major** (`27` in `27.1.2`) — the macOS major version the release targets (e.g. macOS 27). This only changes when Apple ships a new macOS major version.
+- **Minor** (`.1`) — a new feature has landed.
+- **Patch** (`.2`) — a bug fix for the current minor.
+
+For example, `27.1` means "the first feature release built and optimised for macOS 27." The patch level is only shown when a patch actually exists.
+
+Because the minimum deployment target is macOS 15, **any version still runs on macOS 15 and up** — a release numbered `27.5` isn't macOS-27-only, it's just built and tuned against macOS 27, while remaining fully compatible with older supported macOS versions down to 15.
 
 ---
 
