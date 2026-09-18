@@ -184,6 +184,31 @@ struct PerScreenConfig: Codable, Defaults.Serializable {
     var aiUsageInNotch: Bool = false
 }
 
+extension PerScreenConfig {
+    /// The config the primary display (and single-display mode) uses — mirrors
+    /// whatever is set in each feature's own settings section, so there is exactly
+    /// one toggle per feature instead of a global one plus a per-display override.
+    static var fromGlobalSettings: PerScreenConfig {
+        PerScreenConfig(
+            idleLeftWidget: Defaults[.idleNotchLeftWidget],
+            idleRightWidget: Defaults[.idleNotchRightWidget],
+            musicLiveActivityEnabled: Defaults[.musicLiveActivityEnabled],
+            downloadLiveActivityEnabled: Defaults[.enableDownloadListener],
+            showFaceAnimation: Defaults[.showNotHumanFace],
+            aiUsageInNotch: Defaults[.aiUsageInNotch]
+        )
+    }
+
+    /// Keys that feed `fromGlobalSettings` — observe these to keep the primary
+    /// display's live activities in sync as the user changes feature settings.
+    static var globalSourceKeys: [Defaults._AnyKey] {
+        [
+            .idleNotchLeftWidget, .idleNotchRightWidget, .musicLiveActivityEnabled,
+            .enableDownloadListener, .showNotHumanFace, .aiUsageInNotch, .showOnAllDisplays,
+        ]
+    }
+}
+
 enum HUDDisplayPolicy: String, CaseIterable, Identifiable, Defaults.Serializable {
     case allDisplays   = "All Displays"
     case primaryDisplay = "Primary Display"
@@ -196,6 +221,10 @@ extension Defaults.Keys {
     // MARK: General
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
+    // Same UserDefaults key as BoringViewCoordinator's `@AppStorage("musicLiveActivityEnabled")`
+    // so both APIs read/write one persisted value — this is the global source of truth
+    // for the primary display's music live activity.
+    static let musicLiveActivityEnabled = Key<Bool>("musicLiveActivityEnabled", default: true)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
     static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
     
@@ -353,7 +382,9 @@ extension Defaults.Keys {
     // MARK: AI Usage
     static let showAIUsageTab              = Key<Bool>("showAIUsageTab", default: false)
     static let aiUsageProvider             = Key<AIUsageProvider>("aiUsageProvider", default: .claude)
-    static let aiUsageInNotch              = Key<Bool>("aiUsageInNotch", default: false)
+    // "Show in closed notch" sub-switch under "Enable AI Usage" — on by default so
+    // one toggle (Enable AI Usage) is enough to see the feature end to end.
+    static let aiUsageInNotch              = Key<Bool>("aiUsageInNotch", default: true)
     static let aiUsageClosedNotchShowRing  = Key<Bool>("aiUsageClosedNotchShowRing", default: true)
     static let aiUsagePollingInterval      = Key<Int>("aiUsagePollingInterval", default: 5)
     static let claudePreferredBrowser      = Key<AIBrowserPreference>("claudePreferredBrowser", default: .auto)

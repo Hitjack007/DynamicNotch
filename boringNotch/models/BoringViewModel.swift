@@ -68,40 +68,72 @@ class BoringViewModel: NSObject, ObservableObject {
             .assign(to: \.anyDropZoneTargeting, on: self)
             .store(in: &cancellables)
 
-        setupScreenConfig(screenUUID: screenUUID)
+        setupScreenConfig()
         setupDetectorObserver()
     }
 
     // MARK: - Per-screen config
 
-    private func setupScreenConfig(screenUUID: String?) {
-        guard let uuid = screenUUID else { return }
+    /// True when this screen should follow the global feature-section settings
+    /// instead of a per-display override: the primary (menu-bar) display, or any
+    /// screen at all when the app isn't showing a notch on every display (in
+    /// single-display mode there's nothing to "override" against).
+    private var usesGlobalConfig: Bool {
+        guard let uuid = screenUUID else { return true }
+        return !Defaults[.showOnAllDisplays] || uuid == NSScreen.primaryDisplayUUID
+    }
 
-        // Seed from global settings the first time this screen is seen
-        if Defaults[.perScreenConfigs][uuid] == nil {
-            Defaults[.perScreenConfigs][uuid] = PerScreenConfig(
-                idleLeftWidget: Defaults[.idleNotchLeftWidget],
-                idleRightWidget: Defaults[.idleNotchRightWidget],
-                musicLiveActivityEnabled: true,
-                downloadLiveActivityEnabled: true,
-                showFaceAnimation: Defaults[.showNotHumanFace],
-                aiUsageInNotch: Defaults[.aiUsageInNotch]
-            )
+    private func recomputeScreenConfig() {
+        guard !usesGlobalConfig, let uuid = screenUUID else {
+            screenConfig = .fromGlobalSettings
+            return
         }
-        screenConfig = Defaults[.perScreenConfigs][uuid] ?? PerScreenConfig()
+        screenConfig = Defaults[.perScreenConfigs][uuid] ?? .fromGlobalSettings
+    }
+
+    private func setupScreenConfig() {
+        // screenUUID starts nil for the single-display-mode view model (it's
+        // assigned after the window is created), so seeding/subscribing has to
+        // react to the published property rather than an init-time parameter —
+        // otherwise this screen's config never leaves the struct default and
+        // per-display toggles silently do nothing.
+        $screenUUID
+            .compactMap { $0 }
+            .removeDuplicates()
+            .sink { [weak self] uuid in
+                guard let self = self else { return }
+
+                // Seed a per-display override the first time a non-primary screen is
+                // seen, so there's something to edit if the user opens Displays →
+                // Per-Display Settings. The primary display never gets one — it
+                // always tracks global settings live.
+                if uuid != NSScreen.primaryDisplayUUID, Defaults[.perScreenConfigs][uuid] == nil {
+                    Defaults[.perScreenConfigs][uuid] = .fromGlobalSettings
+                }
+                self.recomputeScreenConfig()
+            }
+            .store(in: &cancellables)
 
         Defaults.publisher(.perScreenConfigs)
             .receive(on: RunLoop.main)
-            .sink { [weak self] change in
-                guard let self = self, let uuid = self.screenUUID else { return }
-                self.screenConfig = change.newValue[uuid] ?? PerScreenConfig()
+            .sink { [weak self] _ in
+                self?.recomputeScreenConfig()
             }
             .store(in: &cancellables)
+
+        // The primary display (and single-display mode) reads live activity and
+        // idle widget settings straight from their feature sections rather than a
+        // frozen per-display copy — react live as those change.
+        Task { @MainActor [weak self] in
+            for await _ in Defaults.updates(PerScreenConfig.globalSourceKeys) {
+                self?.recomputeScreenConfig()
+            }
+        }
     }
 
     func updateScreenConfig(_ update: (inout PerScreenConfig) -> Void) {
         guard let uuid = screenUUID else { return }
-        var config = Defaults[.perScreenConfigs][uuid] ?? PerScreenConfig()
+        var config = Defaults[.perScreenConfigs][uuid] ?? .fromGlobalSettings
         update(&config)
         Defaults[.perScreenConfigs][uuid] = config
     }

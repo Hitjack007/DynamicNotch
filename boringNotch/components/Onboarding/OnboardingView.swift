@@ -21,6 +21,7 @@ enum OnboardingStep {
     case spectrogramSetup
     case fullDiskAccessPermission
     case musicPermission
+    case displaySetup
     case finished
 }
 
@@ -209,6 +210,16 @@ struct OnboardingView: View {
 
             case .musicPermission:
                 MusicControllerSelectionView(
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .displaySetup
+                        }
+                    }
+                )
+                .transition(.opacity)
+
+            case .displaySetup:
+                DisplaySetupView(
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
                             BoringViewCoordinator.shared.firstLaunch = false

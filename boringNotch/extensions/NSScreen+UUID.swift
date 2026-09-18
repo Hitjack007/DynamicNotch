@@ -23,6 +23,17 @@ extension NSScreen {
         return "virtual-\(displayID)"
     }
     
+    /// The UUID of the macOS main display (the one with the menu bar), in the same
+    /// format as `displayUUID`. This is the "primary" display for settings that
+    /// should follow global settings rather than a per-display override.
+    static var primaryDisplayUUID: String? {
+        let displayID = CGMainDisplayID()
+        if let uuid = CGDisplayCreateUUIDFromDisplayID(displayID) {
+            return CFUUIDCreateString(nil, uuid.takeRetainedValue()) as String
+        }
+        return "virtual-\(displayID)"
+    }
+
     /// Find a screen by its UUID
     @MainActor static func screen(withUUID uuid: String) -> NSScreen? {
         return NSScreenUUIDCache.shared.screen(forUUID: uuid)

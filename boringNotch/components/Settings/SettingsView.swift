@@ -1495,6 +1495,8 @@ struct Appearance: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @Default(.mirrorShape) var mirrorShape
     @Default(.sliderColor) var sliderColor
+    @Default(.idleNotchLeftWidget) var idleNotchLeftWidget
+    @Default(.idleNotchRightWidget) var idleNotchRightWidget
 
     var body: some View {
         Form {
@@ -1541,8 +1543,25 @@ struct Appearance: View {
                 HStack {
                     Text("Additional features")
                 }
+            }
+
+            Section {
+                Defaults.Toggle(key: .showNotHumanFace) {
+                    Text("Face animation while idle")
+                }
+            } header: {
+                Text("Idle")
+            }
+
+            Section {
+                IdleWidgetConfigurationView(
+                    leftWidget: $idleNotchLeftWidget,
+                    rightWidget: $idleNotchRightWidget
+                )
+            } header: {
+                Text("Idle Widgets")
             } footer: {
-                Text("Live activities and idle widgets are now configured per-display in the Displays section.")
+                Text("Shown when nothing is playing and no live activity is active on your main display. Other displays can override these in Displays → Per-Display Settings.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1568,6 +1587,12 @@ struct DisplaysSettings: View {
     @ObservedObject private var coordinator = BoringViewCoordinator.shared
     @Default(.showOnAllDisplays) var showOnAllDisplays
     @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
+
+    /// Non-primary screens — the only ones that get a per-display override, since
+    /// the primary display always follows each feature's own settings section.
+    private var secondaryScreens: [(uuid: String, name: String)] {
+        screens.filter { $0.uuid != NSScreen.primaryDisplayUUID }
+    }
 
     var body: some View {
         Form {
@@ -1607,21 +1632,27 @@ struct DisplaysSettings: View {
                 Text("Multi-Display")
             }
 
-            Section {
-                if screens.count > 1 {
-                    Picker("Configure for", selection: $selectedUUID) {
-                        ForEach(screens, id: \.uuid) { screen in
-                            Text(screen.name).tag(screen.uuid)
+            if showOnAllDisplays && !secondaryScreens.isEmpty {
+                Section {
+                    if secondaryScreens.count > 1 {
+                        Picker("Configure for", selection: $selectedUUID) {
+                            ForEach(secondaryScreens, id: \.uuid) { screen in
+                                Text(screen.name).tag(screen.uuid)
+                            }
                         }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Per-Display Settings")
+                } footer: {
+                    Text("Your main display follows the settings in each feature's own section (Media, Downloads, Appearance, AI Usage). Other displays can override them here.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-            } header: {
-                Text("Per-Display Settings")
-            }
 
-            if !selectedUUID.isEmpty {
-                PerDisplaySettings(screenUUID: selectedUUID)
+                if !selectedUUID.isEmpty {
+                    PerDisplaySettings(screenUUID: selectedUUID)
+                }
             }
         }
         .accentColor(.effectiveAccent)
@@ -1641,8 +1672,9 @@ struct DisplaysSettings: View {
             guard let uuid = screen.displayUUID else { return nil }
             return (uuid, screen.localizedName)
         }
-        if selectedUUID.isEmpty || !screens.map(\.uuid).contains(selectedUUID) {
-            selectedUUID = screens.first?.uuid ?? ""
+        let secondaryUUIDs = secondaryScreens.map(\.uuid)
+        if selectedUUID.isEmpty || !secondaryUUIDs.contains(selectedUUID) {
+            selectedUUID = secondaryUUIDs.first ?? ""
         }
     }
 }
@@ -1676,7 +1708,7 @@ struct PerDisplaySettings: View {
         } header: {
             Text("Live Activities")
         } footer: {
-            Text("Controls what appears in the closed notch on this display.")
+            Text("Overrides what appears in the closed notch on this display, independent of the main display's settings.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -2390,6 +2422,7 @@ struct SystemStatsSettings: View {
 
 struct AIUsageSettings: View {
     @Default(.showAIUsageTab)              var showAIUsageTab
+    @Default(.aiUsageInNotch)              var aiUsageInNotch
     @Default(.aiUsageProvider)             var aiUsageProvider
     @Default(.aiUsageClosedNotchShowRing)  var aiUsageClosedNotchShowRing
     @Default(.aiUsagePollingInterval)      var aiUsagePollingInterval
@@ -2405,10 +2438,12 @@ struct AIUsageSettings: View {
         Form {
             Section {
                 Toggle("Enable AI Usage", isOn: $showAIUsageTab)
+                Toggle("Show in closed notch", isOn: $aiUsageInNotch)
+                    .disabled(!showAIUsageTab)
             } header: {
                 Text("Display")
             } footer: {
-                Text("Adds an AI Usage tab to the open notch. Select your provider and authenticate below.")
+                Text("Adds an AI Usage tab to the open notch and, by default, a live indicator in the closed notch. Select your provider and authenticate below.")
             }
 
             Section {
@@ -2437,7 +2472,7 @@ struct AIUsageSettings: View {
             } header: {
                 Text("Configuration")
             } footer: {
-                Text("The closed notch live activity is toggled per display in Displays → Live Activities.")
+                Text("Displays other than your main one can override the closed notch indicator in Displays → Per-Display Settings.")
             }
             .disabled(!showAIUsageTab)
 

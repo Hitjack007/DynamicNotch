@@ -141,6 +141,7 @@
 		4DA8936930345AF40095857C /* IdleWidgetConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */; };
 		4DD781093042DD0000C5B74D /* SpectrogramSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD781083042DD0000C5B74D /* SpectrogramSetupView.swift */; };
 		4DDCD26C304AC3F200390EB8 /* AirPlayConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDCD26B304AC3F200390EB8 /* AirPlayConnector.swift */; };
+		4DED0D12305DDD74005D32A2 /* DisplaySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D11305DDD74005D32A2 /* DisplaySetupView.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -355,6 +356,7 @@
 		4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdleWidgetConfigurationView.swift; sourceTree = "<group>"; };
 		4DD781083042DD0000C5B74D /* SpectrogramSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrogramSetupView.swift; sourceTree = "<group>"; };
 		4DDCD26B304AC3F200390EB8 /* AirPlayConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayConnector.swift; sourceTree = "<group>"; };
+		4DED0D11305DDD74005D32A2 /* DisplaySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySetupView.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -841,6 +843,7 @@
 				11CFC65A2E097E9D00748C80 /* WelcomeView.swift */,
 				B141C2402CA5F53E00AC8CC8 /* SparkleView.swift */,
 				4DD781083042DD0000C5B74D /* SpectrogramSetupView.swift */,
+				4DED0D11305DDD74005D32A2 /* DisplaySetupView.swift */,
 			);
 			path = Onboarding;
 			sourceTree = "<group>";
@@ -1235,6 +1238,7 @@
 				11CFC65F2E097F2F00748C80 /* OnboardingView.swift in Sources */,
 				4DA8936930345AF40095857C /* IdleWidgetConfigurationView.swift in Sources */,
 				14CEF4162C5CAED300855D72 /* boringNotchApp.swift in Sources */,
+				4DED0D12305DDD74005D32A2 /* DisplaySetupView.swift in Sources */,
 				4DA8936030345AAE0095857C /* BluetoothBatteryManager.swift in Sources */,
 				4D73E19F301EB06C0084A6A1 /* SMCConnection.swift in Sources */,
 				B17266DF2C64DFA00031BA0D /* BundleInfos.swift in Sources */,
