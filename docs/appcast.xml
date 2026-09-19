@@ -239,5 +239,19 @@
         type="application/octet-stream"/>
     </item>
 
+
+    <item>
+      <title>Version 27.3</title>
+      <pubDate>Sat, 19 Sep 2026 22:40:47 +0000</pubDate>
+      <sparkle:version>202609201038</sparkle:version>
+      <sparkle:shortVersionString>27.3</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <enclosure
+        url="https://github.com/Hitjack007/DynamicNotch/releases/download/v27.3/DynamicNotch-27.3.dmg"
+        sparkle:edSignature="WhVVjgQefGVNgALNOD4UYNDkoxikXJRmhh+56J2zaRtH00/ZMcXjDY7YnxdO6B2MfOxreoFBS4tEtL5Qz0OUAw=="
+        length="12044945"
+        type="application/octet-stream"/>
+    </item>
+
   </channel>
 </rss>
