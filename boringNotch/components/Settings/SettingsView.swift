@@ -15,7 +15,7 @@ import SwiftUI
 import SwiftUIIntrospect
 
 struct SettingsView: View {
-    @State private var selectedTab = "General"
+    @ObservedObject private var navigator = SettingsNavigator.shared
     @State private var accentColorUpdateTrigger = UUID()
 
     let updaterController: SPUStandardUpdaterController?
@@ -26,7 +26,7 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $selectedTab) {
+            List(selection: $navigator.selectedTab) {
                 Section("Notch") {
                     NavigationLink(value: "General") {
                         Label("General", systemImage: "gear")
@@ -94,7 +94,7 @@ struct SettingsView: View {
             .navigationSplitViewColumnWidth(200)
         } detail: {
             Group {
-                switch selectedTab {
+                switch navigator.selectedTab {
                 case "General":
                     GeneralSettings()
                 case "Displays":
@@ -1107,6 +1107,8 @@ struct AboutSettings: View {
                         updater.automaticallyDownloadsUpdates = newValue
                     }
 
+                Defaults.Toggle("Show what's new after updating", key: .whatsNewOnUpdate)
+
                 HStack {
                     Button("Check for Updates…") {
                         updater.checkForUpdates()
@@ -1152,6 +1154,16 @@ struct AboutSettings: View {
                 HStack {
                     Text("What's New in \(Bundle.main.releaseVersionNumber ?? "—")")
                     Spacer()
+                    Button("Show Highlights") {
+                        (NSApp.delegate as? AppDelegate)?.showWhatsNewHighlights()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .disabled(WhatsNewCatalog.pages(
+                        lastSeenVersion: "",
+                        currentVersion: Bundle.main.releaseVersionNumber ?? ""
+                    ).isEmpty)
                     Button("All Releases") {
                         NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch/releases")!)
                     }

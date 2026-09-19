@@ -227,6 +227,7 @@ extension Defaults.Keys {
     static let musicLiveActivityEnabled = Key<Bool>("musicLiveActivityEnabled", default: true)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
     static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
+    static let whatsNewOnUpdate = Key<Bool>("whatsNewOnUpdate", default: true)
     
     // MARK: Behavior
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)

@@ -5,10 +5,7 @@
 //  Created by Mark Greene on 2025-06-23.
 //
 
-import CoreBluetooth
 import SwiftUI
-import AVFoundation
-import ScreenCaptureKit
 
 enum OnboardingStep {
     case welcome
@@ -22,16 +19,17 @@ enum OnboardingStep {
     case fullDiskAccessPermission
     case musicPermission
     case displaySetup
+    case extensionsHighlight
+    case activityReorderHighlight
+    case aiUsageHighlight
+    case thermalHighlight
     case finished
 }
 
-private let calendarService = CalendarService()
-
 struct OnboardingView: View {
     @State var step: OnboardingStep = .welcome
-    @State private var btManager: CBCentralManager?
     let onFinish: () -> Void
-    let onOpenSettings: () -> Void
+    let onOpenSettings: (String) -> Void
 
     var body: some View {
         ZStack {
@@ -52,7 +50,7 @@ struct OnboardingView: View {
                     privacyNote: "Your camera is never used without your consent, and nothing is recorded or stored.",
                     onAllow: {
                         Task {
-                            await requestCameraPermission()
+                            await PermissionRequester.request(.camera)
                             withAnimation(.easeInOut(duration: 0.6)) {
                                 step = .calendarPermission
                             }
@@ -74,7 +72,7 @@ struct OnboardingView: View {
                     privacyNote: "Your calendar data is only used to show your events and is never shared.",
                     onAllow: {
                         Task {
-                                await requestCalendarPermission()
+                                await PermissionRequester.request(.calendar)
                                 withAnimation(.easeInOut(duration: 0.6)) {
                                     step = .remindersPermission
                                 }
@@ -96,7 +94,7 @@ struct OnboardingView: View {
                         privacyNote: "Your reminders data is only used to show your reminders and is never shared.",
                         onAllow: {
                             Task {
-                                await requestRemindersPermission()
+                                await PermissionRequester.request(.reminders)
                                 withAnimation(.easeInOut(duration: 0.6)) {
                                     step = .accessibilityPermission
                                 }
@@ -118,7 +116,7 @@ struct OnboardingView: View {
                     privacyNote: "Accessibility access is used only to improve media and brightness notifications. No data is collected or shared.",
                     onAllow: {
                         Task {
-                            await requestAccessibilityPermission()
+                            await PermissionRequester.request(.accessibility)
                             withAnimation(.easeInOut(duration: 0.6)) {
                                 step = .bluetoothPermission
                             }
@@ -140,7 +138,7 @@ struct OnboardingView: View {
                     privacyNote: "Bluetooth access is only used to read the device name and class. No audio is accessed or transmitted.",
                     onAllow: {
                         Task {
-                            await requestBluetoothPermission()
+                            await PermissionRequester.request(.bluetooth)
                             withAnimation(.easeInOut(duration: 0.6)) {
                                 step = .screenRecordingPermission
                             }
@@ -162,7 +160,7 @@ struct OnboardingView: View {
                     privacyNote: "Screen recording access is used solely to read audio levels. Your screen is never recorded.",
                     onAllow: {
                         Task {
-                            await requestScreenRecordingPermission()
+                            await PermissionRequester.request(.screenRecording)
                             withAnimation(.easeInOut(duration: 0.6)) {
                                 step = .spectrogramSetup
                             }
@@ -193,11 +191,11 @@ struct OnboardingView: View {
                     description: "The Claude Usage feature reads your browser's session cookie to show your token usage in the notch. macOS protects browser cookies behind Full Disk Access — without it, the app cannot read the cookie automatically.\n\nClick Allow Access to open System Settings, add DynamicNotch to the list, then return here.",
                     privacyNote: "Only the claude.ai session cookie is ever read. No other files are accessed.",
                     onAllow: {
-                        NSWorkspace.shared.open(
-                            URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
-                        )
-                        withAnimation(.easeInOut(duration: 0.6)) {
-                            step = .musicPermission
+                        Task {
+                            await PermissionRequester.request(.fullDiskAccess)
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                step = .musicPermission
+                            }
                         }
                     },
                     onSkip: {
@@ -223,48 +221,76 @@ struct OnboardingView: View {
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
                             BoringViewCoordinator.shared.firstLaunch = false
-                            step = .finished
+                            step = .extensionsHighlight
                         }
                     }
                 )
                 .transition(.opacity)
 
+            case .extensionsHighlight:
+                FeatureHighlightView(
+                    highlight: WhatsNewCatalog.highlight(id: "extensions"),
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .activityReorderHighlight
+                        }
+                    },
+                    onOpenSettings: onOpenSettings
+                )
+                .transition(.opacity)
+
+            case .activityReorderHighlight:
+                FeatureHighlightView(
+                    highlight: WhatsNewCatalog.highlight(id: "reorderableActivities"),
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .aiUsageHighlight
+                        }
+                    },
+                    onOpenSettings: onOpenSettings
+                )
+                .transition(.opacity)
+
+            case .aiUsageHighlight:
+                FeatureHighlightView(
+                    highlight: WhatsNewCatalog.highlight(id: "aiUsagePromotion"),
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = ThermalManager.shared.detectHasFans() ? .thermalHighlight : .finished
+                        }
+                    },
+                    onOpenSettings: onOpenSettings
+                )
+                .transition(.opacity)
+
+            case .thermalHighlight:
+                // Fan control is meaningless on fanless Macs, so this step only exists
+                // when ThermalManager.detectHasFans() found real fans via SMC.
+                FeatureHighlightView(
+                    highlight: WhatsNewHighlight(
+                        id: "thermal",
+                        icon: "thermometer.medium",
+                        title: "Take Control of Your Fans",
+                        body: "DynamicNotch can read your CPU and GPU temperature and apply your own fan curve — anywhere from silent to max cooling — right from the notch.",
+                        action: .settings(tab: "Thermal", label: "Open Thermal")
+                    ),
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = .finished
+                        }
+                    },
+                    onOpenSettings: onOpenSettings
+                )
+                .transition(.opacity)
+
             case .finished:
-                OnboardingFinishView(onFinish: onFinish, onOpenSettings: onOpenSettings)
+                OnboardingFinishView(onFinish: onFinish, onOpenSettings: {
+                    onOpenSettings("General")
+                    onFinish()
+                })
             }
         }
         .frame(width: 400, height: 600)
     }
 
-    // MARK: - Permission Request Logic
-
-    func requestCameraPermission() async {
-        await AVCaptureDevice.requestAccess(for: .video)
-    }
-
-    func requestCalendarPermission() async {
-        _ = try? await calendarService.requestAccess(to: .event)
-    }
-
-    func requestRemindersPermission() async {
-        _ = try? await calendarService.requestAccess(to: .reminder)
-    }
-    
-    func requestAccessibilityPermission() async {
-        _ = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
-    }
-
-    func requestBluetoothPermission() async {
-        // Initializing CBCentralManager triggers the macOS Bluetooth permission dialog.
-        // Keep the reference alive while the dialog is shown.
-        btManager = CBCentralManager(delegate: nil, queue: nil)
-        try? await Task.sleep(for: .seconds(1))
-        btManager = nil
-    }
-
-    func requestScreenRecordingPermission() async {
-        // SCShareableContent access triggers the macOS Screen Recording permission prompt.
-        _ = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        try? await Task.sleep(for: .seconds(1))
-    }
 }

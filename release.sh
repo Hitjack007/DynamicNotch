@@ -50,6 +50,20 @@ if git -C "$SCRIPT_DIR" status --short | grep -q '^[MADRC]'; then
     exit 1
 fi
 
+WHATSNEW_CATALOG="$SCRIPT_DIR/boringNotch/components/WhatsNew/WhatsNewCatalog.swift"
+if ! grep -q "version: \"${VERSION}\"" "$WHATSNEW_CATALOG"; then
+    echo ""
+    echo "⚠️  Warning: WhatsNewCatalog.swift has no entry for version \"${VERSION}\"."
+    echo "   Patch releases legitimately have no highlights, but if this release ships"
+    echo "   a feature, users won't be introduced to it in-app."
+    read -p "   Continue anyway? [y/N] " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 1
+    fi
+fi
+
 # ── Bump version in Xcode project ───────────────────────────────────────────
 
 echo ""

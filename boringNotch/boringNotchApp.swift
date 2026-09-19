@@ -59,6 +59,16 @@ struct DynamicNotchApp: App {
                 get: { BatteryStatusViewModel.shared.debugForceCharging },
                 set: { BatteryStatusViewModel.shared.debugForceCharging = $0 }
             ))
+            Button("Show Onboarding") {
+                DispatchQueue.main.async {
+                    appDelegate.showOnboardingWindow()
+                }
+            }
+            Button("Show What's New") {
+                DispatchQueue.main.async {
+                    appDelegate.debugShowLatestWhatsNew()
+                }
+            }
             #endif
             Divider()
             Button("Restart Boring Notch") {
@@ -82,7 +92,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let vm: BoringViewModel = .init()
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     var quickShareService = QuickShareService.shared
-    var whatsNewWindow: NSWindow?
+    private var whatsNewWindowController: NSWindowController?
     var timer: Timer?
     var closeNotchTask: Task<Void, Never>?
     private var previousScreens: [NSScreen]?
@@ -475,20 +485,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupDragDetectors()
         logLaunchStep("Drag detectors set up")
 
+        var whatsNewPageCount = 0
+
         if coordinator.firstLaunch {
             DispatchQueue.main.async {
                 self.showOnboardingWindow()
             }
             playWelcomeSound()
+            // Fresh installs skip What's New — there is nothing to introduce them to.
+            coordinator.lastWhatsNewVersionSeen = Bundle.main.releaseVersionNumber ?? ""
         } else if MusicManager.shared.isNowPlayingDeprecated
             && Defaults[.mediaController] == .nowPlaying
         {
             DispatchQueue.main.async {
                 self.showOnboardingWindow(step: .musicPermission)
             }
+        } else if Defaults[.whatsNewOnUpdate] {
+            let pages = WhatsNewCatalog.pages(
+                lastSeenVersion: coordinator.lastWhatsNewVersionSeen,
+                currentVersion: Bundle.main.releaseVersionNumber ?? ""
+            )
+            whatsNewPageCount = pages.count
+            if !pages.isEmpty {
+                DispatchQueue.main.async {
+                    self.showWhatsNewWindow(pages: pages)
+                }
+            }
         }
 
         logLaunchStep("Onboarding check complete (firstLaunch=\(coordinator.firstLaunch))")
+        logLaunchStep("What's New check complete (lastSeen=\(coordinator.lastWhatsNewVersionSeen), pages=\(whatsNewPageCount))")
 
         previousScreens = NSScreen.screens
 
@@ -633,7 +659,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.terminate(self)
     }
 
-    private func showOnboardingWindow(step: OnboardingStep = .welcome) {
+    func showOnboardingWindow(step: OnboardingStep = .welcome) {
         if onboardingWindowController == nil {
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
@@ -654,9 +680,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         window.close()
                         NSApp.deactivate()
                     },
-                    onOpenSettings: {
-                        window.close()
-                        SettingsWindowController.shared.showWindow()
+                    onOpenSettings: { tab in
+                        SettingsWindowController.shared.showWindow(selecting: tab)
                     }
                 ))
             window.isRestorable = false
@@ -670,6 +695,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         onboardingWindowController?.window?.makeKeyAndOrderFront(nil)
         onboardingWindowController?.window?.orderFrontRegardless()
     }
+
+    private func showWhatsNewWindow(pages: [WhatsNewPage]) {
+        if whatsNewWindowController == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
+                styleMask: [.titled, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.center()
+            window.title = "What's New"
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+            window.contentView = NSHostingView(
+                rootView: WhatsNewView(
+                    pages: pages,
+                    onFinish: { [weak self] in
+                        self?.dismissWhatsNew()
+                    },
+                    onOpenSettings: { tab in
+                        SettingsWindowController.shared.showWindow(selecting: tab)
+                    }
+                ))
+            window.isRestorable = false
+            window.identifier = NSUserInterfaceItemIdentifier("WhatsNewWindow")
+
+            whatsNewWindowController = NSWindowController(window: window)
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        whatsNewWindowController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private func dismissWhatsNew() {
+        coordinator.lastWhatsNewVersionSeen = Bundle.main.releaseVersionNumber ?? ""
+        whatsNewWindowController?.window?.close()
+        whatsNewWindowController = nil
+    }
+
+    /// Re-entry point for the "Show Highlights" button in About settings — always shows the
+    /// running version's highlights, regardless of `lastWhatsNewVersionSeen`.
+    func showWhatsNewHighlights() {
+        let pages = WhatsNewCatalog.pages(
+            lastSeenVersion: "",
+            currentVersion: Bundle.main.releaseVersionNumber ?? ""
+        )
+        guard !pages.isEmpty else { return }
+        showWhatsNewWindow(pages: pages)
+    }
+
+    #if DEBUG
+    /// Menu bar debug action — always previews the newest catalog entry, even if the
+    /// running build's MARKETING_VERSION hasn't been bumped to match it yet.
+    func debugShowLatestWhatsNew() {
+        guard let latest = WhatsNewCatalog.releases.last else { return }
+        let pages = latest.highlights.map { WhatsNewPage(version: latest.version, highlight: $0) }
+        showWhatsNewWindow(pages: pages)
+    }
+    #endif
 }
 
 extension Notification.Name {
