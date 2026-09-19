@@ -308,6 +308,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         checkForAppTranslocation()
         logLaunchStep("Translocation check passed")
 
+        // Owns AI usage polling and threshold alerts. Must be started here rather
+        // than from ContentView, which exists once per screen.
+        AIUsageCoordinator.shared.bootstrap()
+        logLaunchStep("AI usage coordinator bootstrapped")
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),

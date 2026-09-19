@@ -193,9 +193,17 @@ struct AIUsageIdleWidget: View {
         aiUsageProvider == .claude ? claudeManager.isAuthenticated : chatgptManager.isAuthenticated
     }
 
+    private var hasError: Bool {
+        aiUsageProvider == .claude ? claudeManager.hasError : chatgptManager.hasError
+    }
+
     var body: some View {
         Group {
-            if isAuthenticated {
+            if hasError {
+                Image(systemName: "exclamationmark.octagon")
+                    .font(.system(size: size * 0.6))
+                    .foregroundStyle(.secondary)
+            } else if isAuthenticated {
                 ZStack {
                     Circle()
                         .stroke(Color.white.opacity(0.12), lineWidth: 1.5)

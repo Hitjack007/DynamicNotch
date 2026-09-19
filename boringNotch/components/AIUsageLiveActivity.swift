@@ -38,11 +38,22 @@ struct AIUsageLiveActivity: View {
         aiUsageProvider == .claude ? claudeManager.compactTimeUntilReset : chatgptManager.compactTimeUntilReset
     }
 
-    // MARK: - Left: ring or %
+    private var hasError: Bool {
+        aiUsageProvider == .claude ? claudeManager.hasError : chatgptManager.hasError
+    }
+
+    // MARK: - Left: ring, %, or error
 
     @ViewBuilder
     private var leftIndicator: some View {
-        if showRing {
+        if hasError {
+            // An empty ring reads as "nothing used", which is exactly the wrong
+            // thing to show when the reading failed.
+            Image(systemName: "exclamationmark.octagon")
+                .font(.system(size: indicatorSize * 0.75))
+                .foregroundStyle(.secondary)
+                .frame(width: indicatorSize, height: indicatorSize)
+        } else if showRing {
             progressRing
         } else {
             percentLabel
@@ -76,7 +87,7 @@ struct AIUsageLiveActivity: View {
 
     private var rightIndicator: some View {
         TimelineView(.periodic(from: Date(), by: 60)) { _ in
-            Text(compactTimeUntilReset)
+            Text(hasError ? "--" : compactTimeUntilReset)
                 .font(.system(size: 9, weight: .regular, design: .rounded).monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: indicatorSize)

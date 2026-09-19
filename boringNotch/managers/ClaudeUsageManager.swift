@@ -25,8 +25,12 @@ final class ClaudeUsageManager: ObservableObject {
     @Published var lastFetched: Date?
     @Published var isAuthenticating: Bool = false
     @Published var availableLimitGroups: [String] = []  // debug: all group names from last response
+    // Set when a fetch fails or answers with something unexpected. Without this
+    // a changed endpoint renders as a confident 0% forever.
+    @Published var lastError: String?
 
     var isAuthenticated: Bool { authState == .authenticated }
+    var hasError: Bool { lastError != nil }
 
     var timeUntilReset: String {
         guard let date = windowResetsAt else { return "--" }
@@ -48,33 +52,11 @@ final class ClaudeUsageManager: ObservableObject {
         }
     }
 
-    private var pollingTask: Task<Void, Never>?
-
     private init() {
         if KeychainHelper.load(account: "claude.sessionKey") != nil {
             authState = .authenticated
         }
-        if Defaults[.showAIUsageTab] && Defaults[.aiUsageProvider] == .claude {
-            start()
-        }
-    }
-
-    // MARK: - Lifecycle
-
-    func start() {
-        guard pollingTask == nil else { return }
-        pollingTask = Task { [weak self] in
-            while !Task.isCancelled {
-                await self?.refreshNow()
-                let minutes = Defaults[.aiUsagePollingInterval]
-                try? await Task.sleep(for: .seconds(minutes * 60))
-            }
-        }
-    }
-
-    func stop() {
-        pollingTask?.cancel()
-        pollingTask = nil
+        // Polling is owned by AIUsageCoordinator.
     }
 
     // MARK: - Auth
@@ -114,6 +96,7 @@ final class ClaudeUsageManager: ObservableObject {
         usagePercent = 0
         limitKind = ""
         windowResetsAt = nil
+        lastError = nil
         await authenticate()
     }
 
@@ -183,14 +166,23 @@ final class ClaudeUsageManager: ObservableObject {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
-            guard let http = response as? HTTPURLResponse else { return }
+            guard let http = response as? HTTPURLResponse else {
+                lastError = "Unexpected response from Claude."
+                return
+            }
             guard http.statusCode != 401 else { authState = .expired; return }
-            guard http.statusCode == 200 else { return }
+            guard http.statusCode == 200 else {
+                lastError = "Claude returned HTTP \(http.statusCode)."
+                return
+            }
             parseUsage(data)
             lastFetched = Date()
+            lastError = nil
             authState = .authenticated
         } catch {
-            // Keep last-good data on transient network errors
+            // Keep last-good data on transient network errors, but stop
+            // presenting it as a live reading.
+            lastError = error.localizedDescription
         }
     }
 
@@ -277,4 +269,8 @@ final class ClaudeUsageManager: ObservableObject {
             return ChromeCookieReader.findCookie(named: name, variant: .edge)
         }
     }
+}
+
+extension ClaudeUsageManager: AIUsageSource {
+    var displayName: String { "Claude" }
 }

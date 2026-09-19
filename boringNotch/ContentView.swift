@@ -300,28 +300,11 @@ struct ContentView: View {
             }
         }
         .onChange(of: showAIUsageTab) { _, enabled in
-            if enabled {
-                if aiUsageProvider == .claude {
-                    ClaudeUsageManager.shared.start()
-                } else {
-                    ChatGPTUsageManager.shared.start()
-                }
-            } else {
-                ClaudeUsageManager.shared.stop()
-                ChatGPTUsageManager.shared.stop()
-                if coordinator.currentView == .aiUsage {
-                    coordinator.currentView = .home
-                }
-            }
-        }
-        .onChange(of: aiUsageProvider) { _, provider in
-            guard showAIUsageTab else { return }
-            if provider == .claude {
-                ChatGPTUsageManager.shared.stop()
-                ClaudeUsageManager.shared.start()
-            } else {
-                ClaudeUsageManager.shared.stop()
-                ChatGPTUsageManager.shared.start()
+            // Polling and provider switching are owned by AIUsageCoordinator —
+            // this view exists once per screen, so it must not drive them. All
+            // that is left here is keeping the notch off a tab that just went away.
+            if !enabled, coordinator.currentView == .aiUsage {
+                coordinator.currentView = .home
             }
         }
     }

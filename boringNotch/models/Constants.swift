@@ -390,6 +390,20 @@ extension Defaults.Keys {
     static let claudePreferredBrowser      = Key<AIBrowserPreference>("claudePreferredBrowser", default: .auto)
     static let chatgptPreferredBrowser     = Key<AIBrowserPreference>("chatgptPreferredBrowser", default: .auto)
 
+    // MARK: AI Usage — Notifications
+    static let aiUsageNotificationsEnabled = Key<Bool>("aiUsageNotificationsEnabled", default: false)
+    // Three independently configurable alert points. 0 turns a slot off.
+    static let aiUsageThresholdA           = Key<Int>("aiUsageThresholdA", default: 80)
+    static let aiUsageThresholdB           = Key<Int>("aiUsageThresholdB", default: 90)
+    static let aiUsageThresholdC           = Key<Int>("aiUsageThresholdC", default: 100)
+    static let aiUsageNotifyOnReset        = Key<Bool>("aiUsageNotifyOnReset", default: false)
+    // A window reset is only worth announcing if the window that just ended
+    // actually got used — otherwise it is noise every few hours.
+    static let aiUsageResetNotifyMinPercent = Key<Int>("aiUsageResetNotifyMinPercent", default: 95)
+    // Persisted edge-trigger bookkeeping, so relaunching mid-window does not
+    // re-fire an alert the user has already seen.
+    static let aiUsageThresholdState       = Key<AIUsageThresholdState>("aiUsageThresholdState", default: .init())
+
     // MARK: Per-Display
     static let perScreenConfigs = Key<[String: PerScreenConfig]>("perScreenConfigs", default: [:])
     static let hudDisplayPolicy = Key<HUDDisplayPolicy>("hudDisplayPolicy", default: .allDisplays)

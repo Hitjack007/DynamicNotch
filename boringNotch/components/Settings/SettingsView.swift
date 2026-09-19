@@ -2428,8 +2428,15 @@ struct AIUsageSettings: View {
     @Default(.aiUsagePollingInterval)      var aiUsagePollingInterval
     @Default(.claudePreferredBrowser)      var claudePreferredBrowser
     @Default(.chatgptPreferredBrowser)     var chatgptPreferredBrowser
+    @Default(.aiUsageNotificationsEnabled) var aiUsageNotificationsEnabled
+    @Default(.aiUsageThresholdA)           var aiUsageThresholdA
+    @Default(.aiUsageThresholdB)           var aiUsageThresholdB
+    @Default(.aiUsageThresholdC)           var aiUsageThresholdC
+    @Default(.aiUsageNotifyOnReset)        var aiUsageNotifyOnReset
+    @Default(.aiUsageResetNotifyMinPercent) var aiUsageResetNotifyMinPercent
     @ObservedObject var claudeManager = ClaudeUsageManager.shared
     @ObservedObject var chatgptManager = ChatGPTUsageManager.shared
+    @ObservedObject var usageCoordinator = AIUsageCoordinator.shared
 
     @State private var hasFullDiskAccess = false
     @State private var manualClaudeSessionKey = ""
@@ -2476,6 +2483,8 @@ struct AIUsageSettings: View {
             }
             .disabled(!showAIUsageTab)
 
+            notificationsSection
+
             if aiUsageProvider == .claude {
                 Section {
                     Picker("Browser", selection: $claudePreferredBrowser) {
@@ -2494,11 +2503,19 @@ struct AIUsageSettings: View {
                     HStack(spacing: 12) {
                         if claudeManager.isAuthenticated {
                             Button("Re-authenticate") {
-                                Task { await claudeManager.reauthenticate() }
+                                // Fetch straight away rather than leaving the tab
+                                // blank until the next poll comes around.
+                                Task {
+                                    await claudeManager.reauthenticate()
+                                    await usageCoordinator.refreshNow()
+                                }
                             }
                         } else {
                             Button("Authenticate from Browser") {
-                                Task { await claudeManager.authenticate() }
+                                Task {
+                                    await claudeManager.authenticate()
+                                    await usageCoordinator.refreshNow()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.effectiveAccent)
@@ -2558,11 +2575,17 @@ struct AIUsageSettings: View {
                     HStack(spacing: 12) {
                         if chatgptManager.isAuthenticated {
                             Button("Re-authenticate") {
-                                Task { await chatgptManager.reauthenticate() }
+                                Task {
+                                    await chatgptManager.reauthenticate()
+                                    await usageCoordinator.refreshNow()
+                                }
                             }
                         } else {
                             Button("Authenticate from Browser") {
-                                Task { await chatgptManager.authenticate() }
+                                Task {
+                                    await chatgptManager.authenticate()
+                                    await usageCoordinator.refreshNow()
+                                }
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(.effectiveAccent)
@@ -2601,6 +2624,73 @@ struct AIUsageSettings: View {
     private func checkFullDiskAccess() -> Bool {
         let path = NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db"
         return FileManager.default.isReadableFile(atPath: path)
+    }
+
+    // MARK: - Notifications
+
+    @ViewBuilder
+    private var notificationsSection: some View {
+        Section {
+            Toggle("Notify me about usage", isOn: $aiUsageNotificationsEnabled)
+                .onChange(of: aiUsageNotificationsEnabled) { _, enabled in
+                    // Only ask for permission when the feature is actually wanted,
+                    // rather than prompting every user at first launch.
+                    guard enabled else { return }
+                    Task { await usageCoordinator.requestNotificationAuthorization() }
+                }
+
+            if aiUsageNotificationsEnabled, usageCoordinator.notificationStatus == .denied {
+                HStack {
+                    Image(systemName: "exclamationmark.octagon")
+                        .foregroundStyle(.orange)
+                    Text("Notifications are turned off for DynamicNotch")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Open Settings…") {
+                        NSWorkspace.shared.open(
+                            URL(string: "x-apple.systempreferences:com.apple.preference.notifications")!
+                        )
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+
+            thresholdStepper("First alert", value: $aiUsageThresholdA)
+            thresholdStepper("Second alert", value: $aiUsageThresholdB)
+            thresholdStepper("Third alert", value: $aiUsageThresholdC)
+        } header: {
+            Text("Notifications")
+        } footer: {
+            Text("Each alert fires once per window, when usage first passes that percentage. Set an alert to Off to skip it.")
+        }
+        .disabled(!showAIUsageTab)
+
+        Section {
+            Toggle("Notify when the window resets", isOn: $aiUsageNotifyOnReset)
+            Stepper(
+                "Only if the window reached \(aiUsageResetNotifyMinPercent)%",
+                value: $aiUsageResetNotifyMinPercent,
+                in: 0 ... 100,
+                step: 5
+            )
+            .disabled(!aiUsageNotifyOnReset)
+        } header: {
+            Text("Window Reset")
+        } footer: {
+            Text("A reset is only worth hearing about if you were actually near the limit — otherwise it arrives every few hours regardless.")
+        }
+        .disabled(!showAIUsageTab || !aiUsageNotificationsEnabled)
+    }
+
+    private func thresholdStepper(_ label: String, value: Binding<Int>) -> some View {
+        Stepper(
+            value.wrappedValue == 0 ? "\(label): Off" : "\(label) at \(value.wrappedValue)%",
+            value: value,
+            in: 0 ... 100,
+            step: 5
+        )
+        .disabled(!aiUsageNotificationsEnabled)
     }
 
     private var diskAccessRow: some View {

@@ -26,16 +26,26 @@ struct AIUsageView: View {
 
     private var usageSection: some View {
         VStack(spacing: 4) {
-            Text(percentText)
-                .font(.system(size: 40, weight: .light, design: .rounded).monospacedDigit())
-                .foregroundStyle(usageColor)
-                .contentTransition(.numericText())
-                .animation(.smooth, value: usagePercent)
+            if hasError {
+                // Showing a stale percentage here would be indistinguishable from
+                // a live one, so show nothing rather than something wrong.
+                Image(systemName: "exclamationmark.octagon")
+                    .font(.system(size: 36, weight: .light))
+                    .foregroundStyle(.secondary)
+            } else {
+                Text(percentText)
+                    .font(.system(size: 40, weight: .light, design: .rounded).monospacedDigit())
+                    .foregroundStyle(usageColor)
+                    .contentTransition(.numericText())
+                    .animation(.smooth, value: usagePercent)
+            }
             Text(aiUsageProvider == .claude ? "Claude" : "ChatGPT")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            StatBar(fraction: usagePercent, color: usageColor)
-                .frame(width: 70, height: 4)
+            if !hasError {
+                StatBar(fraction: usagePercent, color: usageColor)
+                    .frame(width: 70, height: 4)
+            }
         }
         .frame(minWidth: 100)
     }
@@ -44,11 +54,18 @@ struct AIUsageView: View {
 
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if let message = errorMessage {
+                Text(message)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+            }
+
             if !limitKind.isEmpty {
                 statLine(value: limitKind, label: "limit")
             }
 
-            if windowResetsAt != nil {
+            if windowResetsAt != nil, !hasError {
                 TimelineView(.periodic(from: Date(), by: 30)) { _ in
                     statLine(value: timeUntilReset, label: "until reset")
                 }
@@ -126,6 +143,12 @@ struct AIUsageView: View {
     private var windowResetsAt: Date? {
         aiUsageProvider == .claude ? claudeManager.windowResetsAt : chatgptManager.windowResetsAt
     }
+
+    private var errorMessage: String? {
+        aiUsageProvider == .claude ? claudeManager.lastError : chatgptManager.lastError
+    }
+
+    private var hasError: Bool { errorMessage != nil }
 
     private var percentText: String {
         let authenticated = aiUsageProvider == .claude ? claudeManager.isAuthenticated : chatgptManager.isAuthenticated

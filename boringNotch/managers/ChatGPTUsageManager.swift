@@ -24,8 +24,12 @@ final class ChatGPTUsageManager: ObservableObject {
     @Published var windowResetsAt: Date?
     @Published var lastFetched: Date?
     @Published var isAuthenticating: Bool = false
+    // Set when a fetch fails or answers with something unexpected. Without this
+    // a changed endpoint renders as a confident 0% forever.
+    @Published var lastError: String?
 
     var isAuthenticated: Bool { authState == .authenticated }
+    var hasError: Bool { lastError != nil }
 
     var timeUntilReset: String {
         guard let date = windowResetsAt else { return "--" }
@@ -47,33 +51,11 @@ final class ChatGPTUsageManager: ObservableObject {
         }
     }
 
-    private var pollingTask: Task<Void, Never>?
-
     private init() {
         if KeychainHelper.load(account: "chatgpt.accessToken") != nil {
             authState = .authenticated
         }
-        if Defaults[.showAIUsageTab] && Defaults[.aiUsageProvider] == .chatgpt {
-            start()
-        }
-    }
-
-    // MARK: - Lifecycle
-
-    func start() {
-        guard pollingTask == nil else { return }
-        pollingTask = Task { [weak self] in
-            while !Task.isCancelled {
-                await self?.refreshNow()
-                let minutes = Defaults[.aiUsagePollingInterval]
-                try? await Task.sleep(for: .seconds(minutes * 60))
-            }
-        }
-    }
-
-    func stop() {
-        pollingTask?.cancel()
-        pollingTask = nil
+        // Polling is owned by AIUsageCoordinator.
     }
 
     // MARK: - Auth
@@ -99,6 +81,7 @@ final class ChatGPTUsageManager: ObservableObject {
         usagePercent = 0
         limitKind = ""
         windowResetsAt = nil
+        lastError = nil
         await authenticate()
     }
 
@@ -212,14 +195,23 @@ final class ChatGPTUsageManager: ObservableObject {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
-            guard let http = response as? HTTPURLResponse else { return }
+            guard let http = response as? HTTPURLResponse else {
+                lastError = "Unexpected response from ChatGPT."
+                return
+            }
             guard http.statusCode != 401 else { authState = .expired; return }
-            guard http.statusCode == 200 else { return }
+            guard http.statusCode == 200 else {
+                lastError = "ChatGPT returned HTTP \(http.statusCode)."
+                return
+            }
             parseUsage(data)
             lastFetched = Date()
+            lastError = nil
             authState = .authenticated
         } catch {
-            // Keep last-good data on transient network errors
+            // Keep last-good data on transient network errors, but stop
+            // presenting it as a live reading.
+            lastError = error.localizedDescription
         }
     }
 
@@ -281,4 +273,8 @@ final class ChatGPTUsageManager: ObservableObject {
             return ChromeCookieReader.findCookie(named: name, variant: .edge, domain: domain)
         }
     }
+}
+
+extension ChatGPTUsageManager: AIUsageSource {
+    var displayName: String { "ChatGPT" }
 }
