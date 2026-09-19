@@ -147,6 +147,17 @@
 		4DED0D4B305E49DD005D32A2 /* AmbientActivityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */; };
 		4DED0D4D305E4A77005D32A2 /* ChargingSlotGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4C305E4A77005D32A2 /* ChargingSlotGlyph.swift */; };
 		4DED0D4F305E4ADD005D32A2 /* AmbientActivityOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */; };
+		4DED0D79305E875D005D32A2 /* ExtensionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D78305E875D005D32A2 /* ExtensionTypes.swift */; };
+		4DED0D7B305E8795005D32A2 /* CapabilityRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D7A305E8795005D32A2 /* CapabilityRegistry.swift */; };
+		4DED0D7D305E87C2005D32A2 /* ExtensionEventBus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D7C305E87C2005D32A2 /* ExtensionEventBus.swift */; };
+		4DED0D7F305E87E1005D32A2 /* ExtensionActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D7E305E87E1005D32A2 /* ExtensionActionExecutor.swift */; };
+		4DED0D81305E88C8005D32A2 /* ExtensionRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D80305E88C8005D32A2 /* ExtensionRecord.swift */; };
+		4DED0D83305E88D6005D32A2 /* ExtensionPersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D82305E88D6005D32A2 /* ExtensionPersistenceService.swift */; };
+		4DED0D85305E88E3005D32A2 /* ExtensionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D84305E88E3005D32A2 /* ExtensionsManager.swift */; };
+		4DED0D87305E8A2E005D32A2 /* ExtensionsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D86305E8A2E005D32A2 /* ExtensionsSettingsView.swift */; };
+		4DED0DE6305E8C85005D32A2 /* ExtensionClosedAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0DE5305E8C85005D32A2 /* ExtensionClosedAlert.swift */; };
+		4DED0E44305E8DB5005D32A2 /* ExtensionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0E43305E8DB5005D32A2 /* ExtensionEditorView.swift */; };
+		4DED0E46305E90DF005D32A2 /* ExtensionGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0E45305E90DF005D32A2 /* ExtensionGenerationService.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -367,6 +378,17 @@
 		4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientActivityResolver.swift; sourceTree = "<group>"; };
 		4DED0D4C305E4A77005D32A2 /* ChargingSlotGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargingSlotGlyph.swift; sourceTree = "<group>"; };
 		4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientActivityOrderView.swift; sourceTree = "<group>"; };
+		4DED0D78305E875D005D32A2 /* ExtensionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionTypes.swift; sourceTree = "<group>"; };
+		4DED0D7A305E8795005D32A2 /* CapabilityRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapabilityRegistry.swift; sourceTree = "<group>"; };
+		4DED0D7C305E87C2005D32A2 /* ExtensionEventBus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionEventBus.swift; sourceTree = "<group>"; };
+		4DED0D7E305E87E1005D32A2 /* ExtensionActionExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionActionExecutor.swift; sourceTree = "<group>"; };
+		4DED0D80305E88C8005D32A2 /* ExtensionRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionRecord.swift; sourceTree = "<group>"; };
+		4DED0D82305E88D6005D32A2 /* ExtensionPersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionPersistenceService.swift; sourceTree = "<group>"; };
+		4DED0D84305E88E3005D32A2 /* ExtensionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsManager.swift; sourceTree = "<group>"; };
+		4DED0D86305E8A2E005D32A2 /* ExtensionsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionsSettingsView.swift; sourceTree = "<group>"; };
+		4DED0DE5305E8C85005D32A2 /* ExtensionClosedAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionClosedAlert.swift; sourceTree = "<group>"; };
+		4DED0E43305E8DB5005D32A2 /* ExtensionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionEditorView.swift; sourceTree = "<group>"; };
+		4DED0E45305E90DF005D32A2 /* ExtensionGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionGenerationService.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -612,6 +634,7 @@
 				4DA88E313024633A0095857C /* SystemStats */,
 				4DA88ED8303167B90095857C /* ClaudeUsage */,
 				4DA8936530345ADF0095857C /* IdleNotch */,
+				4DED0DE4305E8C85005D32A2 /* Extensions */,
 			);
 			path = components;
 			sourceTree = "<group>";
@@ -643,6 +666,7 @@
 				4D319FA83039073300D4AE2F /* ClipboardManager.swift */,
 				4D426D113057B6EB00DDF2C2 /* ChatGPTUsageManager.swift */,
 				4DED0D35305E115A005D32A2 /* AIUsageCoordinator.swift */,
+				4DED0D84305E88E3005D32A2 /* ExtensionsManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -766,6 +790,13 @@
 				1153BD902D986DB300979FB0 /* PlaybackState.swift */,
 				4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */,
 				4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */,
+				4DED0D78305E875D005D32A2 /* ExtensionTypes.swift */,
+				4DED0D7A305E8795005D32A2 /* CapabilityRegistry.swift */,
+				4DED0D7C305E87C2005D32A2 /* ExtensionEventBus.swift */,
+				4DED0D7E305E87E1005D32A2 /* ExtensionActionExecutor.swift */,
+				4DED0D80305E88C8005D32A2 /* ExtensionRecord.swift */,
+				4DED0D82305E88D6005D32A2 /* ExtensionPersistenceService.swift */,
+				4DED0E45305E90DF005D32A2 /* ExtensionGenerationService.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -825,6 +856,14 @@
 				4DA8936630345ADF0095857C /* IdleNotchView.swift */,
 			);
 			path = IdleNotch;
+			sourceTree = "<group>";
+		};
+		4DED0DE4305E8C85005D32A2 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				4DED0DE5305E8C85005D32A2 /* ExtensionClosedAlert.swift */,
+			);
+			path = Extensions;
 			sourceTree = "<group>";
 		};
 		9A0887332C7AFF7E00C160EA /* Tabs */ = {
@@ -921,6 +960,8 @@
 				B1C448972C972CC4001F0858 /* ListItemPopover.swift */,
 				4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */,
 				4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */,
+				4DED0D86305E8A2E005D32A2 /* ExtensionsSettingsView.swift */,
+				4DED0E43305E8DB5005D32A2 /* ExtensionEditorView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1196,6 +1237,7 @@
 				1113ABCA2E80E27000EC13B2 /* ShelfSelectionModel.swift in Sources */,
 				1113ABCB2E80E27000EC13B2 /* QuickLookService.swift in Sources */,
 				1113ABCC2E80E27000EC13B2 /* ShelfDropService.swift in Sources */,
+				4DED0D7F305E87E1005D32A2 /* ExtensionActionExecutor.swift in Sources */,
 				1100292E2E86940F00035A57 /* QuickShareService.swift in Sources */,
 				1113ABCE2E80E27000EC13B2 /* ShelfActionService.swift in Sources */,
 				1160F8D82DD98230006FBB94 /* NotchShape.swift in Sources */,
@@ -1214,6 +1256,7 @@
 				1132E5162E777C140068732D /* YouTubeMusicAuthentication.swift in Sources */,
 				14A7E5882C64A89C008C1BE9 /* HelloAnimation.swift in Sources */,
 				111BEA612ED09B1B0079DD4E /* NSScreen+UUID.swift in Sources */,
+				4DED0D7D305E87C2005D32A2 /* ExtensionEventBus.swift in Sources */,
 				4DDCD26C304AC3F200390EB8 /* AirPlayConnector.swift in Sources */,
 				1153BD8F2D986B1F00979FB0 /* MediaControllerProtocol.swift in Sources */,
 				9AB0C6BD2C73C9CB00F7CD30 /* NotchHomeView.swift in Sources */,
@@ -1226,13 +1269,17 @@
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,
 				4DA88E1D3021E7320095857C /* SpectrumAnalyzer.swift in Sources */,
 				4DA88E153021DD6D0095857C /* AudioDeviceModel.swift in Sources */,
+				4DED0D79305E875D005D32A2 /* ExtensionTypes.swift in Sources */,
 				14E9FEAE2C7325770062E83F /* Button+Bouncing.swift in Sources */,
 				14D570C92C5F38890011E668 /* BoringViewModel.swift in Sources */,
 				14D570BC2C5E98EB0011E668 /* generic.swift in Sources */,
+				4DED0D87305E8A2E005D32A2 /* ExtensionsSettingsView.swift in Sources */,
+				4DED0DE6305E8C85005D32A2 /* ExtensionClosedAlert.swift in Sources */,
 				4DA88E1F302304200095857C /* SpectralTilt.swift in Sources */,
 				4DA8936730345ADF0095857C /* IdleNotchView.swift in Sources */,
 				118EBE272E92DE8400D54B5A /* NSMenu+AssociatedObject.swift in Sources */,
 				B1CE8CFE2C6F659400DD9871 /* KeyboardShortcutsHelper.swift in Sources */,
+				4DED0D7B305E8795005D32A2 /* CapabilityRegistry.swift in Sources */,
 				14D570C62C5F38210011E668 /* BoringHeader.swift in Sources */,
 				4DA88E33302463510095857C /* SystemStatsManager.swift in Sources */,
 				B17266E32C65F7FB0031BA0D /* WhatsNewView.swift in Sources */,
@@ -1245,7 +1292,9 @@
 				4DA88E0C301F3C3E0095857C /* FanCurveEditorView.swift in Sources */,
 				1153BD932D986E4300979FB0 /* AppleMusicController.swift in Sources */,
 				11C5E3132DFE85970065821E /* SettingsWindowController.swift in Sources */,
+				4DED0D81305E88C8005D32A2 /* ExtensionRecord.swift in Sources */,
 				110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */,
+				4DED0E44305E8DB5005D32A2 /* ExtensionEditorView.swift in Sources */,
 				11CFC6652E09C7B300748C80 /* OnboardingFinishView.swift in Sources */,
 				507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */,
 				1471A8592C6281BD0058408D /* BoringNotchWindow.swift in Sources */,
@@ -1260,7 +1309,9 @@
 				4DED0D12305DDD74005D32A2 /* DisplaySetupView.swift in Sources */,
 				4DA8936030345AAE0095857C /* BluetoothBatteryManager.swift in Sources */,
 				4D73E19F301EB06C0084A6A1 /* SMCConnection.swift in Sources */,
+				4DED0E46305E90DF005D32A2 /* ExtensionGenerationService.swift in Sources */,
 				B17266DF2C64DFA00031BA0D /* BundleInfos.swift in Sources */,
+				4DED0D83305E88D6005D32A2 /* ExtensionPersistenceService.swift in Sources */,
 				118EBE3B2E9720C500D54B5A /* ShelfStateViewModel.swift in Sources */,
 				11F747CE2EC75CEA00F841DB /* DragPreviewView.swift in Sources */,
 				F38DE6482D8243E7008B5C6D /* BatteryActivityManager.swift in Sources */,
@@ -1275,6 +1326,7 @@
 				118EBE2D2E97165600D54B5A /* Bookmark.swift in Sources */,
 				B1FEB4992C7686630066EBBC /* PanGesture.swift in Sources */,
 				11F748842ECB27DC00F841DB /* MusicSlotConfigurationView.swift in Sources */,
+				4DED0D85305E88E3005D32A2 /* ExtensionsManager.swift in Sources */,
 				9A0887352C7AFF8E00C160EA /* TabSelectionView.swift in Sources */,
 				112FB7352CCF16F70015238C /* NotchSpaceManager.swift in Sources */,
 				4D73E1A1301EB0750084A6A1 /* SMCKeys.swift in Sources */,

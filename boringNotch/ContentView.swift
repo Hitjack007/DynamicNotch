@@ -405,6 +405,13 @@ struct ContentView: View {
                       } else if coordinator.thermalAlertShow && vm.notchState == .closed {
                           ThermalClosedAlert(temp: coordinator.thermalAlertTemp)
                               .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
+                      } else if coordinator.extensionAlertShow && vm.notchState == .closed {
+                          ExtensionClosedAlert(
+                              icon: coordinator.extensionAlertIcon,
+                              title: coordinator.extensionAlertTitle,
+                              message: coordinator.extensionAlertMessage
+                          )
+                          .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
                       } else if vm.notchState == .closed && !vm.hideOnClosed
                           && (resolvedAmbientActivity == .music
                               || (coordinator.expandingView.show && coordinator.expandingView.type == .music)) {

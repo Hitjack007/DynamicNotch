@@ -363,4 +363,36 @@ class BoringViewCoordinator: ObservableObject {
             }
         }
     }
+
+    // MARK: - Extension Alert
+    // A generic closed-notch banner any extension can trigger via the
+    // `notification.showInApp` action, as an alternative to a real system
+    // notification (`notification.request`) — no OS permission needed, and
+    // it only shows while the app itself is on screen. Same shape as
+    // showThermalAlert above, just parameterized instead of thermal-specific.
+
+    @Published var extensionAlertShow: Bool = false
+    @Published var extensionAlertIcon: String = "bolt.badge.a"
+    @Published var extensionAlertTitle: String = ""
+    @Published var extensionAlertMessage: String = ""
+    private var extensionAlertTask: Task<Void, Never>?
+
+    func showExtensionAlert(title: String, message: String = "", icon: String = "bolt.badge.a", duration: TimeInterval = 4) {
+        extensionAlertIcon = icon
+        extensionAlertTitle = title
+        extensionAlertMessage = message
+        extensionAlertTask?.cancel()
+        withAnimation(.smooth) {
+            extensionAlertShow = true
+        }
+        extensionAlertTask = Task {
+            try? await Task.sleep(for: .seconds(duration))
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                withAnimation(.smooth) {
+                    self.extensionAlertShow = false
+                }
+            }
+        }
+    }
 }

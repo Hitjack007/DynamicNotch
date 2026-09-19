@@ -70,6 +70,9 @@ struct SettingsView: View {
                     NavigationLink(value: "Shelf") {
                         Label("Shelf", systemImage: "books.vertical")
                     }
+                    NavigationLink(value: "Extensions") {
+                        Label("Extensions", systemImage: "bolt.badge.a")
+                    }
                 }
 
                 Section("App") {
@@ -118,6 +121,8 @@ struct SettingsView: View {
                     AIUsageSettings()
                 case "Shelf":
                     Shelf()
+                case "Extensions":
+                    ExtensionsSettings()
                 case "Shortcuts":
                     Shortcuts()
                 case "Advanced":

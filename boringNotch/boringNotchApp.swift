@@ -320,6 +320,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         AIUsageCoordinator.shared.bootstrap()
         logLaunchStep("AI usage coordinator bootstrapped")
 
+        // Starts every trigger observer for the extensions system, then loads
+        // stored extensions and starts matching fired triggers against them.
+        ExtensionEventBus.shared.start()
+        ExtensionsManager.shared.activate()
+        logLaunchStep("Extension event bus started")
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenConfigurationDidChange),
