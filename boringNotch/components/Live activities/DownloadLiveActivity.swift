@@ -1,8 +1,10 @@
+import Defaults
 import SwiftUI
 
 struct DownloadLiveActivity: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject private var downloadManager = DownloadManager.shared
+    @ObservedObject private var batteryModel = BatteryStatusViewModel.shared
     @State private var spinAngle: Double = 0
 
     var body: some View {
@@ -13,14 +15,29 @@ struct DownloadLiveActivity: View {
                 Rectangle()
                     .fill(.black)
                     .frame(width: vm.closedNotchSize.width - cornerRadiusInsets.closed.top)
-                fileLabel(for: dl)
-                    .padding(.leading, 6)
+                if showsChargingGlyph {
+                    ChargingSlotGlyph(size: indicatorSize)
+                        .frame(width: indicatorSize * 2.5, alignment: .leading)
+                        .padding(.leading, 6)
+                } else {
+                    fileLabel(for: dl)
+                        .padding(.leading, 6)
+                }
             }
             .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
         }
     }
 
     private var indicatorSize: CGFloat { max(8, vm.effectiveClosedNotchHeight - 8) }
+
+    /// See `ContentView.showsChargingGlyph` for why this keys off `isCharging`
+    /// rather than `isPluggedIn`.
+    private var showsChargingGlyph: Bool {
+        #if DEBUG
+        if batteryModel.debugForceCharging { return true }
+        #endif
+        return batteryModel.isCharging && Defaults[.showPowerStatusNotifications]
+    }
 
     private func progressRing(for dl: ActiveDownload) -> some View {
         ZStack {

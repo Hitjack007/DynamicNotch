@@ -13,6 +13,7 @@ struct AIUsageLiveActivity: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject private var claudeManager = ClaudeUsageManager.shared
     @ObservedObject private var chatgptManager = ChatGPTUsageManager.shared
+    @ObservedObject private var batteryModel = BatteryStatusViewModel.shared
     @Default(.aiUsageProvider) var aiUsageProvider
     @Default(.aiUsageClosedNotchShowRing) var showRing
 
@@ -83,16 +84,30 @@ struct AIUsageLiveActivity: View {
             .animation(.smooth, value: usagePercent)
     }
 
-    // MARK: - Right: time remaining
+    // MARK: - Right: time remaining, or charging glyph
 
+    /// See `ContentView.showsChargingGlyph` for why this keys off `isCharging`
+    /// rather than `isPluggedIn`.
+    private var showsChargingGlyph: Bool {
+        #if DEBUG
+        if batteryModel.debugForceCharging { return true }
+        #endif
+        return batteryModel.isCharging && Defaults[.showPowerStatusNotifications]
+    }
+
+    @ViewBuilder
     private var rightIndicator: some View {
-        TimelineView(.periodic(from: Date(), by: 60)) { _ in
-            Text(hasError ? "--" : compactTimeUntilReset)
-                .font(.system(size: 9, weight: .regular, design: .rounded).monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(width: indicatorSize)
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
+        if showsChargingGlyph {
+            ChargingSlotGlyph(size: indicatorSize)
+        } else {
+            TimelineView(.periodic(from: Date(), by: 60)) { _ in
+                Text(hasError ? "--" : compactTimeUntilReset)
+                    .font(.system(size: 9, weight: .regular, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: indicatorSize)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            }
         }
     }
 

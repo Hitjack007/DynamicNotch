@@ -22,6 +22,13 @@ class BatteryStatusViewModel: ObservableObject {
     @Published private(set) var timeToFullCharge: Int = 0
     @Published private(set) var statusText: String = ""
 
+    #if DEBUG
+    /// Menu bar → "Simulate Charging" — lets the closed-notch charging glyph
+    /// (see `ContentView.showsChargingGlyph`) be previewed without an actual
+    /// power source connected. Debug builds only; never persisted.
+    @Published var debugForceCharging: Bool = false
+    #endif
+
     private let managerBattery = BatteryActivityManager.shared
     private var managerBatteryId: Int?
 

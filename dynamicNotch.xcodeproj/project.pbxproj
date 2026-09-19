@@ -144,6 +144,9 @@
 		4DED0D32305E1110005D32A2 /* AIUsageThresholdState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */; };
 		4DED0D34305E1125005D32A2 /* AIUsageNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D33305E1125005D32A2 /* AIUsageNotifier.swift */; };
 		4DED0D36305E115A005D32A2 /* AIUsageCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D35305E115A005D32A2 /* AIUsageCoordinator.swift */; };
+		4DED0D4B305E49DD005D32A2 /* AmbientActivityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */; };
+		4DED0D4D305E4A77005D32A2 /* ChargingSlotGlyph.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4C305E4A77005D32A2 /* ChargingSlotGlyph.swift */; };
+		4DED0D4F305E4ADD005D32A2 /* AmbientActivityOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */; };
 		507266DB2C908E2E00A2D00D /* HoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507266DA2C908E2E00A2D00D /* HoverButton.swift */; };
 		5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */; };
 		5955950D2E900ED800C66711 /* ApplicationRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */; };
@@ -361,6 +364,9 @@
 		4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageThresholdState.swift; sourceTree = "<group>"; };
 		4DED0D33305E1125005D32A2 /* AIUsageNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageNotifier.swift; sourceTree = "<group>"; };
 		4DED0D35305E115A005D32A2 /* AIUsageCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageCoordinator.swift; sourceTree = "<group>"; };
+		4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientActivityResolver.swift; sourceTree = "<group>"; };
+		4DED0D4C305E4A77005D32A2 /* ChargingSlotGlyph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChargingSlotGlyph.swift; sourceTree = "<group>"; };
+		4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientActivityOrderView.swift; sourceTree = "<group>"; };
 		507266DA2C908E2E00A2D00D /* HoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverButton.swift; sourceTree = "<group>"; };
 		5917FD102E57891600E87F1C /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		5955950C2E900ED800C66711 /* ApplicationRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationRelauncher.swift; sourceTree = "<group>"; };
@@ -759,6 +765,7 @@
 				14D570CA2C5F4B2C0011E668 /* BatteryStatusViewModel.swift */,
 				1153BD902D986DB300979FB0 /* PlaybackState.swift */,
 				4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */,
+				4DED0D4A305E49DD005D32A2 /* AmbientActivityResolver.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -913,6 +920,7 @@
 				B1B112902C6A572100093D8F /* EditPanelView.swift */,
 				B1C448972C972CC4001F0858 /* ListItemPopover.swift */,
 				4DA8936830345AF40095857C /* IdleWidgetConfigurationView.swift */,
+				4DED0D4E305E4ADD005D32A2 /* AmbientActivityOrderView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -927,6 +935,7 @@
 				B1D365CF2C6A9A6C0047BDBC /* SystemEventIndicatorModifier.swift */,
 				B172AABF2C95DA0B001623F1 /* InlineHUD.swift */,
 				4DA8936330345AC30095857C /* DownloadLiveActivity.swift */,
+				4DED0D4C305E4A77005D32A2 /* ChargingSlotGlyph.swift */,
 			);
 			path = "Live activities";
 			sourceTree = "<group>";
@@ -1147,6 +1156,7 @@
 				4DA88E3B302476DC0095857C /* ActivitySimulator.swift in Sources */,
 				1113ABD02E80E6BB00EC13B2 /* ThumbnailService.swift in Sources */,
 				11CFC65B2E097E9D00748C80 /* WelcomeView.swift in Sources */,
+				4DED0D4B305E49DD005D32A2 /* AmbientActivityResolver.swift in Sources */,
 				14D570C02C5EA5870011E668 /* AnimatedFace.swift in Sources */,
 				B1D6FD432C6603730015F173 /* SoftwareUpdater.swift in Sources */,
 				111BE9952ECF2DF40079DD4E /* DragDetector.swift in Sources */,
@@ -1171,6 +1181,7 @@
 				11EFCD702E8E92D600D0B974 /* ShelfItemViewModel.swift in Sources */,
 				1153BDA72D99B22200979FB0 /* YouTubeMusicController.swift in Sources */,
 				1163988F2DF5CC870052E6AF /* CalendarModel.swift in Sources */,
+				4DED0D4D305E4A77005D32A2 /* ChargingSlotGlyph.swift in Sources */,
 				1153BD9A2D98824300979FB0 /* SpotifyController.swift in Sources */,
 				118EBE292E946B3F00D54B5A /* ShareServiceFinder.swift in Sources */,
 				B19424092CD0FF01003E5DC2 /* LottieAnimationView.swift in Sources */,
@@ -1209,6 +1220,7 @@
 				B172AAC02C95DA0B001623F1 /* InlineHUD.swift in Sources */,
 				B1B112912C6A572100093D8F /* EditPanelView.swift in Sources */,
 				B1C4489B2C97376A001F0858 /* TipStore.swift in Sources */,
+				4DED0D4F305E4ADD005D32A2 /* AmbientActivityOrderView.swift in Sources */,
 				4DA88EE03031680B0095857C /* ClaudeUsageManager.swift in Sources */,
 				1153BD912D986DB300979FB0 /* PlaybackState.swift in Sources */,
 				B1A78C822C8BA08100BD51B0 /* FullscreenMediaDetection.swift in Sources */,

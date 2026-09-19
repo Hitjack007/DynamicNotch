@@ -1632,6 +1632,16 @@ struct DisplaysSettings: View {
                 Text("Multi-Display")
             }
 
+            Section {
+                AmbientActivityOrderView()
+            } header: {
+                Text("Notch Activity Priority")
+            } footer: {
+                Text("When more than one of these is active at once, the first one in this list wins the notch — the same order across every display. AI Usage can also jump to the front temporarily; see AI Usage settings.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             if showOnAllDisplays && !secondaryScreens.isEmpty {
                 Section {
                     if secondaryScreens.count > 1 {
@@ -2426,6 +2436,8 @@ struct AIUsageSettings: View {
     @Default(.aiUsageProvider)             var aiUsageProvider
     @Default(.aiUsageClosedNotchShowRing)  var aiUsageClosedNotchShowRing
     @Default(.aiUsagePollingInterval)      var aiUsagePollingInterval
+    @Default(.aiUsagePromoteInNotchEnabled) var aiUsagePromoteInNotchEnabled
+    @Default(.aiUsagePromoteInNotchAt)     var aiUsagePromoteInNotchAt
     @Default(.claudePreferredBrowser)      var claudePreferredBrowser
     @Default(.chatgptPreferredBrowser)     var chatgptPreferredBrowser
     @Default(.aiUsageNotificationsEnabled) var aiUsageNotificationsEnabled
@@ -2480,6 +2492,22 @@ struct AIUsageSettings: View {
                 Text("Configuration")
             } footer: {
                 Text("Displays other than your main one can override the closed notch indicator in Displays → Per-Display Settings.")
+            }
+            .disabled(!showAIUsageTab)
+
+            Section {
+                Toggle("Promote in notch", isOn: $aiUsagePromoteInNotchEnabled)
+                if aiUsagePromoteInNotchEnabled {
+                    Picker("At usage", selection: $aiUsagePromoteInNotchAt) {
+                        ForEach(Array(stride(from: 50, through: 95, by: 5)), id: \.self) { percent in
+                            Text("\(percent)%").tag(percent)
+                        }
+                    }
+                }
+            } header: {
+                Text("Notch Priority")
+            } footer: {
+                Text("While usage stays at or above this, AI Usage jumps to the front of the notch activity priority order in General settings — ahead of Music, Downloads, and Face — until it drops back below.")
             }
             .disabled(!showAIUsageTab)
 

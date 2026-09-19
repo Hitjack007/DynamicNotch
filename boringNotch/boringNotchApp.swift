@@ -53,6 +53,13 @@ struct DynamicNotchApp: App {
             }
             .keyboardShortcut(KeyEquivalent(","), modifiers: .command)
             CheckForUpdatesView(updater: updaterController.updater)
+            #if DEBUG
+            Divider()
+            Toggle("Simulate Charging", isOn: Binding(
+                get: { BatteryStatusViewModel.shared.debugForceCharging },
+                set: { BatteryStatusViewModel.shared.debugForceCharging = $0 }
+            ))
+            #endif
             Divider()
             Button("Restart Boring Notch") {
                 ApplicationRelauncher.restart()

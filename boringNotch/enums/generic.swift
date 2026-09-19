@@ -95,3 +95,25 @@ enum IdleNotchWidget: String, CaseIterable, Identifiable, Codable, Defaults.Seri
         }
     }
 }
+
+/// One of the four closed-notch "ambient" activities that compete for the same slot.
+/// Order among these is user-configurable via `Defaults[.ambientActivityOrder]`; see
+/// `AmbientActivityResolver`.
+enum AmbientActivity: String, CaseIterable, Identifiable, Codable, Defaults.Serializable {
+    case music    = "Music"
+    case download = "Download"
+    case face     = "Face"
+    case aiUsage  = "AI Usage"
+
+    var id: String { rawValue }
+    var label: String { rawValue }
+
+    var iconName: String {
+        switch self {
+        case .music:    return "music.note"
+        case .download: return "arrow.down.circle"
+        case .face:     return "face.smiling"
+        case .aiUsage:  return "apple.intelligence"
+        }
+    }
+}

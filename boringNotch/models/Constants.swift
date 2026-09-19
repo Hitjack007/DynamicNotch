@@ -389,6 +389,13 @@ extension Defaults.Keys {
     static let aiUsagePollingInterval      = Key<Int>("aiUsagePollingInterval", default: 5)
     static let claudePreferredBrowser      = Key<AIBrowserPreference>("claudePreferredBrowser", default: .auto)
     static let chatgptPreferredBrowser     = Key<AIBrowserPreference>("chatgptPreferredBrowser", default: .auto)
+    // Independent of the notification thresholds below — once usage reaches
+    // aiUsagePromoteInNotchAt, the AI usage activity jumps to the front of the
+    // ambient priority order (see AmbientActivityResolver) for as long as it
+    // stays at or above it.
+    static let aiUsagePromoteInNotchEnabled = Key<Bool>("aiUsagePromoteInNotchEnabled", default: false)
+    // Picker-backed, so only values in 50...95 step 5 are ever stored.
+    static let aiUsagePromoteInNotchAt     = Key<Int>("aiUsagePromoteInNotchAt", default: 80)
 
     // MARK: AI Usage — Notifications
     static let aiUsageNotificationsEnabled = Key<Bool>("aiUsageNotificationsEnabled", default: false)
@@ -403,6 +410,15 @@ extension Defaults.Keys {
     // Persisted edge-trigger bookkeeping, so relaunching mid-window does not
     // re-fire an alert the user has already seen.
     static let aiUsageThresholdState       = Key<AIUsageThresholdState>("aiUsageThresholdState", default: .init())
+
+    // MARK: Ambient Activity Priority
+    // Which of Music/Download/Face/AI Usage wins the closed-notch ambient slot when
+    // more than one is active. This default reproduces the previous hardcoded order —
+    // existing users see no change until they reorder it themselves. See
+    // AmbientActivityResolver for how this is resolved at render time.
+    static let ambientActivityOrder = Key<[AmbientActivity]>(
+        "ambientActivityOrder", default: [.music, .download, .face, .aiUsage]
+    )
 
     // MARK: Per-Display
     static let perScreenConfigs = Key<[String: PerScreenConfig]>("perScreenConfigs", default: [:])

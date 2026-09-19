@@ -45,6 +45,9 @@ struct ContentView: View {
     @Default(.showSystemStatsTab) var showSystemStatsTab
     @Default(.showAIUsageTab) var showAIUsageTab
     @Default(.aiUsageProvider) var aiUsageProvider
+    @Default(.ambientActivityOrder) var ambientActivityOrder
+    @Default(.aiUsagePromoteInNotchEnabled) var aiUsagePromoteInNotchEnabled
+    @Default(.aiUsagePromoteInNotchAt) var aiUsagePromoteInNotchAt
     @ObservedObject var downloadManager = DownloadManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
@@ -58,8 +61,51 @@ struct ContentView: View {
         return target == vm.screenUUID
     }
 
+    /// Whether the disposable right slot of the current ambient activity
+    /// (Music/Download/AI Usage) should show a charging glyph instead of its
+    /// normal content. Tied to `isCharging` rather than `isPluggedIn` so it
+    /// clears at 100% instead of pinning permanently for always-plugged-in
+    /// Macs. Face has no disposable slot, so it is excluded — see
+    /// `BoringFaceAnimation()`.
+    private var showsChargingGlyph: Bool {
+        #if DEBUG
+        if batteryModel.debugForceCharging { return true }
+        #endif
+        return batteryModel.isCharging && Defaults[.showPowerStatusNotifications]
+    }
+
     private var activeAIManagerAuthenticated: Bool {
         aiUsageProvider == .claude ? claudeManager.isAuthenticated : chatgptManager.isAuthenticated
+    }
+
+    private var activeAIUsagePercent: Double {
+        aiUsageProvider == .claude ? claudeManager.usagePercent : chatgptManager.usagePercent
+    }
+
+    /// Whether AI usage should jump to the front of the ambient priority order
+    /// regardless of where the user ranked it. See
+    /// `Defaults[.aiUsagePromoteInNotchEnabled]` / `[.aiUsagePromoteInNotchAt]`.
+    private var aiUsagePromoted: Bool {
+        guard aiUsagePromoteInNotchEnabled else { return false }
+        return activeAIUsagePercent * 100 >= Double(aiUsagePromoteInNotchAt)
+    }
+
+    /// Which of Music/Download/Face/AI Usage currently wins the ambient slot,
+    /// per the user's configured order (and any active promotion). `nil` means
+    /// none are active, so the idle widgets (or nothing) should show instead.
+    private var resolvedAmbientActivity: AmbientActivity? {
+        AmbientActivityResolver.resolve(
+            order: ambientActivityOrder,
+            availability: .init(
+                musicPlaying: musicManager.isPlaying,
+                musicEnabled: vm.screenConfig.musicLiveActivityEnabled,
+                hasActiveDownloads: downloadManager.hasActiveDownloads,
+                downloadEnabled: vm.screenConfig.downloadLiveActivityEnabled,
+                faceEnabled: vm.screenConfig.showFaceAnimation,
+                aiUsageAvailable: vm.screenConfig.aiUsageInNotch && showAIUsageTab && activeAIManagerAuthenticated,
+                aiUsagePromoted: aiUsagePromoted
+            )
+        )
     }
 
     private var topCornerRadius: CGFloat {
@@ -84,28 +130,29 @@ struct ContentView: View {
             && vm.notchState == .closed && Defaults[.showPowerStatusNotifications]
         {
             chinWidth = 640
-        } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music)
-            && vm.notchState == .closed && musicManager.isPlaying
-            && vm.screenConfig.musicLiveActivityEnabled && !vm.hideOnClosed
+        } else if vm.notchState == .closed && !vm.hideOnClosed
+            && (resolvedAmbientActivity == .music
+                || (coordinator.expandingView.show && coordinator.expandingView.type == .music))
         {
+            // The music-change peek must win outright, not just when Music is
+            // already the resolved winner — otherwise reordering something
+            // above Music makes every branch below fail its `!expandingView.show`
+            // guard and the notch renders blank while the peek is active.
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && !musicManager.isPlaying && downloadManager.hasActiveDownloads
-            && vm.screenConfig.downloadLiveActivityEnabled && !vm.hideOnClosed
+            && resolvedAmbientActivity == .download && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 8) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && !musicManager.isPlaying && vm.screenConfig.showFaceAnimation
-            && !vm.hideOnClosed
+            && resolvedAmbientActivity == .face && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && vm.screenConfig.aiUsageInNotch && showAIUsageTab
-            && activeAIManagerAuthenticated && !vm.hideOnClosed
+            && resolvedAmbientActivity == .aiUsage && !vm.hideOnClosed
         {
             chinWidth += (2 * max(0, vm.effectiveClosedNotchHeight - 12) + 20)
         } else if !coordinator.expandingView.show && vm.notchState == .closed
-            && !musicManager.isPlaying
+            && resolvedAmbientActivity == nil
             && (vm.screenConfig.idleLeftWidget != .none || vm.screenConfig.idleRightWidget != .none)
             && !vm.hideOnClosed
         {
@@ -358,23 +405,26 @@ struct ContentView: View {
                       } else if coordinator.thermalAlertShow && vm.notchState == .closed {
                           ThermalClosedAlert(temp: coordinator.thermalAlertTemp)
                               .frame(height: vm.effectiveClosedNotchHeight, alignment: .center)
-                      } else if (!coordinator.expandingView.show || coordinator.expandingView.type == .music) && vm.notchState == .closed && musicManager.isPlaying && vm.screenConfig.musicLiveActivityEnabled && !vm.hideOnClosed {
+                      } else if vm.notchState == .closed && !vm.hideOnClosed
+                          && (resolvedAmbientActivity == .music
+                              || (coordinator.expandingView.show && coordinator.expandingView.type == .music)) {
+                          // The music-change peek (inline style) must win outright even
+                          // when something else is ranked above Music — see the matching
+                          // comment in computedChinWidth.
                           MusicLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && !musicManager.isPlaying && downloadManager.hasActiveDownloads
-                          && vm.screenConfig.downloadLiveActivityEnabled && !vm.hideOnClosed {
+                          && resolvedAmbientActivity == .download && !vm.hideOnClosed {
                           DownloadLiveActivity()
                               .frame(alignment: .center)
-                      } else if !coordinator.expandingView.show && vm.notchState == .closed && !musicManager.isPlaying && vm.screenConfig.showFaceAnimation && !vm.hideOnClosed {
+                      } else if !coordinator.expandingView.show && vm.notchState == .closed && resolvedAmbientActivity == .face && !vm.hideOnClosed {
                           BoringFaceAnimation()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && vm.screenConfig.aiUsageInNotch && showAIUsageTab
-                          && activeAIManagerAuthenticated && !vm.hideOnClosed {
+                          && resolvedAmbientActivity == .aiUsage && !vm.hideOnClosed {
                           AIUsageLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
-                          && !musicManager.isPlaying
+                          && resolvedAmbientActivity == nil
                           && (vm.screenConfig.idleLeftWidget != .none || vm.screenConfig.idleRightWidget != .none)
                           && !vm.hideOnClosed {
                           IdleNotchView()
@@ -542,7 +592,9 @@ struct ContentView: View {
                 )
 
             HStack {
-                if useMusicVisualizer {
+                if showsChargingGlyph {
+                    ChargingSlotGlyph(size: 16)
+                } else if useMusicVisualizer {
                     if useResponsiveSpectrogram && !musicManager.isExcludedFromResponsiveSpectrogram {
                         Rectangle()
                             .fill(
