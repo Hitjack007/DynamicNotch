@@ -76,8 +76,11 @@ struct ChromeCookieReader {
     private static func deriveKey(from password: String) -> Data? {
         let salt = "saltysalt"
         var derived = Data(count: 16)
-        let status: CCStatus = derived.withUnsafeMutableBytes { keyPtr in
-            password.withCString { pwPtr in
+        let status: CCStatus = derived.withUnsafeMutableBytes { (keyPtr: UnsafeMutableRawBufferPointer) -> CCStatus in
+            guard let keyBase = keyPtr.bindMemory(to: UInt8.self).baseAddress else {
+                return CCStatus(kCCParamError)
+            }
+            return password.withCString { pwPtr in
                 salt.withCString { saltPtr in
                     CCKeyDerivationPBKDF(
                         CCPBKDFAlgorithm(kCCPBKDF2),
@@ -85,7 +88,7 @@ struct ChromeCookieReader {
                         UnsafeRawPointer(saltPtr).assumingMemoryBound(to: UInt8.self), salt.utf8.count,
                         CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1),
                         1003,
-                        keyPtr.bindMemory(to: UInt8.self).baseAddress!, 16
+                        keyBase, 16
                     )
                 }
             }

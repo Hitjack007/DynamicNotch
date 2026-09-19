@@ -153,10 +153,14 @@ final class ChatGPTUsageManager: ObservableObject {
                 return
             }
 
-            KeychainHelper.save(accessToken, account: "chatgpt.accessToken")
+            guard KeychainHelper.save(accessToken, account: "chatgpt.accessToken") else {
+                authState = .error("Could not save the access token to the Keychain.")
+                return
+            }
 
+            // Best effort — the refresh path degrades to a manual re-auth without it.
             if let sessionToken = json["sessionToken"] as? String {
-                KeychainHelper.save(sessionToken, account: "chatgpt.sessionToken")
+                _ = KeychainHelper.save(sessionToken, account: "chatgpt.sessionToken")
             }
 
             authState = .authenticated
@@ -184,10 +188,12 @@ final class ChatGPTUsageManager: ObservableObject {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let newAccessToken = json["accessToken"] as? String else { return nil }
 
-        KeychainHelper.save(newAccessToken, account: "chatgpt.accessToken")
+        // Without persistence the token would be refreshed on every poll forever,
+        // so treat a failed write as a failed refresh and require a re-authentication.
+        guard KeychainHelper.save(newAccessToken, account: "chatgpt.accessToken") else { return nil }
 
         if let newSessionToken = json["sessionToken"] as? String {
-            KeychainHelper.save(newSessionToken, account: "chatgpt.sessionToken")
+            _ = KeychainHelper.save(newSessionToken, account: "chatgpt.sessionToken")
         }
 
         return newAccessToken

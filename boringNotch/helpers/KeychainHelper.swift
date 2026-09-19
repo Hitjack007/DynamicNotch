@@ -9,8 +9,12 @@ import Security
 struct KeychainHelper {
     private static let service = "com.boringnotch.claude"
 
-    static func save(_ value: String, account: String) {
-        guard let data = value.data(using: .utf8) else { return }
+    /// Writes a credential to the Keychain.
+    /// - Returns: `true` when the item was stored. Callers must not report success
+    ///   to the user on `false` — the previous value has already been removed at
+    ///   that point, so the credential is simply gone.
+    static func save(_ value: String, account: String) -> Bool {
+        guard let data = value.data(using: .utf8) else { return false }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -19,7 +23,7 @@ struct KeychainHelper {
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
         SecItemDelete(query as CFDictionary)
-        SecItemAdd(query as CFDictionary, nil)
+        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
 
     static func load(account: String) -> String? {

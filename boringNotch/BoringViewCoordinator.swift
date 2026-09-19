@@ -187,8 +187,9 @@ class BoringViewCoordinator: ObservableObject {
     // then re-add the "Microphone Mute" toggle in HUDCustomizerSheet (see SettingsView.swift).
     @objc func sneakPeekEvent(_ notification: Notification) {
         let decoder = JSONDecoder()
-        if let decodedData = try? decoder.decode(
-            SharedSneakPeek.self, from: notification.userInfo?.first?.value as! Data)
+        // The payload arrives from another process, so never force-cast it.
+        guard let payload = notification.userInfo?.first?.value as? Data else { return }
+        if let decodedData = try? decoder.decode(SharedSneakPeek.self, from: payload)
         {
             let contentType =
                 decodedData.type == "brightness"

@@ -89,13 +89,19 @@ final class ClaudeUsageManager: ObservableObject {
             return
         }
 
-        KeychainHelper.save(sessionKey, account: "claude.sessionKey")
+        guard KeychainHelper.save(sessionKey, account: "claude.sessionKey") else {
+            authState = .error("Could not save the session key to the Keychain.")
+            return
+        }
         KeychainHelper.delete(account: "claude.orgID")
 
         // Prefer the org ID from cookies — avoids an unverified API round-trip
         if let orgID = findCookie(named: "lastActiveOrg", for: browser), !orgID.isEmpty {
-            KeychainHelper.save(orgID, account: "claude.orgID")
-            authState = .authenticated
+            if KeychainHelper.save(orgID, account: "claude.orgID") {
+                authState = .authenticated
+            } else {
+                authState = .error("Could not save organization info to the Keychain.")
+            }
         } else {
             await discoverOrgID(sessionKey: sessionKey)
         }
@@ -116,7 +122,10 @@ final class ClaudeUsageManager: ObservableObject {
         guard !trimmed.isEmpty else { return }
         isAuthenticating = true
         defer { isAuthenticating = false }
-        KeychainHelper.save(trimmed, account: "claude.sessionKey")
+        guard KeychainHelper.save(trimmed, account: "claude.sessionKey") else {
+            authState = .error("Could not save the session key to the Keychain.")
+            return
+        }
         KeychainHelper.delete(account: "claude.orgID")
         await discoverOrgID(sessionKey: trimmed)
     }
@@ -154,8 +163,11 @@ final class ClaudeUsageManager: ObservableObject {
                let first = orgs.first,
                let id = (first["id"] ?? first["uuid"]) as? String
             {
-                KeychainHelper.save(id, account: "claude.orgID")
-                authState = .authenticated
+                if KeychainHelper.save(id, account: "claude.orgID") {
+                    authState = .authenticated
+                } else {
+                    authState = .error("Could not save organization info to the Keychain.")
+                }
             } else {
                 authState = .error("Could not parse org info from Claude API response.")
             }
