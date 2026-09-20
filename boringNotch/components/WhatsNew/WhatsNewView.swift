@@ -24,7 +24,7 @@ struct WhatsNewView: View {
         }
         .frame(width: 400, height: 600)
         .background(
-            VisualEffectView(material: .underWindowBackground, blendingMode: .behindWindow)
+            VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
                 .ignoresSafeArea()
         )
     }
