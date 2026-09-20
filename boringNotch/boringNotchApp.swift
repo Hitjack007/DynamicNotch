@@ -44,8 +44,18 @@ struct DynamicNotchApp: App {
         logLaunchStep("Settings window controller configured")
     }
 
+    #if DEBUG
+    // Always show the menu bar icon in Debug builds so it's reachable while developing,
+    // regardless of the persisted Defaults[.menubarIcon] value used in Release.
+    private var menuBarIconInserted: Binding<Bool> {
+        Binding(get: { true }, set: { _ in })
+    }
+    #else
+    private var menuBarIconInserted: Binding<Bool> { $showMenuBarIcon }
+    #endif
+
     var body: some Scene {
-        MenuBarExtra("boring.notch", systemImage: "sparkle", isInserted: $showMenuBarIcon) {
+        MenuBarExtra("boring.notch", systemImage: "sparkle", isInserted: menuBarIconInserted) {
             Button("Settings") {
                 DispatchQueue.main.async {
                     SettingsWindowController.shared.showWindow()
