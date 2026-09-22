@@ -34,9 +34,12 @@ final class BluetoothBatteryManager: ObservableObject {
 
     // Returns 0-100, or -1 if unavailable. Uses KVC to access private IOBluetooth property.
     static func readBatteryLevel(for device: IOBluetoothDevice) -> Int {
-        if let level = device.value(forKey: "batteryPercent") as? Int,
-           level >= 0, level <= 100 {
-            return level
+        let batteryPercentSelector = NSSelectorFromString("batteryPercent")
+        guard device.responds(to: batteryPercentSelector) else { return -1 }
+
+        if let level = device.value(forKey: "batteryPercent") as? NSNumber,
+           level.intValue >= 0, level.intValue <= 100 {
+            return level.intValue
         }
         return -1
     }
