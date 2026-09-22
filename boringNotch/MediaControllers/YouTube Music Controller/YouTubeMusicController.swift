@@ -229,6 +229,7 @@ final class YouTubeMusicController: MediaControllerProtocol, @unchecked Sendable
             webSocketClient = client
             stopPeriodicUpdates() // WebSocket will provide real-time updates
             reconnectDelay = configuration.reconnectDelay.lowerBound
+            print("[YouTubeMusicController] WebSocket connected — reconnect delay reset to \(reconnectDelay)s")
         } catch {
             print("[YouTubeMusicController] WebSocket connection failed: \(error)")
             await scheduleReconnect()
@@ -302,15 +303,17 @@ final class YouTubeMusicController: MediaControllerProtocol, @unchecked Sendable
     }
     
     private func handleWebSocketDisconnect() async {
+        print("[YouTubeMusicController] WebSocket disconnected")
         webSocketClient = nil
         await startPeriodicUpdates() // Fallback to polling
         await scheduleReconnect()
     }
-    
+
     private func scheduleReconnect() async {
+        print("[YouTubeMusicController] Scheduling reconnect in \(reconnectDelay)s")
         try? await Task.sleep(for: .seconds(reconnectDelay))
         reconnectDelay = min(reconnectDelay * 2, configuration.reconnectDelay.upperBound)
-        
+
         if isActive() {
             await initializeIfAppActive()
         }

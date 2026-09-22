@@ -136,13 +136,25 @@ actor YouTubeMusicWebSocketClient {
     private let session: URLSession
     private let onMessage: @Sendable (Data) async -> Void
     private let onDisconnect: @Sendable () async -> Void
-    
+
     var isConnected: Bool { task != nil }
-    
+
+    private struct HandshakeTimeout: Error {}
+
+    // A dedicated, non-caching session. The shared session's disk-backed URLCache
+    // has no reason to persist responses for a local companion-server socket, and
+    // doing so is what was spamming CFNetwork's writeDBwithCachedResponse-ERROR /
+    // libsqlite3 misuse logs on every failed handshake.
+    private static let defaultSession: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.urlCache = nil
+        return URLSession(configuration: config)
+    }()
+
     init(
         onMessage: @escaping @Sendable (Data) async -> Void,
         onDisconnect: @escaping @Sendable () async -> Void,
-        session: URLSession = .shared
+        session: URLSession = YouTubeMusicWebSocketClient.defaultSession
     ) {
         self.onMessage = onMessage
         self.onDisconnect = onDisconnect
@@ -156,9 +168,25 @@ actor YouTubeMusicWebSocketClient {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let newTask = session.webSocketTask(with: request)
-        task = newTask
         newTask.resume()
-        
+        print("[YouTubeMusicWebSocketClient] Attempting handshake to \(url)")
+
+        // resume() is fire-and-forget and never throws for a refused or dropped
+        // connection — only the first receive() actually surfaces the handshake
+        // result. Callers rely on connect() throwing here to know the attempt
+        // failed and to back off before retrying.
+        let firstMessage: URLSessionWebSocketTask.Message
+        do {
+            firstMessage = try await receiveWithTimeout(newTask, timeout: 5)
+        } catch {
+            print("[YouTubeMusicWebSocketClient] Handshake failed: \(error)")
+            newTask.cancel(with: .goingAway, reason: nil)
+            throw error
+        }
+
+        print("[YouTubeMusicWebSocketClient] Handshake succeeded")
+        task = newTask
+        await handle(firstMessage)
         Task { await listenForMessages() }
     }
     
@@ -168,29 +196,48 @@ actor YouTubeMusicWebSocketClient {
     }
     
     private func listenForMessages() async {
-        guard let currentTask = task else { return }
-        
-        while !Task.isCancelled && task != nil {
+        while !Task.isCancelled, let currentTask = task {
             do {
                 let message = try await currentTask.receive()
-                
-                let data: Data
-                switch message {
-                case .data(let d):
-                    data = d
-                case .string(let s):
-                    data = s.data(using: .utf8) ?? Data()
-                @unknown default:
-                    continue
-                }
-                
-                await onMessage(data)
+                await handle(message)
             } catch {
+                print("[YouTubeMusicWebSocketClient] Receive failed, disconnecting: \(error)")
                 break
             }
         }
         task = nil
         await onDisconnect()
+    }
+
+    private func handle(_ message: URLSessionWebSocketTask.Message) async {
+        let data: Data
+        switch message {
+        case .data(let d):
+            data = d
+        case .string(let s):
+            data = s.data(using: .utf8) ?? Data()
+        @unknown default:
+            return
+        }
+
+        await onMessage(data)
+    }
+
+    // Bounds the initial handshake confirmation so a socket that accepts the
+    // connection but never sends anything can't hang connect() forever.
+    private func receiveWithTimeout(
+        _ task: URLSessionWebSocketTask,
+        timeout: TimeInterval
+    ) async throws -> URLSessionWebSocketTask.Message {
+        try await withThrowingTaskGroup(of: URLSessionWebSocketTask.Message.self) { group in
+            group.addTask { try await task.receive() }
+            group.addTask {
+                try await Task.sleep(for: .seconds(timeout))
+                throw HandshakeTimeout()
+            }
+            defer { group.cancelAll() }
+            return try await group.next()!
+        }
     }
 }
 
