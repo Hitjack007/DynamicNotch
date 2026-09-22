@@ -108,8 +108,10 @@ struct ChromeCookieReader {
         defer { try? FileManager.default.removeItem(atPath: tmp) }
 
         var db: OpaquePointer?
-        guard sqlite3_open_v2(tmp, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return nil }
+        // sqlite3_open_v2 allocates a connection handle even when it returns an error,
+        // so close must be deferred before the failure guard, not after it.
         defer { sqlite3_close(db) }
+        guard sqlite3_open_v2(tmp, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return nil }
 
         let sql = """
             SELECT encrypted_value FROM cookies
