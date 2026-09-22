@@ -116,7 +116,6 @@
 		4DA88E0C301F3C3E0095857C /* FanCurveEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E0B301F3C3E0095857C /* FanCurveEditorView.swift */; };
 		4DA88E0E301F3F700095857C /* ThermalDaemonClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */; };
 		4DA88E11301F42F10095857C /* install-thermal-daemon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */; };
-		4DA88E1330208E210095857C /* logoutput.md in Resources */ = {isa = PBXBuildFile; fileRef = 4DA88E1230208E210095857C /* logoutput.md */; };
 		4DA88E153021DD6D0095857C /* AudioDeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */; };
 		4DA88E173021E6EF0095857C /* MelFilterbank.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E163021E6EF0095857C /* MelFilterbank.swift */; };
 		4DA88E193021E6F70095857C /* EnvelopeFollower.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E183021E6F70095857C /* EnvelopeFollower.swift */; };
@@ -349,7 +348,6 @@
 		4DA88E0B301F3C3E0095857C /* FanCurveEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanCurveEditorView.swift; sourceTree = "<group>"; };
 		4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalDaemonClient.swift; sourceTree = "<group>"; };
 		4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "install-thermal-daemon.sh"; sourceTree = "<group>"; };
-		4DA88E1230208E210095857C /* logoutput.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = logoutput.md; path = ../logoutput.md; sourceTree = SOURCE_ROOT; };
 		4DA88E143021DD6D0095857C /* AudioDeviceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDeviceModel.swift; sourceTree = "<group>"; };
 		4DA88E163021E6EF0095857C /* MelFilterbank.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MelFilterbank.swift; sourceTree = "<group>"; };
 		4DA88E183021E6F70095857C /* EnvelopeFollower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvelopeFollower.swift; sourceTree = "<group>"; };
@@ -740,7 +738,6 @@
 				14CEF4172C5CAED300855D72 /* ContentView.swift */,
 				B17266E02C6532560031BA0D /* Localizable.xcstrings */,
 				14CEF4192C5CAED400855D72 /* Assets.xcassets */,
-				4DA88E1230208E210095857C /* logoutput.md */,
 				14A7E5962C65FD31008C1BE9 /* boring.m4a */,
 				1443E7F42C609E650027C1FC /* Info.plist */,
 				14CEF41E2C5CAED400855D72 /* boringNotch.entitlements */,
@@ -1176,7 +1173,6 @@
 				112B0EB82E30DD0F00562D6C /* MediaRemoteAdapterTestClient in Resources */,
 				112B0EB92E30DD0F00562D6C /* mediaremote-adapter.pl in Resources */,
 				B17266E12C6532560031BA0D /* Localizable.xcstrings in Resources */,
-				4DA88E1330208E210095857C /* logoutput.md in Resources */,
 				14A7E5972C65FD31008C1BE9 /* boring.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
