@@ -99,6 +99,14 @@ Security issues go through [SECURITY.md](./SECURITY.md) rather than the public i
 
 ---
 
+## Contributors
+
+Thanks to everyone who's contributed code to DynamicNotch:
+
+- [Aliaskar Abdualiyev](https://github.com/aliaskar-rockeater) — [Prevent Bluetooth battery scan from aborting launch (#11)](https://github.com/Hitjack007/DynamicNotch/pull/11)
+
+---
+
 ## Credits
 
 DynamicNotch is a fork of [boring.notch](https://github.com/TheBoredTeam/boring.notch) by [TheBoredTeam](https://github.com/TheBoredTeam). Their work is the foundation of everything here.
