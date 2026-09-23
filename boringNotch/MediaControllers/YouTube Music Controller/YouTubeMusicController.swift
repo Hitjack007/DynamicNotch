@@ -210,7 +210,10 @@ final class YouTubeMusicController: MediaControllerProtocol, @unchecked Sendable
     }
     
     private func setupWebSocketIfPossible(token: String) async {
-        guard let wsURL = WebSocketURLBuilder.buildURL(from: configuration.baseURL) else {
+        guard let wsURL = WebSocketURLBuilder.buildURL(
+            from: configuration.baseURL,
+            token: token
+        ) else {
             print("[YouTubeMusicController] Failed to build WebSocket URL")
             return
         }
