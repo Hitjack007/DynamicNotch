@@ -406,4 +406,45 @@ final class ExtensionEventBus: ObservableObject {
             }
             .store(in: &cancellables)
     }
+
+    // MARK: - Live re-check (for ExtensionsManager's sustainFor heartbeat)
+
+    /// The CURRENT ambient payload for triggers backed by state that can be read synchronously
+    /// right now, rather than only known at the moment an event fired. Lets a `sustainFor`
+    /// timer keep resetting while its condition remains continuously true (e.g. Xcode staying
+    /// frontmost) instead of only resetting on discrete change events — sitting on Xcode with
+    /// no app switches wouldn't otherwise refire `app.frontmostChanged` at all. `nil` means
+    /// this trigger has no meaningful "current value" to re-check; `sustainFor` on rules using
+    /// it can only be reset by an actual recurring event, same as before this existed.
+    func currentPayload(for trigger: TriggerID) -> [String: ExtensionValue]? {
+        switch trigger {
+        case .appFrontmostChanged:
+            guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+            return ["bundleIdentifier": .string(app.bundleIdentifier ?? ""), "name": .string(app.localizedName ?? "")]
+        case .volumeChanged:
+            return ["level": .double(Double(VolumeManager.shared.rawVolume)), "muted": .bool(VolumeManager.shared.isMuted)]
+        case .brightnessChanged:
+            return ["level": .double(Double(BrightnessManager.shared.rawBrightness))]
+        case .mediaPlaybackChanged:
+            let mm = MusicManager.shared
+            return [
+                "isPlaying": .bool(mm.isPlaying),
+                "title": .string(mm.songTitle),
+                "artist": .string(mm.artistName),
+                "bundleIdentifier": .string(mm.bundleIdentifier ?? ""),
+            ]
+        case .caffeineStateChanged:
+            return ["isActive": .bool(CaffeineManager.shared.isActive)]
+        case .webcamActiveChanged:
+            return ["isActive": .bool(WebcamManager.shared.isSessionRunning)]
+        case .audioDeviceChanged:
+            let manager = AudioOutputManager.shared
+            let name = manager.outputDevices.first(where: { $0.id == manager.currentDeviceID })?.name ?? "Unknown"
+            return ["deviceName": .string(name)]
+        case .thermalStateChanged:
+            return ["state": .string(Self.thermalStateName(ProcessInfo.processInfo.thermalState))]
+        default:
+            return nil
+        }
+    }
 }

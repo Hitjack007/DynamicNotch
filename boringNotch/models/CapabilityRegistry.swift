@@ -50,6 +50,7 @@ enum TriggerID: String, CaseIterable, Codable, Sendable {
     case displayDisconnected = "display.disconnected"
     case webcamActiveChanged = "webcam.activeChanged"
     case airplayConnectingChanged = "airplay.connectingChanged"
+    case durationElapsed = "extension.durationElapsed"
 }
 
 /// Every action an extension can ask the app to perform. Raw value is the
@@ -73,6 +74,7 @@ enum ActionID: String, CaseIterable, Codable, Sendable {
     case aiUsageProviderSet = "aiUsageProvider.set"
     case hudReplacementSet = "hudReplacement.set"
     case notchSetTab = "notch.setTab"
+    case fanFloorSet = "fan.floorSet"
 }
 
 // MARK: - Descriptors
@@ -293,6 +295,12 @@ enum CapabilityRegistry {
             payloadFields: ["connectingCount: Int"],
             implementedBy: "ExtensionEventBus.observeAirPlay()"
         ),
+        TriggerDescriptor(
+            id: .durationElapsed, label: "Sustained condition timed out",
+            summary: "Fires when a rule with \"sustainFor\" set doesn't re-match its own trigger/conditions before that many seconds pass — see TIPS. Payload mirrors whatever fields the timed-out rule's own trigger has.",
+            payloadFields: [],
+            implementedBy: "ExtensionsManager.armSustainTimer(ruleID:seconds:payload:)"
+        ),
     ]
 
     static let actions: [ActionDescriptor] = [
@@ -440,6 +448,14 @@ enum CapabilityRegistry {
             implementedBy: "ExtensionActionExecutor.performNotchSetTab(_:)",
             prerequisiteEligible: true
         ),
+        ActionDescriptor(
+            id: .fanFloorSet, label: "Set fan speed floor",
+            summary: "Sets a minimum fan speed the thermal curve can't go below — the thermal curve (or macOS itself) can still push fans higher if needed, but never lower than this floor. \"level\" is required when enabled is true.",
+            tier: .realAction,
+            payloadFields: ["enabled: Bool", "level: Double (0-1, required when enabled)"],
+            implementedBy: "ExtensionActionExecutor.performFanFloorSet(_:)",
+            prerequisiteEligible: true
+        ),
     ]
 
     static func trigger(_ id: TriggerID) -> TriggerDescriptor {
@@ -466,6 +482,7 @@ enum CapabilityRegistry {
         lines.append("- A rule can run several actions: \"actions\" is an array, run in order, once the trigger matches and prerequisites (if any) pass.")
         lines.append("- \"prerequisites\" is a COMPULSORY ambient-state gate, checked AFTER the trigger/conditions match and BEFORE actions run \u{2014} required whenever any action inside \"actions\" is marked (usable as a prerequisite) below, since that's exactly what stops a state-setting action from re-firing every time its trigger recurs. Only omit \"prerequisites\" when every action in the rule is NOT marked (usable as a prerequisite) \u{2014} a pure fire-and-forget command with nothing to gate on. Each entry has the exact same shape as an action step (\"action\" + \"payload\"), but is read as current live state instead of performed.")
         lines.append("- \"mode\" controls how \"prerequisites\" are evaluated: \"entry\" (default) runs the rule if ANY prerequisite's live state currently matches its payload, skipping only if ALL currently mismatch. \"exit\" runs the rule if ANY prerequisite's live state currently MISmatches its payload, skipping only if ALL currently match. Pair an \"entry\" rule and an \"exit\" rule that reuse the exact same prerequisites and payload values, but each with their own independent trigger, to build an on/off pair \u{2014} e.g. entry trigger \"app.frontmostChanged\"/Xcode with prerequisites [caffeine.set: {enabled:false}] mode entry, and a separate exit rule with trigger \"app.frontmostChanged\"/Safari, the SAME prerequisites, mode \"exit\".")
+        lines.append("- \"sustainFor\" (optional, seconds) puts a resettable timer on a rule: every time this rule's trigger/conditions match, its \"actions\" run as normal AND this timer (re)starts. If the timer ever completes without being reset first, it fires the \"extension.durationElapsed\" trigger, with a payload identical to the fields of whatever trigger set the timer. For a handful of triggers with an obvious \"current value\" (app.frontmostChanged, volume.changed, brightness.changed, media.playbackChanged, caffeine.stateChanged, webcam.activeChanged, audioDevice.changed, thermal.stateChanged) the timer ALSO keeps resetting on its own every few seconds for as long as that live value keeps satisfying the same conditions — so it measures continuous real time in that state, not just \"how long since the last matching event.\" Other triggers can only reset it via an actual recurring event. Use this for \"undo after N straight minutes of this\" — e.g. trigger \"app.frontmostChanged\" with condition name contains \"Xcode\", actions [caffeine.set: {enabled:true}], sustainFor 7200 (2 hours); then a separate rule with trigger \"extension.durationElapsed\" and the SAME condition (name contains \"Xcode\") to turn Caffeine back off once Xcode has been away from the foreground — whether quit, or just not reactivated — for a full 2 hours. This is independent of the ordinary \"Xcode quit\" exit rule you'd also write for the immediate case.")
         lines.append("")
 
         lines.append("TRIGGERS (what an extension can react to)")
@@ -508,6 +525,7 @@ enum CapabilityRegistry {
             { "action": "<an action id marked (usable as a prerequisite) below>", "payload": { "...": "the payload fields that action expects" } }
           ],
           "mode": "entry | exit",
+          "sustainFor": <number of seconds, optional>,
           "actions": [
             { "action": "<an action id from the list below>", "payload": { "...": "the payload fields that action expects" } }
           ]
@@ -525,7 +543,12 @@ enum CapabilityRegistry {
         skipping only if ALL currently match. To build an on/off pair, write two separate rules with their own \
         independent triggers that reuse the exact same `prerequisites` list \u{2014} one with mode "entry", one with \
         mode "exit" \u{2014} rather than trying to express both directions in one rule. `actions` is a non-empty array \
-        run in order once the rule's gate passes.
+        run in order once the rule's gate passes. `sustainFor` (optional, seconds) is a separate, independent \
+        mechanism: it puts a resettable timer on THIS rule that (re)starts every time this rule's trigger/conditions \
+        match, and fires the "extension.durationElapsed" trigger (payload identical to this rule's own trigger's \
+        fields) if that timer ever completes without the rule matching again first. Use it for "undo automatically \
+        if this stays true for N without ever going away and coming back" — write a second rule with trigger \
+        "extension.durationElapsed" and the same conditions to react to the timeout.
 
         Only use trigger and action ids from this exact list — never invent one:
 

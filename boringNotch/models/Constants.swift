@@ -379,6 +379,11 @@ extension Defaults.Keys {
     static let fanCurvePoints = Key<[FanCurvePoint]>("fanCurvePoints", default: FanCurvePoint.defaultCurve)
     static let fanCurvePreset = Key<FanCurvePreset>("fanCurvePreset", default: .appleDefault)
     static let thermalNotchPresets = Key<[FanCurvePreset]>("thermalNotchPresets", default: [.appleDefault, .maxSpeed, .ramp80])
+    // Minimum fan speed the thermal curve can't go below — only set via the fan.floorSet
+    // extension action for now. The thermal manager (or macOS itself) can still push fans
+    // higher, but never lower than this floor.
+    static let fanFloorEnabled = Key<Bool>("fanFloorEnabled", default: false)
+    static let fanFloorLevel = Key<Double>("fanFloorLevel", default: 0.8)
 
     // MARK: AI Usage
     static let showAIUsageTab              = Key<Bool>("showAIUsageTab", default: false)

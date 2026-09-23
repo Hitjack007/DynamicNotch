@@ -47,6 +47,7 @@ enum ExtensionActionExecutor {
         case .aiUsageProviderSet: return performAIUsageProviderSet(payload)
         case .hudReplacementSet: return performHUDReplacementSet(payload)
         case .notchSetTab: return performNotchSetTab(payload)
+        case .fanFloorSet: return performFanFloorSet(payload)
         }
     }
 
@@ -69,6 +70,7 @@ enum ExtensionActionExecutor {
         case .appOpen: return appOpenCurrentlyMatches(payload)
         case .appQuit: return appQuitCurrentlyMatches(payload)
         case .mediaPlayPause: return mediaPlayPauseCurrentlyMatches(payload)
+        case .fanFloorSet: return fanFloorCurrentlyMatches(payload)
         case .notificationRequest, .notificationShowInApp, .sneakPeekShow,
              .mediaNextTrack, .mediaPreviousTrack, .shortcutRun:
             return false
@@ -383,5 +385,29 @@ enum ExtensionActionExecutor {
         case "shelf": return BoringViewCoordinator.shared.currentView == .shelf
         default: return false
         }
+    }
+
+    // MARK: - Fan floor
+
+    static func performFanFloorSet(_ payload: [String: ExtensionValue]) -> ExtensionActionResult {
+        let enabled = payload["enabled"]?.boolValue ?? true
+        guard enabled else {
+            Defaults[.fanFloorEnabled] = false
+            return .ok()
+        }
+        guard let level = payload["level"]?.doubleValue else {
+            return .failed("Missing \"level\" in payload.")
+        }
+        Defaults[.fanFloorEnabled] = true
+        Defaults[.fanFloorLevel] = level
+        return .ok()
+    }
+
+    static func fanFloorCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
+        let enabled = payload["enabled"]?.boolValue ?? true
+        guard enabled else { return !Defaults[.fanFloorEnabled] }
+        guard Defaults[.fanFloorEnabled] else { return false }
+        guard let level = payload["level"]?.doubleValue else { return true }
+        return abs(Defaults[.fanFloorLevel] - level) < 0.01
     }
 }

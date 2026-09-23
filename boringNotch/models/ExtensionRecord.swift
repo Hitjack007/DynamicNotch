@@ -108,13 +108,22 @@ struct ExtensionRule: Codable, Identifiable, Equatable {
     var prerequisites: [ExtensionActionStep]
     var mode: PrerequisiteMode
 
+    /// Optional resettable timer, in seconds. Every time this rule's `trigger`+`conditions`
+    /// match, `ExtensionsManager` (re)starts a countdown for this many seconds. If the
+    /// countdown ever completes without the rule matching again first, it fires the
+    /// `.durationElapsed` trigger with a payload identical to the fields of the event that
+    /// last (re)armed it — see `CapabilityRegistry`'s TIPS for the "undo after N without a
+    /// refresh" pattern this exists for. `nil` means the rule has no timer at all.
+    var sustainFor: TimeInterval?
+
     init(
         id: UUID = UUID(),
         trigger: TriggerID,
         conditions: [MatchCondition] = [],
         actions: [ExtensionActionStep],
         prerequisites: [ExtensionActionStep] = [],
-        mode: PrerequisiteMode = .entry
+        mode: PrerequisiteMode = .entry,
+        sustainFor: TimeInterval? = nil
     ) {
         self.id = id
         self.trigger = trigger
@@ -122,10 +131,11 @@ struct ExtensionRule: Codable, Identifiable, Equatable {
         self.actions = actions
         self.prerequisites = prerequisites
         self.mode = mode
+        self.sustainFor = sustainFor
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, trigger, conditions, actions, prerequisites, mode
+        case id, trigger, conditions, actions, prerequisites, mode, sustainFor
     }
 
     /// Hand-typed or LLM-produced JSON shouldn't need to invent a UUID or
@@ -139,6 +149,7 @@ struct ExtensionRule: Codable, Identifiable, Equatable {
         actions = try container.decode([ExtensionActionStep].self, forKey: .actions)
         prerequisites = try container.decodeIfPresent([ExtensionActionStep].self, forKey: .prerequisites) ?? []
         mode = try container.decodeIfPresent(PrerequisiteMode.self, forKey: .mode) ?? .entry
+        sustainFor = try container.decodeIfPresent(TimeInterval.self, forKey: .sustainFor)
     }
 
     func matches(_ event: ExtensionTriggerEvent) -> Bool {

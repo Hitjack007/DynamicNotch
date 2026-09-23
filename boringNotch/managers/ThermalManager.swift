@@ -194,17 +194,34 @@ final class ThermalManager: ObservableObject {
 
     // MARK: - Curve
 
+    /// The fraction the curve/max-speed preset alone would apply, ignoring the floor. `nil`
+    /// means neither is active (not enough curve points, or curve disabled and no preset).
+    private func curveFraction() -> Float? {
+        if Defaults[.fanCurvePreset] == .maxSpeed { return 1.0 }
+        guard Defaults[.fanCurveEnabled] else { return nil }
+        let temp = max(cpuTemp, gpuTemp)
+        let pts = Defaults[.fanCurvePoints].sorted { $0.tempC < $1.tempC }
+        guard pts.count >= 2 else { return nil }
+        return evaluateCurve(pts, at: temp) / 100.0
+    }
+
+    /// Combines the curve/max-speed fraction with the user's fan floor (see `fanFloorEnabled`/
+    /// `fanFloorLevel`): the floor sets a minimum the curve can't go below, but the curve (or
+    /// max-speed preset) can still push fans higher. `nil` means nothing wants control of the
+    /// fans at all — hand them back to macOS.
+    private func desiredFanFraction() -> Float? {
+        var fraction = curveFraction()
+        if Defaults[.fanFloorEnabled] {
+            fraction = max(fraction ?? 0, Float(Defaults[.fanFloorLevel]))
+        }
+        return fraction
+    }
+
     private func applyFanCurve() {
-        guard Defaults[.fanCurveEnabled] else {
+        guard let fraction = desiredFanFraction() else {
             if lastAppliedFraction >= 0 { resetToAuto() }
             return
         }
-        let temp = max(cpuTemp, gpuTemp)
-        let pts = Defaults[.fanCurvePoints].sorted { $0.tempC < $1.tempC }
-        guard pts.count >= 2 else { return }
-
-        let pct = evaluateCurve(pts, at: temp)
-        let fraction = pct / 100.0
 
         guard abs(fraction - lastAppliedFraction) >= 0.02 else { return }
         lastAppliedFraction = fraction
@@ -274,14 +291,7 @@ final class ThermalManager: ObservableObject {
             return val > 0 ? val : nil
         }
         guard canControlFans else { return }
-        if Defaults[.fanCurvePreset] == .maxSpeed {
-            if abs(1.0 - lastAppliedFraction) >= 0.02 {
-                lastAppliedFraction = 1.0
-                applyFraction(1.0)
-            }
-        } else {
-            applyFanCurve()
-        }
+        applyFanCurve()
         checkThermalAlert()
     }
 
