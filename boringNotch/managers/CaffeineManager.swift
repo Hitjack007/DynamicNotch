@@ -111,6 +111,22 @@ final class CaffeineManager: ObservableObject {
                 }
             }
             .store(in: &self.cancellables)
+
+        // Fast User Switching away from this session — same signal ThermalManager uses to relinquish control
+        NSWorkspace.shared.notificationCenter
+            .publisher(for: NSWorkspace.sessionDidResignActiveNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor in self?.deactivate() }
+            }
+            .store(in: &self.cancellables)
+
+        // Screen lock (Touch ID button, Cmd+Ctrl+Q, screensaver) — same distributed notification ThermalManager uses
+        DistributedNotificationCenter.default()
+            .publisher(for: NSNotification.Name("com.apple.screenIsLocked"))
+            .sink { [weak self] _ in
+                Task { @MainActor in self?.deactivate() }
+            }
+            .store(in: &self.cancellables)
     }
 
     private func cancelTimers() {
