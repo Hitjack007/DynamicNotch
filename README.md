@@ -103,7 +103,7 @@ Security issues go through [SECURITY.md](./SECURITY.md) rather than the public i
 
 Thanks to everyone who's contributed code to DynamicNotch:
 
-- [Aliaskar Abdualiyev](https://github.com/aliaskar-rockeater) — [Prevent Bluetooth battery scan from aborting launch (#11)](https://github.com/Hitjack007/DynamicNotch/pull/11)
+- [Aliaskar Abdualiyev](https://github.com/aliaskar-rockeater) — [Prevent Bluetooth battery scan from aborting launch (#11)](https://github.com/Hitjack007/DynamicNotch/pull/11), [Fix YouTube Music events with Pear API (#12)](https://github.com/Hitjack007/DynamicNotch/pull/12)
 
 ---
 
