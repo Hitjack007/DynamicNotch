@@ -169,7 +169,7 @@ actor YouTubeMusicWebSocketClient {
         
         let newTask = session.webSocketTask(with: request)
         newTask.resume()
-        print("[YouTubeMusicWebSocketClient] Attempting handshake to \(url)")
+        print("[YouTubeMusicWebSocketClient] Attempting WebSocket handshake")
 
         // resume() is fire-and-forget and never throws for a refused or dropped
         // connection — only the first receive() actually surfaces the handshake
@@ -243,7 +243,7 @@ actor YouTubeMusicWebSocketClient {
 
 // MARK: - WebSocket URL Helper
 struct WebSocketURLBuilder {
-    static func buildURL(from baseURL: String) -> URL? {
+    static func buildURL(from baseURL: String, token: String) -> URL? {
         guard var components = URLComponents(string: baseURL) else { return nil }
 
         switch components.scheme {
@@ -256,6 +256,7 @@ struct WebSocketURLBuilder {
         }
 
         components.path = "/api/v1/ws"
+        components.queryItems = [URLQueryItem(name: "token", value: token)]
         return components.url
     }
 }
