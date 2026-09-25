@@ -281,7 +281,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func createBoringNotchWindow(for screen: NSScreen, with viewModel: NotchViewModel) -> NSWindow {
+    private func createDynamicNotchWindow(for screen: NSScreen, with viewModel: NotchViewModel) -> NSWindow {
         let rect = NSRect(x: 0, y: 0, width: windowSize.width, height: windowSize.height)
         let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .utilityWindow, .hudWindow]
         
@@ -482,7 +482,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if !Defaults[.showOnAllDisplays] {
             let viewModel = self.vm
-            let window = createBoringNotchWindow(
+            let window = createDynamicNotchWindow(
                 for: NSScreen.main ?? NSScreen.screens.first!, with: viewModel)
             self.window = window
             adjustWindowPosition(changeAlpha: true)
@@ -605,7 +605,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 
                 if windows[uuid] == nil {
                     let viewModel = NotchViewModel(screenUUID: uuid)
-                    let window = createBoringNotchWindow(for: screen, with: viewModel)
+                    let window = createDynamicNotchWindow(for: screen, with: viewModel)
 
                     windows[uuid] = window
                     viewModels[uuid] = viewModel
@@ -640,7 +640,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             vm.notchSize = getClosedNotchSize(screenUUID: selectedScreen.displayUUID)
 
             if window == nil {
-                window = createBoringNotchWindow(for: selectedScreen, with: vm)
+                window = createDynamicNotchWindow(for: selectedScreen, with: vm)
             }
 
             if let window = window {

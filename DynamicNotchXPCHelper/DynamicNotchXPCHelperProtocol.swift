@@ -25,7 +25,7 @@ import Foundation
 /*
  To use the service from an application or other process, use NSXPCConnection to establish a connection to the service by doing something like this:
 
-     connectionToService = NSXPCConnection(serviceName: "com.mark.dynamicnotch.BoringNotchXPCHelper")
+     connectionToService = NSXPCConnection(serviceName: "com.mark.dynamicnotch.DynamicNotchXPCHelper")
      connectionToService.remoteObjectInterface = NSXPCInterface(with: (any DynamicNotchXPCHelperProtocol).self)
      connectionToService.resume()
 

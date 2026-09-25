@@ -67,7 +67,7 @@
 		11D58EA22E760AE100FA8377 /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D58EA12E760AE100FA8377 /* ImageService.swift */; };
 		11EFCD702E8E92D600D0B974 /* ShelfItemViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EFCD6F2E8E92D600D0B974 /* ShelfItemViewModel.swift */; };
 		11F747CE2EC75CEA00F841DB /* DragPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F747CD2EC75CEA00F841DB /* DragPreviewView.swift */; };
-		11F7485B2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		11F7485B2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = 11F7484F2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		11F748682EC9AC9600F841DB /* DynamicNotchXPCHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F748652EC9AC9600F841DB /* DynamicNotchXPCHelperProtocol.swift */; };
 		11F748692EC9AC9600F841DB /* XPCHelperClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F748662EC9AC9600F841DB /* XPCHelperClient.swift */; };
 		11F748732EC9DA9300F841DB /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 11F748722EC9DA9300F841DB /* Lottie */; };
@@ -206,14 +206,14 @@
 			containerPortal = 14CEF40A2C5CAED200855D72 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 11F7484E2EC9AABA00F841DB;
-			remoteInfo = BoringNotchXPCHelper;
+			remoteInfo = DynamicNotchXPCHelper;
 		};
 		4DA88E2A302305750095857C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 14CEF40A2C5CAED200855D72 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 14CEF4112C5CAED300855D72;
-			remoteInfo = boringNotch;
+			remoteInfo = DynamicNotch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -224,7 +224,7 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
 			dstSubfolderSpec = 16;
 			files = (
-				11F7485B2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc in Embed XPC Services */,
+				11F7485B2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc in Embed XPC Services */,
 			);
 			name = "Embed XPC Services";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -298,7 +298,7 @@
 		11D58EA12E760AE100FA8377 /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
 		11EFCD6F2E8E92D600D0B974 /* ShelfItemViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfItemViewModel.swift; sourceTree = "<group>"; };
 		11F747CD2EC75CEA00F841DB /* DragPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPreviewView.swift; sourceTree = "<group>"; };
-		11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = BoringNotchXPCHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		11F7484F2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc */ = {isa = PBXFileReference; explicitFileType = "wrapper.xpc-service"; includeInIndex = 0; path = DynamicNotchXPCHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
 		11F748652EC9AC9600F841DB /* DynamicNotchXPCHelperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicNotchXPCHelperProtocol.swift; sourceTree = "<group>"; };
 		11F748662EC9AC9600F841DB /* XPCHelperClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XPCHelperClient.swift; sourceTree = "<group>"; };
 		11F748812ECB07A400F841DB /* MusicControlButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicControlButton.swift; sourceTree = "<group>"; };
@@ -355,7 +355,7 @@
 		4DA88E1C3021E7320095857C /* SpectrumAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrumAnalyzer.swift; sourceTree = "<group>"; };
 		4DA88E1E302304200095857C /* SpectralTilt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectralTilt.swift; sourceTree = "<group>"; };
 		4DA88E21302304640095857C /* SpectrumAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrumAnalyzerTests.swift; sourceTree = "<group>"; };
-		4DA88E26302305750095857C /* boringNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = boringNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DA88E26302305750095857C /* DynamicNotchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DynamicNotchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DA88E32302463510095857C /* SystemStatsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsManager.swift; sourceTree = "<group>"; };
 		4DA88E343024635F0095857C /* SystemStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsView.swift; sourceTree = "<group>"; };
 		4DA88E36302476DC0095857C /* ActivitySimulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySimulator.swift; sourceTree = "<group>"; };
@@ -436,14 +436,14 @@
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = 11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */;
+			target = 11F7484E2EC9AABA00F841DB /* DynamicNotchXPCHelper */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		112FB72F2CCF12CC0015238C /* private */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = private; sourceTree = "<group>"; };
-		11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11F7485C2EC9AABA00F841DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = DynamicNotchXPCHelper; sourceTree = "<group>"; };
-		4DA88E27302305750095857C /* boringNotchTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DynamicNotchTests; sourceTree = "<group>"; };
+		11F748502EC9AABA00F841DB /* DynamicNotchXPCHelper */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11F7485C2EC9AABA00F841DB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = DynamicNotchXPCHelper; sourceTree = "<group>"; };
+		4DA88E27302305750095857C /* DynamicNotchTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DynamicNotchTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -698,13 +698,13 @@
 			isa = PBXGroup;
 			children = (
 				112B0EB62E30DD0F00562D6C /* mediaremote-adapter */,
-				14CEF4142C5CAED300855D72 /* boringNotch */,
-				11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */,
-				4DA88E27302305750095857C /* boringNotchTests */,
+				14CEF4142C5CAED300855D72 /* DynamicNotch */,
+				11F748502EC9AABA00F841DB /* DynamicNotchXPCHelper */,
+				4DA88E27302305750095857C /* DynamicNotchTests */,
 				14CEF4132C5CAED300855D72 /* Products */,
 				14D031EC2C689DB70096E6A1 /* Frameworks */,
 				4DA88E0F301F41FE0095857C /* Resources */,
-				4DA88E20302304640095857C /* boringNotchTests */,
+				4DA88E20302304640095857C /* DynamicNotchTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -712,13 +712,13 @@
 			isa = PBXGroup;
 			children = (
 				14CEF4122C5CAED300855D72 /* DynamicNotch.app */,
-				11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */,
-				4DA88E26302305750095857C /* boringNotchTests.xctest */,
+				11F7484F2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc */,
+				4DA88E26302305750095857C /* DynamicNotchTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		14CEF4142C5CAED300855D72 /* boringNotch */ = {
+		14CEF4142C5CAED300855D72 /* DynamicNotch */ = {
 			isa = PBXGroup;
 			children = (
 				11F748672EC9AC9600F841DB /* XPCHelperClient */,
@@ -833,7 +833,7 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		4DA88E20302304640095857C /* boringNotchTests */ = {
+		4DA88E20302304640095857C /* DynamicNotchTests */ = {
 			isa = PBXGroup;
 			children = (
 				4DA88E21302304640095857C /* SpectrumAnalyzerTests.swift */,
@@ -1017,9 +1017,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */ = {
+		11F7484E2EC9AABA00F841DB /* DynamicNotchXPCHelper */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "BoringNotchXPCHelper" */;
+			buildConfigurationList = 11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "DynamicNotchXPCHelper" */;
 			buildPhases = (
 				11F7484B2EC9AABA00F841DB /* Sources */,
 				11F7484C2EC9AABA00F841DB /* Frameworks */,
@@ -1030,13 +1030,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				11F748502EC9AABA00F841DB /* BoringNotchXPCHelper */,
+				11F748502EC9AABA00F841DB /* DynamicNotchXPCHelper */,
 			);
-			name = BoringNotchXPCHelper;
+			name = DynamicNotchXPCHelper;
 			packageProductDependencies = (
 			);
-			productName = BoringNotchXPCHelper;
-			productReference = 11F7484F2EC9AABA00F841DB /* BoringNotchXPCHelper.xpc */;
+			productName = DynamicNotchXPCHelper;
+			productReference = 11F7484F2EC9AABA00F841DB /* DynamicNotchXPCHelper.xpc */;
 			productType = "com.apple.product-type.xpc-service";
 		};
 		14CEF4112C5CAED300855D72 /* DynamicNotch */ = {
@@ -1076,9 +1076,9 @@
 			productReference = 14CEF4122C5CAED300855D72 /* DynamicNotch.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4DA88E25302305750095857C /* boringNotchTests */ = {
+		4DA88E25302305750095857C /* DynamicNotchTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4DA88E2C302305750095857C /* Build configuration list for PBXNativeTarget "boringNotchTests" */;
+			buildConfigurationList = 4DA88E2C302305750095857C /* Build configuration list for PBXNativeTarget "DynamicNotchTests" */;
 			buildPhases = (
 				4DA88E22302305750095857C /* Sources */,
 				4DA88E23302305750095857C /* Frameworks */,
@@ -1090,13 +1090,13 @@
 				4DA88E2B302305750095857C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				4DA88E27302305750095857C /* boringNotchTests */,
+				4DA88E27302305750095857C /* DynamicNotchTests */,
 			);
-			name = boringNotchTests;
+			name = DynamicNotchTests;
 			packageProductDependencies = (
 			);
-			productName = boringNotchTests;
-			productReference = 4DA88E26302305750095857C /* boringNotchTests.xctest */;
+			productName = DynamicNotchTests;
+			productReference = 4DA88E26302305750095857C /* DynamicNotchTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -1149,8 +1149,8 @@
 			projectRoot = "";
 			targets = (
 				14CEF4112C5CAED300855D72 /* DynamicNotch */,
-				11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */,
-				4DA88E25302305750095857C /* boringNotchTests */,
+				11F7484E2EC9AABA00F841DB /* DynamicNotchXPCHelper */,
+				4DA88E25302305750095857C /* DynamicNotchTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1382,7 +1382,7 @@
 /* Begin PBXTargetDependency section */
 		11F7485A2EC9AABA00F841DB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 11F7484E2EC9AABA00F841DB /* BoringNotchXPCHelper */;
+			target = 11F7484E2EC9AABA00F841DB /* DynamicNotchXPCHelper */;
 			targetProxy = 11F748592EC9AABA00F841DB /* PBXContainerItemProxy */;
 		};
 		4DA88E2B302305750095857C /* PBXTargetDependency */ = {
@@ -1405,11 +1405,11 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DynamicNotchXPCHelper/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
+				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 27.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.BoringNotchXPCHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.DynamicNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1430,11 +1430,11 @@
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DynamicNotchXPCHelper/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = BoringNotchXPCHelper;
+				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 27.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.BoringNotchXPCHelper;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.DynamicNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SKIP_INSTALL = YES;
@@ -1685,7 +1685,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 27.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Hitjack007.boringNotchTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -1706,7 +1706,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
 				MARKETING_VERSION = 27.4;
-				PRODUCT_BUNDLE_IDENTIFIER = com.Hitjack007.boringNotchTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -1720,7 +1720,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "BoringNotchXPCHelper" */ = {
+		11F7485D2EC9AABA00F841DB /* Build configuration list for PBXNativeTarget "DynamicNotchXPCHelper" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				11F7485E2EC9AABA00F841DB /* Debug */,
@@ -1747,7 +1747,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4DA88E2C302305750095857C /* Build configuration list for PBXNativeTarget "boringNotchTests" */ = {
+		4DA88E2C302305750095857C /* Build configuration list for PBXNativeTarget "DynamicNotchTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4DA88E2D302305750095857C /* Debug */,
