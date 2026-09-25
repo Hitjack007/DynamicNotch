@@ -1,6 +1,6 @@
 //
-//  BoringNotchXPCHelperProtocol.swift
-//  BoringNotchXPCHelper
+//  DynamicNotchXPCHelperProtocol.swift
+//  DynamicNotchXPCHelper
 //
 //  Created by Mark Greene on 2025-11-16.
 //
@@ -8,7 +8,7 @@
 import Foundation
 
 /// The protocol that this service will vend as its API. This protocol will also need to be visible to the process hosting the service.
-@objc protocol BoringNotchXPCHelperProtocol {
+@objc protocol DynamicNotchXPCHelperProtocol {
     func isAccessibilityAuthorized(with reply: @escaping (Bool) -> Void)
     func requestAccessibilityAuthorization()
     func ensureAccessibilityAuthorization(_ promptIfNeeded: Bool, with reply: @escaping (Bool) -> Void)
@@ -26,12 +26,12 @@ import Foundation
  To use the service from an application or other process, use NSXPCConnection to establish a connection to the service by doing something like this:
 
      connectionToService = NSXPCConnection(serviceName: "com.mark.dynamicnotch.BoringNotchXPCHelper")
-     connectionToService.remoteObjectInterface = NSXPCInterface(with: (any BoringNotchXPCHelperProtocol).self)
+     connectionToService.remoteObjectInterface = NSXPCInterface(with: (any DynamicNotchXPCHelperProtocol).self)
      connectionToService.resume()
 
  Once you have a connection to the service, you can use it like this:
 
-     if let proxy = connectionToService.remoteObjectProxy as? BoringNotchXPCHelperProtocol {
+     if let proxy = connectionToService.remoteObjectProxy as? DynamicNotchXPCHelperProtocol {
          proxy.performCalculation(firstNumber: 23, secondNumber: 19) { result in
              NSLog("Result of calculation is: \(result)")
          }

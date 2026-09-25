@@ -7,7 +7,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
     
     private let serviceName = "com.mark.dynamicnotch.BoringNotchXPCHelper"
     
-    private var remoteService: RemoteXPCService<BoringNotchXPCHelperProtocol>?
+    private var remoteService: RemoteXPCService<DynamicNotchXPCHelperProtocol>?
     private var connection: NSXPCConnection?
     private var lastKnownAuthorization: Bool?
     private var monitoringTask: Task<Void, Never>?
@@ -20,7 +20,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
     // MARK: - Connection Management (Main Actor Isolated)
     
     @MainActor
-    private func ensureRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol> {
+    private func ensureRemoteService() -> RemoteXPCService<DynamicNotchXPCHelperProtocol> {
         if let existing = remoteService {
             return existing
         }
@@ -43,9 +43,9 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
         
         conn.resume()
         
-        let service = RemoteXPCService<BoringNotchXPCHelperProtocol>(
+        let service = RemoteXPCService<DynamicNotchXPCHelperProtocol>(
             connection: conn,
-            remoteInterface: BoringNotchXPCHelperProtocol.self
+            remoteInterface: DynamicNotchXPCHelperProtocol.self
         )
         
         connection = conn
@@ -54,7 +54,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
     }
     
     @MainActor
-    private func getRemoteService() -> RemoteXPCService<BoringNotchXPCHelperProtocol>? {
+    private func getRemoteService() -> RemoteXPCService<DynamicNotchXPCHelperProtocol>? {
         remoteService
     }
     

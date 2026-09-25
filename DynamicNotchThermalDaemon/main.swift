@@ -1,4 +1,4 @@
-// BoringNotchThermalDaemon/main.swift
+// DynamicNotchThermalDaemon/main.swift (installed binary is still named BoringNotchThermalDaemon — see install-thermal-daemon.sh)
 //
 // Root launchd daemon for fan control.
 // Listens on /tmp/boringnotch-thermal.sock (chmod 0777).

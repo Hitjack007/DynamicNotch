@@ -1,6 +1,6 @@
 //
-//  boringNotchTests.swift
-//  boringNotchTests
+//  DynamicNotchTests.swift
+//  DynamicNotchTests
 //
 //  Created by Mark Greene on 05/08/2026.
 //

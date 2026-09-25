@@ -1,6 +1,6 @@
 //
 //  DynamicNotchApp.swift
-//  DynamicNotchApp
+//  DynamicNotch
 //
 //  Created by Mark Greene on 02/08/24.
 //
@@ -552,7 +552,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func playWelcomeSound() {
         let audioPlayer = AudioPlayer()
-        audioPlayer.play(fileName: "boring", fileExtension: "m4a")
+        audioPlayer.play(fileName: "startup", fileExtension: "m4a")
     }
 
     func deviceHasNotch() -> Bool {
