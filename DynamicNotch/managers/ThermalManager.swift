@@ -291,7 +291,17 @@ final class ThermalManager: ObservableObject {
             return val > 0 ? val : nil
         }
         guard canControlFans else { return }
-        applyFanCurve()
+
+        // Don't drive fans - by curve, floor, or the direct-SMC fallback - through a
+        // daemon that isn't confirmed to be running the current (ramped) protocol.
+        // The old script has no ramping at all, and the fallback path in applyFraction()/
+        // resetToAuto() doesn't ramp either. Give up control entirely until the user
+        // reinstalls (see the What's New migration gate / Settings backstop).
+        if ThermalDaemonClient.migrationNeeded {
+            if lastAppliedFraction >= 0 { resetToAuto() }
+        } else {
+            applyFanCurve()
+        }
         checkThermalAlert()
     }
 
