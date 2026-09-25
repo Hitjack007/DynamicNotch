@@ -297,8 +297,14 @@ final class ThermalManager: ObservableObject {
         // The old script has no ramping at all, and the fallback path in applyFraction()/
         // resetToAuto() doesn't ramp either. Give up control entirely until the user
         // reinstalls (see the What's New migration gate / Settings backstop).
+        //
+        // Unconditional, not gated on lastAppliedFraction >= 0: that's a fresh in-process
+        // variable that starts at -1 on every launch, so it can't tell us whether fans are
+        // actually already idle or still pinned high from a previous session that crashed
+        // or was force-quit while under load - only the daemon/hardware knows that, so we
+        // have to keep re-asserting auto every tick until migrationNeeded clears.
         if ThermalDaemonClient.migrationNeeded {
-            if lastAppliedFraction >= 0 { resetToAuto() }
+            resetToAuto()
         } else {
             applyFanCurve()
         }

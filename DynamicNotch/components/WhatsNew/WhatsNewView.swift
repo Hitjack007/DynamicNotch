@@ -16,7 +16,9 @@ struct WhatsNewView: View {
     @State private var migrationConfirmed = false
     @State private var migrationCommandCopied = false
     @State private var migrationCheckError: String? = nil
-    @State private var isInstalling = false
+    // Shared with Settings: an install started from either place shows "Installing…"
+    // in both, since the old daemon really is killed the moment this starts.
+    @ObservedObject private var daemonClient = ThermalDaemonClient.shared
 
     var body: some View {
         ZStack {
@@ -103,7 +105,7 @@ struct WhatsNewView: View {
     @ViewBuilder
     private var migrationContent: some View {
         VStack(spacing: 12) {
-            if isInstalling {
+            if daemonClient.isInstalling {
                 ProgressView("Installing…")
             } else if migrationCommandCopied {
                 VStack(spacing: 6) {
@@ -190,12 +192,10 @@ struct WhatsNewView: View {
     }
 
     private func runMigrationInstall() {
-        isInstalling = true
         migrationCheckError = nil
         Task {
             switch await ThermalDaemonClient.Installer.run() {
             case .installed:
-                isInstalling = false
                 // do shell script exiting 0 doesn't guarantee the daemon actually came up
                 // with the new protocol version, so still verify before advancing.
                 _ = ThermalDaemonClient.shared.checkAvailability()
@@ -207,12 +207,10 @@ struct WhatsNewView: View {
                     migrationCommandCopied = true
                 }
             case .cancelled:
-                isInstalling = false
+                break
             case .fellBackToTerminal:
-                isInstalling = false
                 migrationCommandCopied = true
             case .failed(let message):
-                isInstalling = false
                 migrationCheckError = message
             }
         }

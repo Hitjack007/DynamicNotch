@@ -10,7 +10,7 @@
 import AppKit
 import Foundation
 
-final class ThermalDaemonClient {
+final class ThermalDaemonClient: ObservableObject {
     static let shared = ThermalDaemonClient()
     private let socketPath = "/tmp/boringnotch-thermal.sock"
     private static let launchDaemonPlistPath = "/Library/LaunchDaemons/com.boringnotch.thermaldaemon.plist"
@@ -20,6 +20,12 @@ final class ThermalDaemonClient {
     static let currentProtocolVersion = 2
 
     private(set) var isAvailable: Bool = false
+
+    /// True while Installer.run() is in flight, from wherever it was started - Settings
+    /// and the What's New migration gate both observe this same instance, so triggering
+    /// an install from one shows "Installing…" in the other too instead of a stale
+    /// "not installed" reading (the old daemon really is killed mid-install).
+    @Published private(set) var isInstalling: Bool = false
 
     private init() {}
 
@@ -88,6 +94,13 @@ final class ThermalDaemonClient {
         /// Falls back to the old copy-to-clipboard/open-Terminal flow if that mechanism
         /// fails for any reason other than the user explicitly cancelling.
         static func run() async -> Outcome {
+            await MainActor.run { ThermalDaemonClient.shared.isInstalling = true }
+            let outcome = await performInstall()
+            await MainActor.run { ThermalDaemonClient.shared.isInstalling = false }
+            return outcome
+        }
+
+        private static func performInstall() async -> Outcome {
             guard let resourcePath = Bundle.main.resourcePath else {
                 return .failed("Could not locate app resources.")
             }

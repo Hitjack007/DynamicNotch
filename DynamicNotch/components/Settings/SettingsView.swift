@@ -2151,7 +2151,9 @@ struct ThermalSettings: View {
     @State private var showTerminalInstructions: Bool = false
     @State private var installError: String? = nil
     @State private var migrationNeeded: Bool = false
-    @State private var isInstalling: Bool = false
+    // Shared with the What's New migration gate: an install started from either place
+    // shows "Installing…" in both, instead of one of them reading a stale "not installed".
+    @ObservedObject private var daemonClient = ThermalDaemonClient.shared
 
     var body: some View {
         Form {
@@ -2219,12 +2221,12 @@ struct ThermalSettings: View {
                     // Daemon status row
                     HStack(spacing: 8) {
                         Circle()
-                            .fill(daemonAvailable ? Color.green : Color.orange)
+                            .fill(daemonClient.isInstalling ? Color.blue : (daemonAvailable ? Color.green : Color.orange))
                             .frame(width: 8, height: 8)
-                        Text(daemonAvailable ? "Fan daemon running" : "Fan daemon not installed")
+                        Text(daemonClient.isInstalling ? "Installing…" : (daemonAvailable ? "Fan daemon running" : "Fan daemon not installed"))
                             .foregroundStyle(daemonAvailable ? .primary : .secondary)
                         Spacer()
-                        if !daemonAvailable {
+                        if !daemonAvailable && !daemonClient.isInstalling {
                             if showTerminalInstructions {
                                 HStack(spacing: 6) {
                                     Button("Check again") { checkDaemon() }
@@ -2375,7 +2377,7 @@ struct ThermalSettings: View {
 
     @ViewBuilder
     private func installButton(title: LocalizedStringKey, style: InstallButtonStyle = .prominent) -> some View {
-        if isInstalling {
+        if daemonClient.isInstalling {
             ProgressView().controlSize(.small)
         } else {
             switch style {
@@ -2395,21 +2397,17 @@ struct ThermalSettings: View {
     private enum InstallButtonStyle { case prominent, borderless }
 
     private func installDaemon() {
-        isInstalling = true
         installError = nil
         Task {
             switch await ThermalDaemonClient.Installer.run() {
             case .installed:
-                isInstalling = false
                 showTerminalInstructions = false
                 checkDaemon()
             case .cancelled:
-                isInstalling = false
+                break
             case .fellBackToTerminal:
-                isInstalling = false
                 showTerminalInstructions = true
             case .failed(let message):
-                isInstalling = false
                 installError = message
             }
         }
