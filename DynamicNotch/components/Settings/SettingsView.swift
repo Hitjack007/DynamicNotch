@@ -2151,6 +2151,7 @@ struct ThermalSettings: View {
     @State private var showTerminalInstructions: Bool = false
     @State private var installError: String? = nil
     @State private var migrationNeeded: Bool = false
+    @State private var isInstalling: Bool = false
 
     var body: some View {
         Form {
@@ -2210,9 +2211,7 @@ struct ThermalSettings: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Button("Update…") { installDaemon() }
-                                .buttonStyle(.borderedProminent)
-                                .controlSize(.small)
+                            installButton(title: "Update…")
                         }
                         .padding(.vertical, 2)
                     }
@@ -2238,15 +2237,10 @@ struct ThermalSettings: View {
                                     .controlSize(.small)
                                 }
                             } else {
-                                Button("Setup…") { installDaemon() }
-                                    .buttonStyle(.borderedProminent)
-                                    .controlSize(.small)
+                                installButton(title: "Setup…")
                             }
                         } else {
-                            Button("Reinstall") { installDaemon() }
-                                .buttonStyle(.borderless)
-                                .controlSize(.small)
-                                .foregroundStyle(.secondary)
+                            installButton(title: "Reinstall", style: .borderless)
                         }
                     }
 
@@ -2379,12 +2373,45 @@ struct ThermalSettings: View {
         }
     }
 
-    private func installDaemon() {
-        if let error = ThermalDaemonClient.Installer.copyCommandAndOpenTerminal() {
-            installError = error
+    @ViewBuilder
+    private func installButton(title: LocalizedStringKey, style: InstallButtonStyle = .prominent) -> some View {
+        if isInstalling {
+            ProgressView().controlSize(.small)
         } else {
-            installError = nil
-            showTerminalInstructions = true
+            switch style {
+            case .prominent:
+                Button(title) { installDaemon() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+            case .borderless:
+                Button(title) { installDaemon() }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private enum InstallButtonStyle { case prominent, borderless }
+
+    private func installDaemon() {
+        isInstalling = true
+        installError = nil
+        Task {
+            switch await ThermalDaemonClient.Installer.run() {
+            case .installed:
+                isInstalling = false
+                showTerminalInstructions = false
+                checkDaemon()
+            case .cancelled:
+                isInstalling = false
+            case .fellBackToTerminal:
+                isInstalling = false
+                showTerminalInstructions = true
+            case .failed(let message):
+                isInstalling = false
+                installError = message
+            }
         }
     }
 

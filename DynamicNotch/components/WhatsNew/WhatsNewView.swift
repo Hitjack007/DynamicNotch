@@ -16,6 +16,7 @@ struct WhatsNewView: View {
     @State private var migrationConfirmed = false
     @State private var migrationCommandCopied = false
     @State private var migrationCheckError: String? = nil
+    @State private var isInstalling = false
 
     var body: some View {
         ZStack {
@@ -102,18 +103,9 @@ struct WhatsNewView: View {
     @ViewBuilder
     private var migrationContent: some View {
         VStack(spacing: 12) {
-            if !migrationCommandCopied {
-                Button("Copy Update Command & Open Terminal") {
-                    if let error = ThermalDaemonClient.Installer.copyCommandAndOpenTerminal() {
-                        migrationCheckError = error
-                    } else {
-                        migrationCheckError = nil
-                        migrationCommandCopied = true
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.effectiveAccent)
-            } else {
+            if isInstalling {
+                ProgressView("Installing…")
+            } else if migrationCommandCopied {
                 VStack(spacing: 6) {
                     Text("Command copied to clipboard.")
                         .font(.caption).bold()
@@ -128,6 +120,12 @@ struct WhatsNewView: View {
                         migrationConfirmed = true
                         advance()
                     }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.effectiveAccent)
+            } else {
+                Button("Update Now") {
+                    runMigrationInstall()
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.effectiveAccent)
@@ -187,6 +185,35 @@ struct WhatsNewView: View {
         } else {
             withAnimation(.easeInOut(duration: 0.6)) {
                 index += 1
+            }
+        }
+    }
+
+    private func runMigrationInstall() {
+        isInstalling = true
+        migrationCheckError = nil
+        Task {
+            switch await ThermalDaemonClient.Installer.run() {
+            case .installed:
+                isInstalling = false
+                // do shell script exiting 0 doesn't guarantee the daemon actually came up
+                // with the new protocol version, so still verify before advancing.
+                _ = ThermalDaemonClient.shared.checkAvailability()
+                if !ThermalDaemonClient.migrationNeeded {
+                    migrationConfirmed = true
+                    advance()
+                } else {
+                    migrationCheckError = "Ran, but the daemon isn't reporting the new version yet. Try Check Again in a moment."
+                    migrationCommandCopied = true
+                }
+            case .cancelled:
+                isInstalling = false
+            case .fellBackToTerminal:
+                isInstalling = false
+                migrationCommandCopied = true
+            case .failed(let message):
+                isInstalling = false
+                migrationCheckError = message
             }
         }
     }

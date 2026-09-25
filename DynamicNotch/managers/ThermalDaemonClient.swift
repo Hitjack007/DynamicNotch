@@ -66,27 +66,64 @@ final class ThermalDaemonClient {
 
     // MARK: - Installer
 
-    /// The App Sandbox blocks privileged AppleScript execution, so installing/reinstalling
-    /// the daemon means copying a sudo command to the clipboard and opening Terminal for the
-    /// user to run it. Shared between the Settings install flow and the What's New migration
-    /// gate so there's one place that knows how to invoke the installer.
+    /// Shared between the Settings install flow and the What's New migration gate so
+    /// there's one place that knows how to invoke the installer.
     enum Installer {
-        /// Returns an error message on failure, or `nil` on success.
-        static func copyCommandAndOpenTerminal() -> String? {
+        enum Outcome {
+            case installed        // ran with administrator privileges, no Terminal needed
+            case cancelled        // user declined the password prompt
+            case fellBackToTerminal(command: String)  // AppleScript path failed some other way
+            case failed(String)   // couldn't even get as far as prompting
+        }
+
+        private static func buildCommand(scriptPath: String) -> String {
+            // Kill the old daemon first (bootout for macOS 13+, pkill as fallback), then install fresh.
+            let killCmd = "sudo launchctl bootout system/com.boringnotch.thermaldaemon 2>/dev/null; sudo pkill -f BoringNotchThermalDaemon 2>/dev/null; sleep 1"
+            return "\(killCmd) && sudo bash '\(scriptPath)'"
+        }
+
+        /// Tries to run the installer directly via a native admin-password dialog
+        /// (AppleScript's `do shell script ... with administrator privileges`, through
+        /// the app's existing AppleScriptHelper) so the user never has to open Terminal.
+        /// Falls back to the old copy-to-clipboard/open-Terminal flow if that mechanism
+        /// fails for any reason other than the user explicitly cancelling.
+        static func run() async -> Outcome {
             guard let resourcePath = Bundle.main.resourcePath else {
-                return "Could not locate app resources."
+                return .failed("Could not locate app resources.")
             }
             let scriptPath = (resourcePath as NSString).appendingPathComponent("install-thermal-daemon.sh")
             guard FileManager.default.fileExists(atPath: scriptPath) else {
-                return "Script not found — add install-thermal-daemon.sh to Copy Bundle Resources in Xcode."
+                return .failed("Script not found — add install-thermal-daemon.sh to Copy Bundle Resources in Xcode.")
             }
-            // Kill the old daemon first (bootout for macOS 13+, pkill as fallback), then install fresh.
-            let killCmd = "sudo launchctl bootout system/com.boringnotch.thermaldaemon 2>/dev/null; sudo pkill -f BoringNotchThermalDaemon 2>/dev/null; sleep 1"
-            let cmd = "\(killCmd) && sudo bash '\(scriptPath)'"
+            let cmd = buildCommand(scriptPath: scriptPath)
+
+            // Escape for embedding in an AppleScript string literal.
+            let escaped = cmd
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "\"", with: "\\\"")
+            let appleScript = "do shell script \"\(escaped)\" with administrator privileges"
+
+            do {
+                try await AppleScriptHelper.executeVoid(appleScript)
+                return .installed
+            } catch {
+                let nsError = error as NSError
+                // -128 is AppleScript's "user canceled" (they clicked Cancel/dismissed
+                // the password prompt) - respect that instead of falling back to Terminal.
+                if nsError.domain == "AppleScriptError",
+                   (nsError.userInfo["NSAppleScriptErrorNumber"] as? Int) == -128 {
+                    return .cancelled
+                }
+                NSLog("ThermalDaemonClient.Installer: direct install failed, falling back to Terminal: %@", error.localizedDescription)
+                copyToClipboardAndOpenTerminal(cmd)
+                return .fellBackToTerminal(command: cmd)
+            }
+        }
+
+        private static func copyToClipboardAndOpenTerminal(_ cmd: String) {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cmd, forType: .string)
             NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"))
-            return nil
         }
     }
 
