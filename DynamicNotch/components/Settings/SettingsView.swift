@@ -2150,6 +2150,7 @@ struct ThermalSettings: View {
     @State private var hasFans: Bool = true
     @State private var showTerminalInstructions: Bool = false
     @State private var installError: String? = nil
+    @State private var migrationNeeded: Bool = false
 
     var body: some View {
         Form {
@@ -2193,6 +2194,29 @@ struct ThermalSettings: View {
                     }
                     .padding(.vertical, 2)
                 } else {
+                    // Backstop for anyone who gets past the What's New migration gate (it's
+                    // a non-modal window, so this is reachable, not just theoretical): if the
+                    // daemon is running but reports an old protocol version, block the fan
+                    // curve controls here too until it's reinstalled.
+                    if migrationNeeded && daemonAvailable {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Fan control needs an update")
+                                    .font(.subheadline)
+                                Text("The fan daemon was rebuilt with smoother ramping. Update it to keep using custom fan curves.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Update…") { installDaemon() }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                        }
+                        .padding(.vertical, 2)
+                    }
+
                     // Daemon status row
                     HStack(spacing: 8) {
                         Circle()
@@ -2274,7 +2298,7 @@ struct ThermalSettings: View {
                             Text(preset.rawValue).tag(preset)
                         }
                     }
-                    .disabled(!daemonAvailable)
+                    .disabled(!daemonAvailable || migrationNeeded)
                     .onChange(of: fanCurvePreset) {
                         applyPreset(fanCurvePreset)
                     }
@@ -2299,7 +2323,7 @@ struct ThermalSettings: View {
                         .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
                     }
 
-                    if fanCurvePreset == .custom && daemonAvailable {
+                    if fanCurvePreset == .custom && daemonAvailable && !migrationNeeded {
                         VStack(alignment: .leading, spacing: 10) {
                             FanCurveEditorView()
 
@@ -2331,6 +2355,7 @@ struct ThermalSettings: View {
         .onAppear {
             daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
             hasFans = ThermalManager.shared.detectHasFans()
+            migrationNeeded = ThermalDaemonClient.migrationNeeded
             // Migrate: if fan curve was previously enabled but no preset was stored
             if fanCurveEnabled && fanCurvePreset == .appleDefault {
                 fanCurvePreset = .custom
@@ -2355,30 +2380,18 @@ struct ThermalSettings: View {
     }
 
     private func installDaemon() {
-        guard let resourcePath = Bundle.main.resourcePath else {
-            installError = "Could not locate app resources."
-            return
+        if let error = ThermalDaemonClient.Installer.copyCommandAndOpenTerminal() {
+            installError = error
+        } else {
+            installError = nil
+            showTerminalInstructions = true
         }
-        let scriptPath = (resourcePath as NSString).appendingPathComponent("install-thermal-daemon.sh")
-        guard FileManager.default.fileExists(atPath: scriptPath) else {
-            installError = "Script not found — add install-thermal-daemon.sh to Copy Bundle Resources in Xcode."
-            return
-        }
-        // The App Sandbox blocks privileged AppleScript execution. Instead, copy the
-        // sudo commands to clipboard and open Terminal so the user can run them directly.
-        // Kill the old daemon first (bootout for macOS 13+, pkill as fallback), then install fresh.
-        let killCmd = "sudo launchctl bootout system/com.boringnotch.thermaldaemon 2>/dev/null; sudo pkill -f BoringNotchThermalDaemon 2>/dev/null; sleep 1"
-        let cmd = "\(killCmd) && sudo bash '\(scriptPath)'"
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(cmd, forType: .string)
-        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"))
-        installError = nil
-        showTerminalInstructions = true
     }
 
     private func checkDaemon() {
         daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
         ThermalManager.shared.daemonAvailable = daemonAvailable
+        migrationNeeded = ThermalDaemonClient.migrationNeeded
         if daemonAvailable { showTerminalInstructions = false }
     }
 }

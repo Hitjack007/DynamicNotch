@@ -510,11 +510,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 self.showOnboardingWindow(step: .musicPermission)
             }
-        } else if Defaults[.whatsNewOnUpdate] {
-            let pages = WhatsNewCatalog.pages(
-                lastSeenVersion: coordinator.lastWhatsNewVersionSeen,
-                currentVersion: Bundle.main.releaseVersionNumber ?? ""
-            )
+        } else {
+            // The thermal daemon migration page shows regardless of the "show what's new"
+            // preference and regardless of lastWhatsNewVersionSeen - it's a required fix,
+            // not release marketing, and it must keep reappearing every launch until the
+            // daemon actually reports the current protocol version.
+            var pages: [WhatsNewPage] = []
+            if ThermalDaemonClient.migrationNeeded {
+                pages.append(WhatsNewPage(
+                    version: Bundle.main.releaseVersionNumber ?? "",
+                    highlight: WhatsNewCatalog.thermalDaemonMigrationHighlight
+                ))
+            }
+            if Defaults[.whatsNewOnUpdate] {
+                pages += WhatsNewCatalog.pages(
+                    lastSeenVersion: coordinator.lastWhatsNewVersionSeen,
+                    currentVersion: Bundle.main.releaseVersionNumber ?? ""
+                )
+            }
             whatsNewPageCount = pages.count
             if !pages.isEmpty {
                 DispatchQueue.main.async {

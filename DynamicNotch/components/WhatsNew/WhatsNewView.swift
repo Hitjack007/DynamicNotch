@@ -13,6 +13,9 @@ struct WhatsNewView: View {
     let onOpenSettings: (String) -> Void
 
     @State private var index = 0
+    @State private var migrationConfirmed = false
+    @State private var migrationCommandCopied = false
+    @State private var migrationCheckError: String? = nil
 
     var body: some View {
         ZStack {
@@ -90,7 +93,62 @@ struct WhatsNewView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.effectiveAccent)
+
+        case .thermalDaemonMigrate:
+            migrationContent
         }
+    }
+
+    @ViewBuilder
+    private var migrationContent: some View {
+        VStack(spacing: 12) {
+            if !migrationCommandCopied {
+                Button("Copy Update Command & Open Terminal") {
+                    if let error = ThermalDaemonClient.Installer.copyCommandAndOpenTerminal() {
+                        migrationCheckError = error
+                    } else {
+                        migrationCheckError = nil
+                        migrationCommandCopied = true
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.effectiveAccent)
+            } else {
+                VStack(spacing: 6) {
+                    Text("Command copied to clipboard.")
+                        .font(.caption).bold()
+                    Text("In Terminal, press ⌘V then Enter. Takes ~15s to compile. Then click Check Again.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                Button("Check Again") {
+                    _ = ThermalDaemonClient.shared.checkAvailability()
+                    if !ThermalDaemonClient.migrationNeeded {
+                        migrationConfirmed = true
+                        advance()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.effectiveAccent)
+            }
+            if let error = migrationCheckError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+
+    /// True while the current page is the thermal daemon migration gate and it hasn't
+    /// been confirmed yet - hides Skip and disables Next/Done so it can't be dismissed
+    /// without actually resolving it.
+    private var currentPageBlocksProgress: Bool {
+        guard pages.indices.contains(index) else { return false }
+        if case .thermalDaemonMigrate = pages[index].highlight.action {
+            return !migrationConfirmed
+        }
+        return false
     }
 
     private var footer: some View {
@@ -106,7 +164,7 @@ struct WhatsNewView: View {
             }
 
             HStack {
-                if pages.count > 1 {
+                if pages.count > 1 && !currentPageBlocksProgress {
                     Button("Skip") { onFinish() }
                         .buttonStyle(.bordered)
                 }
@@ -116,6 +174,7 @@ struct WhatsNewView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
+                .disabled(currentPageBlocksProgress)
             }
             .padding(.horizontal)
         }

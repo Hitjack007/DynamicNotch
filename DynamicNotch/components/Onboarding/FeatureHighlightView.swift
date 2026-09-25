@@ -76,6 +76,12 @@ struct FeatureHighlightView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.effectiveAccent)
+
+        case .thermalDaemonMigrate:
+            // Never actually reachable here: this action only appears on a highlight
+            // synthesized at launch and shown via WhatsNewView, never looked up by id
+            // for onboarding reuse (a fresh install can't have the daemon installed).
+            EmptyView()
         }
     }
 }

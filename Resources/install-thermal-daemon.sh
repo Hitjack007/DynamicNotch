@@ -101,6 +101,10 @@ private func toBytes(_ v: Float) -> [UInt8] {
     var x = v; return withUnsafeBytes(of: &x) { Array($0) }
 }
 
+// Bump whenever a daemon change needs existing installs to be force-reinstalled.
+// Must match ThermalDaemonClient.currentProtocolVersion in the app.
+private let daemonProtocolVersion = 2
+
 private final class FanControl {
     private let smc: SMC
     let count: Int
@@ -160,7 +164,7 @@ private final class FanControl {
             let r = smc.read(String(format: "F%dAc", i))
             return "\(Int(r.ok && r.size >= 4 ? toFloat(r.bytes, size: r.size) : 0))"
         }.joined(separator: ",")
-        return "ok fans=\(count) rpms=\(rpms)"
+        return "ok fans=\(count) rpms=\(rpms) daemonv=\(daemonProtocolVersion)"
     }
 }
 

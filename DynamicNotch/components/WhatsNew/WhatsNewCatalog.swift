@@ -19,6 +19,10 @@ enum WhatsNewAction {
     case settings(tab: String, label: LocalizedStringResource)   // tab = SettingsView's selectedTab string
     case link(URL, label: LocalizedStringResource)
     case permission(PermissionRequester.Kind, label: LocalizedStringResource)
+    /// Renders the unskippable thermal daemon migration flow instead of a normal button.
+    /// Not tied to a specific release - synthesized at launch by DynamicNotchApp whenever
+    /// ThermalDaemonClient.migrationNeeded is true, so it isn't part of `releases` below.
+    case thermalDaemonMigrate
 }
 
 struct WhatsNewRelease {
@@ -93,6 +97,16 @@ enum WhatsNewCatalog {
             release.highlights.map { WhatsNewPage(version: release.version, highlight: $0) }
         }
     }
+
+    /// Synthesized migration gate shown whenever ThermalDaemonClient.migrationNeeded is true,
+    /// regardless of app version or the "show what's new" preference. Not part of `releases`.
+    static let thermalDaemonMigrationHighlight = WhatsNewHighlight(
+        id: "thermalDaemonMigration-v\(ThermalDaemonClient.currentProtocolVersion)",
+        icon: "fan.fill",
+        title: "Fan Control Needs an Update",
+        body: "The fan control daemon has been rebuilt with smoother speed ramping and a more reliable installer. Run the update below to keep using custom fan curves.",
+        action: .thermalDaemonMigrate
+    )
 
     /// Looks up a highlight by its stable slug, so onboarding can reuse the exact same
     /// content as the What's New flow instead of duplicating it.
