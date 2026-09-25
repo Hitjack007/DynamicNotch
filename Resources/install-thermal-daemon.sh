@@ -150,6 +150,11 @@ private final class FanControl {
         unlocked = false
     }
 
+    // Lowest RPM any fan is allowed to idle at — used as the ramp-down target
+    // before releasing control back to Apple, so we never hand off abruptly
+    // from a high commanded RPM.
+    var floorRPM: Float { minRPM.min() ?? 1200 }
+
     func statusLine() -> String {
         let rpms = (0..<count).map { i -> String in
             let r = smc.read(String(format: "F%dAc", i))
@@ -159,17 +164,22 @@ private final class FanControl {
     }
 }
 
-// Smoothly ramps fan RPM toward a target at ≤ 450 RPM/s.
-// Delays ramp-up 2 s and ramp-down 5 s to absorb heatsink thermal mass.
+// Smoothly ramps fan RPM toward a target: ≤ 450 RPM/s up, ≤ 900 RPM/s down
+// (ramp-down is faster since a fan spinning down is never a safety concern
+// the way an under-cooled spin-up would be). Delays ramp-up 2 s and
+// ramp-down 3 s to absorb heatsink thermal mass before committing to a
+// direction change.
 private final class RampController {
     private let fans: FanControl
     private var currentRPM: Float = 0   // last RPM written to SMC
     private var targetRPM: Float? = nil  // nil = auto mode
     private var deadline: Date? = nil    // earliest time to start moving
     private var direction: Int = 0       // +1 up, -1 down, 0 neutral
+    private var releaseAfterFloor = false  // hand back to Apple once target is reached
     private let mu = NSLock()
 
-    private let maxStep: Float = 225     // 450 RPM/s × 0.5 s tick
+    private let upStep: Float = 225      // 450 RPM/s × 0.5 s tick
+    private let downStep: Float = 450    // 900 RPM/s × 0.5 s tick — 2x ramp-up rate
     private let tickInterval: TimeInterval = 0.5
     private let upDelay: TimeInterval = 2.0
     private let downDelay: TimeInterval = 3.0
@@ -181,6 +191,7 @@ private final class RampController {
 
     func setTarget(_ rpm: Float) {
         mu.lock(); defer { mu.unlock() }
+        releaseAfterFloor = false
         let newDir = rpm > currentRPM ? 1 : (rpm < currentRPM ? -1 : 0)
         if newDir != 0 && newDir != direction {
             direction = newDir
@@ -189,11 +200,26 @@ private final class RampController {
         targetRPM = rpm
     }
 
+    // Ramps down to the fans' floor RPM first, then releases control - avoids
+    // handing off to Apple's automatic control abruptly while fans are still
+    // spinning at a high commanded RPM.
     func setAuto() {
         mu.lock()
-        targetRPM = nil; deadline = nil; direction = 0
-        fans.setAuto()
-        currentRPM = 0
+        let floor = fans.floorRPM
+        guard floor < currentRPM else {
+            // Already at or below the floor - nothing to ramp, release now.
+            targetRPM = nil; deadline = nil; direction = 0; releaseAfterFloor = false
+            mu.unlock()
+            fans.setAuto()
+            mu.lock(); currentRPM = 0; mu.unlock()
+            return
+        }
+        if direction != -1 {
+            direction = -1
+            deadline = Date().addingTimeInterval(downDelay)
+        }
+        targetRPM = floor
+        releaseAfterFloor = true
         mu.unlock()
     }
 
@@ -201,7 +227,8 @@ private final class RampController {
         mu.lock(); defer { mu.unlock() }
         guard let t = targetRPM else { return " target=auto" }
         let waiting = deadline.map { Date() < $0 } ?? false
-        return " target=\(Int(t)) cmd_rpm=\(Int(currentRPM))\(waiting ? " (pending)" : "")"
+        let releasing = releaseAfterFloor ? " (releasing to auto)" : ""
+        return " target=\(Int(t)) cmd_rpm=\(Int(currentRPM))\(waiting ? " (pending)" : "")\(releasing)"
     }
 
     private func loop() {
@@ -212,8 +239,18 @@ private final class RampController {
             if let d = deadline, Date() < d { mu.unlock(); continue }
             deadline = nil
             let delta = target - currentRPM
-            guard abs(delta) >= 1 else { mu.unlock(); continue }
-            let step = min(abs(delta), maxStep)
+            guard abs(delta) >= 1 else {
+                // Reached target and holding steady - nothing further to do, unless
+                // this was a ramp-down-then-release: hand off to Apple now.
+                guard releaseAfterFloor else { mu.unlock(); continue }
+                releaseAfterFloor = false
+                targetRPM = nil
+                mu.unlock()
+                fans.setAuto()
+                mu.lock(); currentRPM = 0; mu.unlock()
+                continue
+            }
+            let step = min(abs(delta), delta > 0 ? upStep : downStep)
             currentRPM += delta > 0 ? step : -step
             let rpmToWrite = currentRPM
             mu.unlock()
