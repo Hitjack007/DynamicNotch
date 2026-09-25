@@ -6,7 +6,7 @@ If you are an AI coding agent working in this repository, read **[AI_AGENTS.md](
 
 The essentials, in case you read nothing else:
 
-1. **Protected paths — do not modify:** `dynamicNotch.xcodeproj/`, `.github/workflows/`, `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/`, `*.entitlements`, `boringNotch/helpers/SafariCookieReader.swift`, `boringNotch/helpers/ChromeCookieReader.swift`, `boringNotch/helpers/KeychainHelper.swift`.
+1. **Protected paths — do not modify:** `dynamicNotch.xcodeproj/`, `.github/workflows/`, `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/`, `*.entitlements`, `DynamicNotch/helpers/SafariCookieReader.swift`, `DynamicNotch/helpers/ChromeCookieReader.swift`, `DynamicNotch/helpers/KeychainHelper.swift`.
 2. **No dependency changes.** No new Swift Packages, no version bumps.
 3. **No new private Apple API, MediaRemote internals, SMC keys, or XPC surfaces.**
 4. **No secrets in the diff** — keys, tokens, cookies, Team IDs, personal paths.
@@ -18,7 +18,7 @@ The essentials, in case you read nothing else:
 ## Project orientation
 
 - **What it is:** a macOS menu bar app that turns the MacBook notch into a live system dashboard. SwiftUI, macOS 15+, GPL-3.0.
-- **Build:** open `dynamicNotch.xcodeproj` in Xcode 26 or later. Targets: `dynamicNotch`, `BoringNotchXPCHelper`, `BoringNotchThermalDaemon`.
+- **Build:** open `dynamicNotch.xcodeproj` in Xcode 26 or later. Targets: `DynamicNotch`, `DynamicNotchXPCHelper`, `DynamicNotchThermalDaemon`.
 - **Tests:** Swift Testing for unit tests, XCUIAutomation for UI tests.
 - **Architecture notes:** [CODEBASE_NOTES.md](./CODEBASE_NOTES.md) and [HUD-NOTES.md](./HUD-NOTES.md).
 - **Human contribution process:** [CONTRIBUTING.md](./CONTRIBUTING.md).

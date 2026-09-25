@@ -19,7 +19,7 @@ handleKeyPress() routes to appropriate manager
   ↓
 VolumeManager / BrightnessManager update system value
   ↓
-Manager calls BoringViewCoordinator.toggleSneakPeek()
+Manager calls NotchViewCoordinator.toggleSneakPeek()
   ↓
 sneakPeek @Published property updates → SwiftUI re-renders
   ↓
@@ -57,7 +57,7 @@ EVENT CONSUMED (return nil) → system never sees it → no BezelServices HUD
 
 **There are no explicit HUD suppression API calls.** The suppression is achieved by returning `nil` from the CGEvent callback instead of `Unmanaged.passRetained(cgEvent)`. This consumes the event — the system never receives it and therefore never triggers BezelServices to show a HUD. Simple and non-invasive.
 
-This only activates when `hudReplacement` is enabled in user defaults (`BoringViewCoordinator.toggleSneakPeek` early-returns if the setting is off).
+This only activates when `hudReplacement` is enabled in user defaults (`NotchViewCoordinator.toggleSneakPeek` early-returns if the setting is off).
 
 ---
 
@@ -70,7 +70,7 @@ This only activates when `hudReplacement` is enabled in user defaults (`BoringVi
 - Feedback click: plays `/System/Library/LoginPlugins/BezelServices.loginPlugin/Contents/Resources/volume.aiff`
 
 ### Screen Brightness (`BrightnessManager.swift` + XPC helper)
-- Delegated to the **XPC helper** (`BoringNotchXPCHelper`) because the app sandbox can't access private frameworks directly
+- Delegated to the **XPC helper** (`DynamicNotchXPCHelper`) because the app sandbox can't access private frameworks directly
 - Helper dynamically loads `DisplayServices.framework` via `dlopen` and calls:
   - `DisplayServicesGetBrightness()` — read
   - `DisplayServicesSetBrightness()` — write
@@ -87,8 +87,8 @@ This only activates when `hudReplacement` is enabled in user defaults (`BoringVi
 
 ## Step 4 — Showing the Custom HUD
 
-### State Management (`BoringViewCoordinator.swift`)
-- Managers call `BoringViewCoordinator.shared.toggleSneakPeek(status: true, type:, value:)`
+### State Management (`NotchViewCoordinator.swift`)
+- Managers call `NotchViewCoordinator.shared.toggleSneakPeek(status: true, type:, value:)`
 - Updates `@Published var sneakPeek` with:
   - `show: Bool`
   - `type: SneakContentType` (`.volume`, `.brightness`, `.backlight`, `.mic`)
@@ -115,19 +115,19 @@ This only activates when `hudReplacement` is enabled in user defaults (`BoringVi
 
 ## Step 5 — Window Positioning
 
-**`BoringNotchWindow`** (NSPanel subclass):
+**`DynamicNotchWindow`** (NSPanel subclass):
 - `level = .mainMenu + 3` — above the menu bar, below native system UI
 - `collectionBehavior = [.fullScreenAuxiliary, .stationary, .canJoinAllSpaces, .ignoresCycle]`
 - Transparent, non-movable, floating
 
-**`BoringNotchSkyLightWindow`** — extends this for lock-screen support:
+**`DynamicNotchSkyLightWindow`** — extends this for lock-screen support:
 - Uses private `SkyLight.framework` (loaded via `dlopen`/`dlsym`)
 - Calls `SLSRemoveWindowsFromSpaces()` for space management on the lock screen
 - Supports hiding from screen recording: `sharingType = .none`
 
 ---
 
-## XPC Helper Protocol (`BoringNotchXPCHelperProtocol.swift`)
+## XPC Helper Protocol (`DynamicNotchXPCHelperProtocol.swift`)
 
 The helper runs as a privileged process to access private APIs the sandbox blocks:
 
@@ -143,7 +143,7 @@ currentScreenBrightness(reply:)
 setScreenBrightness(_:reply:)
 ```
 
-Service name: `theboringteam.boringnotch.BoringNotchXPCHelper`
+Service name: `com.mark.dynamicnotch.DynamicNotchXPCHelper`
 
 ---
 
@@ -170,8 +170,8 @@ Service name: `theboringteam.boringnotch.BoringNotchXPCHelper`
 | `managers/VolumeManager.swift` | CoreAudio volume/mute control |
 | `managers/BrightnessManager.swift` | Brightness control (delegates to XPC) |
 | `XPCHelperClient/XPCHelperClient.swift` | XPC connection to privileged helper |
-| `XPCHelperClient/BoringNotchXPCHelperProtocol.swift` | XPC interface definition |
-| `models/BoringViewCoordinator.swift` | `sneakPeek` state, `toggleSneakPeek()` |
+| `XPCHelperClient/DynamicNotchXPCHelperProtocol.swift` | XPC interface definition |
+| `models/NotchViewCoordinator.swift` | `sneakPeek` state, `toggleSneakPeek()` |
 | `components/Live activities/InlineHUD.swift` | Closed-notch HUD view |
 | `components/Live activities/OpenNotchHUD.swift` | Open-notch HUD view |
 | `components/Live activities/SystemEventIndicatorModifier.swift` | Alternative HUD style |

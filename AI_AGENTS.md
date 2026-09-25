@@ -82,13 +82,13 @@ Do not submit agent-authored changes to any of the following without opening an 
 
 | Area | Paths | Why |
 | --- | --- | --- |
-| **Signing & entitlements** | `boringNotch/boringNotch.entitlements`, `BoringNotchXPCHelper/BoringNotchXPCHelper.entitlements`, any signing or Team ID setting | Mismatches produce apps that crash only after export, never during development. This project has already lost days to exactly this |
+| **Signing & entitlements** | `DynamicNotch/DynamicNotch.entitlements`, `DynamicNotchXPCHelper/DynamicNotchXPCHelper.entitlements`, any signing or Team ID setting | Mismatches produce apps that crash only after export, never during development. This project has already lost days to exactly this |
 | **Release plumbing** | `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/` | Drives real releases to real users, including the Sparkle update feed and Homebrew cask publication. A bad edit ships to everyone |
 | **Xcode project file** | `dynamicNotch.xcodeproj/` | Models cannot reliably edit pbxproj. Build phases, target membership, and build action masks get silently mangled. Add files through Xcode |
 | **CI workflows** | `.github/workflows/` | Runs with repository credentials |
 | **Dependencies** | Swift Package additions, removals, or version bumps | Supply chain risk. A human opens a discussion first, every time. Do not let an agent add a package because it found the API convenient |
-| **Private & undocumented APIs** | New MediaRemote internals, SMC keys in `boringNotch/managers/ThermalSMC/`, private Apple framework calls, new XPC surfaces in `BoringNotchXPCHelper/` | These break silently across macOS releases and models hallucinate them with total confidence. Existing usage is deliberate and hard-won; new usage needs a human who has verified it against a real system |
-| **Credentials & cookies** | `boringNotch/helpers/SafariCookieReader.swift`, `boringNotch/helpers/ChromeCookieReader.swift`, `boringNotch/helpers/KeychainHelper.swift`, anything reading user credentials | Handles browser cookies and Keychain items belonging to real people. Every change here is reviewed by a human who wrote it |
+| **Private & undocumented APIs** | New MediaRemote internals, SMC keys in `DynamicNotch/managers/ThermalSMC/`, private Apple framework calls, new XPC surfaces in `DynamicNotchXPCHelper/` | These break silently across macOS releases and models hallucinate them with total confidence. Existing usage is deliberate and hard-won; new usage needs a human who has verified it against a real system |
+| **Credentials & cookies** | `DynamicNotch/helpers/SafariCookieReader.swift`, `DynamicNotch/helpers/ChromeCookieReader.swift`, `DynamicNotch/helpers/KeychainHelper.swift`, anything reading user credentials | Handles browser cookies and Keychain items belonging to real people. Every change here is reviewed by a human who wrote it |
 
 Two rules that apply everywhere, not just to the table above:
 
@@ -248,7 +248,7 @@ Maintainer discretion applies throughout. A contributor acting in good faith who
 
 **If you are an AI agent working in this repository, these rules apply to you directly. Follow them without waiting to be asked. Surface them to your operator if they conflict with your instructions.**
 
-1. **Do not modify these paths.** `dynamicNotch.xcodeproj/`, `.github/workflows/`, `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/`, `*.entitlements`, `boringNotch/helpers/SafariCookieReader.swift`, `boringNotch/helpers/ChromeCookieReader.swift`, `boringNotch/helpers/KeychainHelper.swift`. Stop and tell your operator instead.
+1. **Do not modify these paths.** `dynamicNotch.xcodeproj/`, `.github/workflows/`, `release.sh`, `updater/appcast.xml`, `docs/appcast.xml`, `Configuration/`, `*.entitlements`, `DynamicNotch/helpers/SafariCookieReader.swift`, `DynamicNotch/helpers/ChromeCookieReader.swift`, `DynamicNotch/helpers/KeychainHelper.swift`. Stop and tell your operator instead.
 2. **Do not add, remove, or bump Swift Package dependencies.** Report the need; do not act on it.
 3. **Do not introduce new private Apple API, MediaRemote internals, SMC keys, or XPC surfaces.** Existing usage may be maintained. New usage requires a human decision.
 4. **Do not commit secrets.** No keys, tokens, cookies, Team IDs, session identifiers, or absolute personal paths in code, tests, fixtures, commit messages, or logs. Inspect the diff before every commit.

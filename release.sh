@@ -50,7 +50,7 @@ if git -C "$SCRIPT_DIR" status --short | grep -q '^[MADRC]'; then
     exit 1
 fi
 
-WHATSNEW_CATALOG="$SCRIPT_DIR/boringNotch/components/WhatsNew/WhatsNewCatalog.swift"
+WHATSNEW_CATALOG="$SCRIPT_DIR/DynamicNotch/components/WhatsNew/WhatsNewCatalog.swift"
 if ! grep -q "version: \"${VERSION}\"" "$WHATSNEW_CATALOG"; then
     echo ""
     echo "⚠️  Warning: WhatsNewCatalog.swift has no entry for version \"${VERSION}\"."

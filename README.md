@@ -80,7 +80,7 @@ cd DynamicNotch
 open dynamicNotch.xcodeproj
 ```
 
-In Xcode, set your own development team under **Signing & Capabilities** for both `dynamicNotch` and `BoringNotchXPCHelper`, then press **Cmd + R**.
+In Xcode, set your own development team under **Signing & Capabilities** for both `DynamicNotch` and `DynamicNotchXPCHelper`, then press **Cmd + R**.
 
 ---
 
