@@ -1,6 +1,6 @@
 //
 //  TipStore.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 15/09/2024.
 //
@@ -20,7 +20,7 @@ struct HUDsTip: Tip {
     
     
     var image: Image? {
-        AppIcon(for: "theboringteam.boringNotch")
+        AppIcon(for: "com.mark.dynamicnotch")
     }
     
     var actions: [Action] {
@@ -42,7 +42,7 @@ struct CBTip: Tip {
     
     
     var image: Image? {
-        AppIcon(for: "theboringteam.boringNotch")
+        AppIcon(for: "com.mark.dynamicnotch")
     }
     
     var actions: [Action] {

@@ -1,6 +1,6 @@
 //
 //  ChromeCookieReader.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Reads session cookies from Chromium-based browsers (Chrome, Brave, Edge).
 //
@@ -102,7 +102,7 @@ struct ChromeCookieReader {
         guard FileManager.default.fileExists(atPath: variant.cookiePath) else { return nil }
 
         // Copy to avoid locking conflict with a running browser instance
-        let tmp = NSTemporaryDirectory() + "boring_\(variant.keychainAccount)_cookies.db"
+        let tmp = NSTemporaryDirectory() + "dynamicnotch_\(variant.keychainAccount)_cookies.db"
         try? FileManager.default.removeItem(atPath: tmp)
         guard (try? FileManager.default.copyItem(atPath: variant.cookiePath, toPath: tmp)) != nil else { return nil }
         defer { try? FileManager.default.removeItem(atPath: tmp) }

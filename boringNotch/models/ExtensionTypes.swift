@@ -1,6 +1,6 @@
 //
 //  ExtensionTypes.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Shared value types for the extensions system (CapabilityRegistry,
 //  ExtensionEventBus, ExtensionActionExecutor). Kept dependency-free so the

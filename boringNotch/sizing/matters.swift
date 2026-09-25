@@ -1,6 +1,6 @@
 //
 //  sizeMatters.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 05/08/24.
 //

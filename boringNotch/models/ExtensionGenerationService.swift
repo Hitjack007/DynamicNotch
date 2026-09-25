@@ -1,6 +1,6 @@
 //
 //  ExtensionGenerationService.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  On-device generation: turns a plain-English description into the same
 //  rules JSON the manual editor already validates. This is the primary way

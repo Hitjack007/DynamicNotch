@@ -57,7 +57,7 @@ final class SpectrumAnalyzer: NSObject, ObservableObject {
 
             let filter = SCContentFilter(display: display, excludingWindows: [])
             let stream = SCStream(filter: filter, configuration: config, delegate: nil)
-            let callbackQueue = DispatchQueue(label: "com.boringnotch.spectrum.callback", qos: .userInteractive)
+            let callbackQueue = DispatchQueue(label: "com.dynamicnotch.spectrum.callback", qos: .userInteractive)
             try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: callbackQueue)
             try await stream.startCapture()
             captureStream = stream
@@ -97,7 +97,7 @@ extension SpectrumAnalyzer: SCStreamOutput {
 
 final class AudioSignalProcessor: @unchecked Sendable {
 
-    private let queue = DispatchQueue(label: "com.boringnotch.spectrum.dsp", qos: .userInteractive)
+    private let queue = DispatchQueue(label: "com.dynamicnotch.spectrum.dsp", qos: .userInteractive)
 
     private var envelopes: [EnvelopeFollower]
     private var filterbank: MelFilterbank

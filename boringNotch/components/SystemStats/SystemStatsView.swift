@@ -1,6 +1,6 @@
 //
 //  SystemStatsView.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Defaults

@@ -1,6 +1,6 @@
     //
     //  ProgressIndicator.swift
-    //  boringNotch
+    //  DynamicNotch
     //
     //  Created by Mark Greene on 11/08/24.
     //

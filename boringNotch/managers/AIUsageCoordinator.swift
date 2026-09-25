@@ -1,6 +1,6 @@
 //
 //  AIUsageCoordinator.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Single owner of AI usage polling and alert state.
 //

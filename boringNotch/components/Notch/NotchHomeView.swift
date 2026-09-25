@@ -1,6 +1,6 @@
 //
 //  NotchHomeView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024-08-18.
 //
@@ -12,7 +12,7 @@ import SwiftUI
 // MARK: - Music Player Components
 
 struct MusicPlayerView: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     let albumArtNamespace: Namespace.ID
 
     var body: some View {
@@ -25,7 +25,7 @@ struct MusicPlayerView: View {
 
 struct AlbumArtView: View {
     @ObservedObject var musicManager = MusicManager.shared
-    @ObservedObject var vm: BoringViewModel
+    @ObservedObject var vm: NotchViewModel
     let albumArtNamespace: Namespace.ID
 
     private var artSize: CGSize {
@@ -127,7 +127,7 @@ struct AlbumArtView: View {
 
 struct MusicControlsView: View {
     @ObservedObject var musicManager = MusicManager.shared
-        @EnvironmentObject var vm: BoringViewModel
+        @EnvironmentObject var vm: NotchViewModel
         @ObservedObject var webcamManager = WebcamManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
@@ -454,7 +454,7 @@ struct VolumeControlView: View {
 #if false // TODO: re-enable once HomePod waking is solved
 
 struct AudioOutputSlotButton: View {
-    @EnvironmentObject private var vm: BoringViewModel
+    @EnvironmentObject private var vm: NotchViewModel
     @ObservedObject private var audioManager = AudioOutputManager.shared
     @State private var showPicker = false
     @State private var globalMonitor: Any?
@@ -573,10 +573,10 @@ struct AudioOutputPickerView: View {
 // MARK: - Main View
 
 struct NotchHomeView: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject var webcamManager = WebcamManager.shared
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
 
     var body: some View {

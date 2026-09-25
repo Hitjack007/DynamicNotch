@@ -1,6 +1,6 @@
 //
 //  CalendarManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 08/09/24.
 //

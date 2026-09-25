@@ -1,6 +1,6 @@
 //
 //  MediaKeyInterceptor.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-11-23.
 
@@ -361,18 +361,18 @@ final class MediaKeyInterceptor {
             case .soundUp, .soundDown, .mute:
                 let v = VolumeManager.shared.rawVolume
                 let icon = VolumeManager.shared.bluetoothAudioModel?.sfSymbolName ?? ""
-                BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(v), icon: icon)
+                NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(v), icon: icon)
             case .brightnessUp, .brightnessDown:
                 if command {
                     let v = KeyboardBacklightManager.shared.rawBrightness
-                    BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .backlight, value: CGFloat(v))
+                    NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .backlight, value: CGFloat(v))
                 } else {
                     let v = BrightnessManager.shared.rawBrightness
-                    BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(v))
+                    NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(v))
                 }
             case .keyboardBrightnessUp, .keyboardBrightnessDown:
                 let v = KeyboardBacklightManager.shared.rawBrightness
-                BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .backlight, value: CGFloat(v))
+                NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .backlight, value: CGFloat(v))
             }
         }
     }
@@ -384,7 +384,7 @@ final class MediaKeyInterceptor {
 
     private func startOSDSuppressor() {
         guard osdIdleTimer == nil else { return }
-        let queue = DispatchQueue(label: "com.boringnotch.osd-idle", qos: .background)
+        let queue = DispatchQueue(label: "com.dynamicnotch.osd-idle", qos: .background)
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + 1, repeating: 1)
         timer.setEventHandler { [weak self] in

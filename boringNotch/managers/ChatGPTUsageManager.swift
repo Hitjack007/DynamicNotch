@@ -1,6 +1,6 @@
 //
 //  ChatGPTUsageManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Defaults

@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  boringNotchApp
+//  DynamicNotchApp
 //
 //  Created by Mark Greene on 02/08/24
 //
@@ -14,10 +14,10 @@ import SwiftUIIntrospect
 
 @MainActor
 struct ContentView: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject var webcamManager = WebcamManager.shared
 
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @ObservedObject var musicManager = MusicManager.shared
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var brightnessManager = BrightnessManager.shared
@@ -66,7 +66,7 @@ struct ContentView: View {
     /// normal content. Tied to `isCharging` rather than `isPluggedIn` so it
     /// clears at 100% instead of pinning permanently for always-plugged-in
     /// Macs. Face has no disposable slot, so it is excluded — see
-    /// `BoringFaceAnimation()`.
+    /// `NotchFaceAnimation()`.
     private var showsChargingGlyph: Bool {
         #if DEBUG
         if batteryModel.debugForceCharging { return true }
@@ -390,7 +390,7 @@ struct ContentView: View {
                                 .frame(width: vm.closedNotchSize.width + 10)
 
                             HStack {
-                                BoringBatteryView(
+                                NotchBatteryView(
                                     batteryWidth: 30,
                                     isCharging: batteryModel.isCharging,
                                     isInLowPowerMode: batteryModel.isInLowPowerMode,
@@ -425,7 +425,7 @@ struct ContentView: View {
                           DownloadLiveActivity()
                               .frame(alignment: .center)
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && resolvedAmbientActivity == .face && !vm.hideOnClosed {
-                          BoringFaceAnimation()
+                          NotchFaceAnimation()
                       } else if !coordinator.expandingView.show && vm.notchState == .closed
                           && resolvedAmbientActivity == .aiUsage && !vm.hideOnClosed {
                           AIUsageLiveActivity()
@@ -437,7 +437,7 @@ struct ContentView: View {
                           IdleNotchView()
                               .frame(alignment: .center)
                        } else if vm.notchState == .open {
-                           BoringHeader()
+                           NotchHeader()
                                .frame(height: max(24, vm.effectiveClosedNotchHeight))
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
                        } else {
@@ -515,7 +515,7 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    func BoringFaceAnimation() -> some View {
+    func NotchFaceAnimation() -> some View {
         HStack {
             HStack {
                 Rectangle()
@@ -710,7 +710,7 @@ struct ContentView: View {
 
     @ViewBuilder
     var dragDetector: some View {
-        if Defaults[.boringShelf] && vm.notchState == .closed {
+        if Defaults[.shelfEnabled] && vm.notchState == .closed {
             Color.clear
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())
@@ -879,7 +879,7 @@ struct GeneralDropTargetDelegate: DropDelegate {
 }
 
 #Preview {
-    let vm = BoringViewModel()
+    let vm = NotchViewModel()
     vm.open()
     return ContentView()
         .environmentObject(vm)

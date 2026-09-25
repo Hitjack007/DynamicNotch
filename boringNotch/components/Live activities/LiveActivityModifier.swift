@@ -1,6 +1,6 @@
 //
 //  LiveActivityModifier.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 12/08/2024.
 //

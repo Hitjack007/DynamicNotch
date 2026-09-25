@@ -1,6 +1,6 @@
 //
 //  FullscreenMediaDetection.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 06/09/2024.
 //

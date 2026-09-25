@@ -1,6 +1,6 @@
 //
 //  VolumeManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 22/08/2025.
 //
@@ -43,7 +43,7 @@ final class VolumeManager: NSObject, ObservableObject {
         let current = readVolumeInternal() ?? rawVolume
         let target = max(0, min(1, current + delta))
         setAbsolute(target)
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
+        NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
 
     @MainActor func decrease(stepDivisor: Float = 1.0) {
@@ -52,7 +52,7 @@ final class VolumeManager: NSObject, ObservableObject {
         let current = readVolumeInternal() ?? rawVolume
         let target = max(0, min(1, current - delta))
         setAbsolute(target)
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
+        NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(target), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
 
     @MainActor func toggleMuteAction() {
@@ -71,7 +71,7 @@ final class VolumeManager: NSObject, ObservableObject {
         }
 
         toggleMuteInternal()
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(willBeMuted ? 0 : resultingVolume), icon: bluetoothAudioModel?.sfSymbolName ?? "")
+        NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .volume, value: CGFloat(willBeMuted ? 0 : resultingVolume), icon: bluetoothAudioModel?.sfSymbolName ?? "")
     }
     
     func refresh() { fetchCurrentVolume() }

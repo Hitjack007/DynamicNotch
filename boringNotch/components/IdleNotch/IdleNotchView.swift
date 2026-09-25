@@ -2,7 +2,7 @@ import SwiftUI
 import Defaults
 
 struct IdleNotchView: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
 
     var indicatorSize: CGFloat { max(0, vm.effectiveClosedNotchHeight - 12) }
 

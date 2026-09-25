@@ -1,6 +1,6 @@
 //
 //  SafariCookieReader.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Parses Safari's BinaryCookies format to extract the claude.ai session key
 //  without requiring any user interaction.

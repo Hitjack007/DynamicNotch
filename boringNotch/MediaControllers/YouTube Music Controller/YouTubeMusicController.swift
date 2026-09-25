@@ -1,6 +1,6 @@
 //
 //  YouTubeMusicController.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created By Alexander on 2025-03-30.
 //

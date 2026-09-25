@@ -1,6 +1,6 @@
 //
 //  ConditionalModifier.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 20/08/2024.
 //

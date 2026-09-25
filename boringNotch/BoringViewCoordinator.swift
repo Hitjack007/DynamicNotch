@@ -1,6 +1,6 @@
 //
-//  BoringViewCoordinator.swift
-//  boringNotch
+//  NotchViewCoordinator.swift
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024-11-20.
 //
@@ -47,8 +47,8 @@ struct ExpandedItem {
 }
 
 @MainActor
-class BoringViewCoordinator: ObservableObject {
-    static let shared = BoringViewCoordinator()
+class NotchViewCoordinator: ObservableObject {
+    static let shared = NotchViewCoordinator()
 
     @Published var currentView: NotchViews = .home
     @Published var helloAnimationRunning: Bool = false

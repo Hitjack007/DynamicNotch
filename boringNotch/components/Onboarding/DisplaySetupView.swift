@@ -1,6 +1,6 @@
 //
 //  DisplaySetupView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2026-09-19.
 //
@@ -11,7 +11,7 @@ import Defaults
 struct DisplaySetupView: View {
     let onContinue: () -> Void
 
-    @ObservedObject private var coordinator = BoringViewCoordinator.shared
+    @ObservedObject private var coordinator = NotchViewCoordinator.shared
     @Default(.showOnAllDisplays) var showOnAllDisplays
     @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
 

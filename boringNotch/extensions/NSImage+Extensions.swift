@@ -1,6 +1,6 @@
 //
 //  Image2Color.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 07/08/2024.
 //

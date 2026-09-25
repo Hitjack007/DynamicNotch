@@ -1,6 +1,6 @@
 //
 //  ExtensionRecord.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  The stored shape of one user extension: a name plus a flat list of
 //  independent rules. Each rule is trigger -> (AND-only conditions) ->

@@ -1,6 +1,6 @@
 //
 //  SleepPreventionManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import AppKit
@@ -47,7 +47,7 @@ final class SleepPreventionManager {
         var assertionID: IOPMAssertionID = 0
         let result = IOPMAssertionCreateWithDescription(
             kIOPMAssertPreventUserIdleDisplaySleep as CFString,
-            "boring.notch prevents sleep" as CFString,
+            "DynamicNotch prevents sleep" as CFString,
             nil as CFString?,
             nil as CFString?,
             nil as CFString?,

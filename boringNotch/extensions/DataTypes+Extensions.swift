@@ -1,6 +1,6 @@
     //
     //  DataTypes+Extensions.swift
-    //  boringNotch
+    //  DynamicNotch
     //
     //  Created by Mark Greene on 27/08/24.
     //

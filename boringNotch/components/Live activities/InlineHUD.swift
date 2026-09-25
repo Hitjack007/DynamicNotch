@@ -1,6 +1,6 @@
 //
 //  InlineHUDs.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 14/09/2024.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import Defaults
 
 struct InlineHUD: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @Binding var type: SneakContentType
     @Binding var value: CGFloat
     @Binding var icon: String
@@ -158,5 +158,5 @@ struct InlineHUD: View {
         .padding(.horizontal, 8)
         .background(Color.black)
         .padding()
-        .environmentObject(BoringViewModel())
+        .environmentObject(NotchViewModel())
 }

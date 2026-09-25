@@ -1,6 +1,6 @@
 //
 //  ExtensionsManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Owns the stored extension list and is the one place that turns a fired
 //  ExtensionTriggerEvent into ExtensionActionExecutor calls. Deliberately no

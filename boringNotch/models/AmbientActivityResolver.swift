@@ -1,6 +1,6 @@
 //
 //  AmbientActivityResolver.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Decides which of Music/Download/Face/AI Usage wins the closed-notch ambient
 //  slot, given a user-configured priority order and which activities are

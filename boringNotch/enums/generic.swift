@@ -1,6 +1,6 @@
 //
 //  generic.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 04/08/24.
 //

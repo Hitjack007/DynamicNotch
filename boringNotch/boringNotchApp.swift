@@ -1,6 +1,6 @@
 //
-//  boringNotchApp.swift
-//  boringNotchApp
+//  DynamicNotchApp.swift
+//  DynamicNotchApp
 //
 //  Created by Mark Greene on 02/08/24.
 //
@@ -55,7 +55,7 @@ struct DynamicNotchApp: App {
     #endif
 
     var body: some Scene {
-        MenuBarExtra("boring.notch", systemImage: "sparkle", isInserted: menuBarIconInserted) {
+        MenuBarExtra("DynamicNotch", systemImage: "sparkle", isInserted: menuBarIconInserted) {
             Button("Settings") {
                 DispatchQueue.main.async {
                     SettingsWindowController.shared.showWindow()
@@ -81,7 +81,7 @@ struct DynamicNotchApp: App {
             }
             #endif
             Divider()
-            Button("Restart Boring Notch") {
+            Button("Restart DynamicNotch") {
                 ApplicationRelauncher.restart()
             }
             Button("Quit", role: .destructive) {
@@ -95,12 +95,12 @@ struct DynamicNotchApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var windows: [String: NSWindow] = [:] // UUID -> NSWindow
-    var viewModels: [String: BoringViewModel] = [:] // UUID -> BoringViewModel
+    var viewModels: [String: NotchViewModel] = [:] // UUID -> NotchViewModel
     var window: NSWindow?
     // Single-display mode only. In showOnAllDisplays mode use viewModels[uuid] instead.
     // Any new feature targeting a notch window must branch on Defaults[.showOnAllDisplays].
-    let vm: BoringViewModel = .init()
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    let vm: NotchViewModel = .init()
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     var quickShareService = QuickShareService.shared
     private var whatsNewWindowController: NSWindowController?
     var timer: Timer?
@@ -162,12 +162,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func enableSkyLightOnAllWindows() {
         if Defaults[.showOnAllDisplays] {
             windows.values.forEach { window in
-                if let skyWindow = window as? BoringNotchSkyLightWindow {
+                if let skyWindow = window as? DynamicNotchSkyLightWindow {
                     skyWindow.enableSkyLight()
                 }
             }
         } else {
-            if let skyWindow = window as? BoringNotchSkyLightWindow {
+            if let skyWindow = window as? DynamicNotchSkyLightWindow {
                 skyWindow.enableSkyLight()
             }
         }
@@ -181,12 +181,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             await MainActor.run {
                 if Defaults[.showOnAllDisplays] {
                     self.windows.values.forEach { window in
-                        if let skyWindow = window as? BoringNotchSkyLightWindow {
+                        if let skyWindow = window as? DynamicNotchSkyLightWindow {
                             skyWindow.disableSkyLight()
                         }
                     }
                 } else {
-                    if let skyWindow = self.window as? BoringNotchSkyLightWindow {
+                    if let skyWindow = self.window as? DynamicNotchSkyLightWindow {
                         skyWindow.disableSkyLight()
                     }
                 }
@@ -281,11 +281,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func createBoringNotchWindow(for screen: NSScreen, with viewModel: BoringViewModel) -> NSWindow {
+    private func createBoringNotchWindow(for screen: NSScreen, with viewModel: NotchViewModel) -> NSWindow {
         let rect = NSRect(x: 0, y: 0, width: windowSize.width, height: windowSize.height)
         let styleMask: NSWindow.StyleMask = [.borderless, .nonactivatingPanel, .utilityWindow, .hudWindow]
         
-        let window = BoringNotchSkyLightWindow(contentRect: rect, styleMask: styleMask, backing: .buffered, defer: false)
+        let window = DynamicNotchSkyLightWindow(contentRect: rect, styleMask: styleMask, backing: .buffered, defer: false)
         
         // Enable SkyLight only when screen is locked
         if isScreenLocked {
@@ -537,8 +537,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard Bundle.main.bundlePath.contains("AppTranslocation") else { return }
 
         let alert = NSAlert()
-        alert.messageText = "Move boring.notch to Applications"
-        alert.informativeText = "boring.notch is running from a temporary location, which prevents it from receiving Accessibility and other system permissions.\n\nPlease move boring.notch to your Applications folder and relaunch it."
+        alert.messageText = "Move DynamicNotch to Applications"
+        alert.informativeText = "DynamicNotch is running from a temporary location, which prevents it from receiving Accessibility and other system permissions.\n\nPlease move DynamicNotch to your Applications folder and relaunch it."
         alert.addButton(withTitle: "Open Applications Folder")
         alert.addButton(withTitle: "Quit")
         alert.alertStyle = .warning
@@ -604,7 +604,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let uuid = screen.displayUUID else { continue }
                 
                 if windows[uuid] == nil {
-                    let viewModel = BoringViewModel(screenUUID: uuid)
+                    let viewModel = NotchViewModel(screenUUID: uuid)
                     let window = createBoringNotchWindow(for: screen, with: viewModel)
 
                     windows[uuid] = window

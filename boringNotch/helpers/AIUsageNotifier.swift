@@ -1,6 +1,6 @@
 //
 //  AIUsageNotifier.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Posts AI usage alerts as system notifications.
 //
@@ -112,7 +112,7 @@ final class AIUsageNotifier: NSObject, UNUserNotificationCenterDelegate {
         else { return nil }
 
         let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("boring-aiusage-\(slot).png")
+            .appendingPathComponent("dynamicnotch-aiusage-\(slot).png")
         guard (try? png.write(to: url)) != nil else { return nil }
         return url
     }

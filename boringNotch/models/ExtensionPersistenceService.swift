@@ -1,6 +1,6 @@
 //
 //  ExtensionPersistenceService.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  One JSON array file for every stored extension, mirroring
 //  ShelfPersistenceService's approach exactly: Application Support (so it

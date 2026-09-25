@@ -1,5 +1,5 @@
 //  BrightnessManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 08/22/24.
 
@@ -44,14 +44,14 @@ final class BrightnessManager: ObservableObject {
 		if DisplayServicesAPI.setSmooth(delta) {
 			let settled = DisplayServicesAPI.get() ?? max(0, min(1, rawBrightness + delta))
 			rawBrightness = settled
-			BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(settled))
+			NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(settled))
 			publish(brightness: settled, touchDate: true)
 			return
 		}
 		// Fallback: instant absolute setter.
 		let target = max(0, min(1, rawBrightness + delta))
 		rawBrightness = target
-		BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(target))
+		NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(target))
 		if DisplayServicesAPI.set(target) {
 			publish(brightness: target, touchDate: true)
 		} else {
@@ -61,7 +61,7 @@ final class BrightnessManager: ObservableObject {
 				let xpcTarget = max(0, min(1, starting + delta))
 				if await client.setScreenBrightness(xpcTarget) {
 					publish(brightness: xpcTarget, touchDate: true)
-					BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(xpcTarget))
+					NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(xpcTarget))
 				}
 			}
 		}
@@ -170,7 +170,7 @@ final class KeyboardBacklightManager: ObservableObject {
 			} else {
 				refresh()
 			}
-			BoringViewCoordinator.shared.toggleSneakPeek(
+			NotchViewCoordinator.shared.toggleSneakPeek(
 				status: true,
 				type: .backlight,
 				value: CGFloat(target)

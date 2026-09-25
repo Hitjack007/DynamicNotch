@@ -1,6 +1,6 @@
 //
 //  WhatsNewCatalog.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2026-09-20.
 //

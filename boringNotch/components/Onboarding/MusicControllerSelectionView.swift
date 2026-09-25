@@ -1,6 +1,6 @@
 //
 //  MusicControllerSelectionView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-06-23.
 //

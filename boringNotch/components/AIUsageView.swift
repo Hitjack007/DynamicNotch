@@ -1,6 +1,6 @@
 //
 //  AIUsageView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Open-notch tab view for AI usage (Claude or ChatGPT).
 //

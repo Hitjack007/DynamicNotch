@@ -1,6 +1,6 @@
 //
 //  ChargingSlotGlyph.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Small persistent charging indicator that takes over the disposable right
 //  slot of an ambient live activity (Music/Download/AI Usage) while actively

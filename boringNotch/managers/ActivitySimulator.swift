@@ -1,6 +1,6 @@
 //
 //  ActivitySimulator.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import AppKit

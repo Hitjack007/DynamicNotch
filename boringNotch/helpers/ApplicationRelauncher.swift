@@ -1,6 +1,6 @@
 //
 //  ApplicationRelauncher.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 03/10/2025.
 //

@@ -1,6 +1,6 @@
 //
 //  SMCKeys.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  SMC key constants and data conversion helpers for Apple Silicon.
 //  Adapted from ThermalForge / agoodkind/macos-smc-fan (MIT).

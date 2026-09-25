@@ -1,6 +1,6 @@
 //
 //  TabSelectionView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024-08-25.
 //
@@ -16,7 +16,7 @@ struct TabModel: Identifiable {
 }
 
 struct TabSelectionView: View {
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @AppStorage("showThermalTab") private var showThermalTab: Bool = true
     @AppStorage("showSystemStatsTab") private var showSystemStatsTab: Bool = false
     @Default(.showAIUsageTab) private var showAIUsageTab
@@ -193,5 +193,5 @@ private struct TabScrollHandler: NSViewRepresentable {
 }
 
 #Preview {
-    BoringHeader().environmentObject(BoringViewModel())
+    NotchHeader().environmentObject(NotchViewModel())
 }

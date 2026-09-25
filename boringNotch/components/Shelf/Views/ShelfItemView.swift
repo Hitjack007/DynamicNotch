@@ -1,6 +1,6 @@
 //
 //  ShelfItemView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-09-24.
 //
@@ -13,7 +13,7 @@ import QuickLook
 
 struct ShelfItemView: View {
     let item: ShelfItem
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject var selection = ShelfSelectionModel.shared
     @StateObject private var viewModel: ShelfItemViewModel
     @EnvironmentObject private var quickLookService: QuickLookService

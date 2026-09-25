@@ -1,6 +1,6 @@
 //
 //  AudioDeviceModel.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Foundation

@@ -1,6 +1,6 @@
 //
 //  AmbientActivityOrderView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Lets the user reorder which ambient closed-notch activity
 //  (Music/Download/Face/AI Usage) wins when more than one is active. See

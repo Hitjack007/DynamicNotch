@@ -1,6 +1,6 @@
 //
 //  HoverButton.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 04.09.2024.
 //

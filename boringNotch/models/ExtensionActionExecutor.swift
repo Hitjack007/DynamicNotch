@@ -1,6 +1,6 @@
 //
 //  ExtensionActionExecutor.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Runs one ActionID against the real manager that does the work. Every
 //  action has its own named `performXxx` function (matching the
@@ -111,7 +111,7 @@ enum ExtensionActionExecutor {
         }
         let message = payload["message"]?.stringValue ?? ""
         let icon = payload["icon"]?.stringValue ?? "bolt.badge.a"
-        BoringViewCoordinator.shared.showExtensionAlert(title: title, message: message, icon: icon)
+        NotchViewCoordinator.shared.showExtensionAlert(title: title, message: message, icon: icon)
         return .ok()
     }
 
@@ -179,7 +179,7 @@ enum ExtensionActionExecutor {
         case "download": type = .download
         default: type = .battery
         }
-        BoringViewCoordinator.shared.toggleSneakPeek(status: true, type: type, value: CGFloat(value))
+        NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: type, value: CGFloat(value))
         return .ok()
     }
 
@@ -371,8 +371,8 @@ enum ExtensionActionExecutor {
             return .failed("Missing \"view\" in payload.")
         }
         switch raw.lowercased() {
-        case "home": BoringViewCoordinator.shared.currentView = .home
-        case "shelf": BoringViewCoordinator.shared.currentView = .shelf
+        case "home": NotchViewCoordinator.shared.currentView = .home
+        case "shelf": NotchViewCoordinator.shared.currentView = .shelf
         default: return .failed("Unknown view \"\(raw)\". Expected \"home\" or \"shelf\".")
         }
         return .ok()
@@ -381,8 +381,8 @@ enum ExtensionActionExecutor {
     static func notchTabCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
         guard let raw = payload["view"]?.stringValue else { return false }
         switch raw.lowercased() {
-        case "home": return BoringViewCoordinator.shared.currentView == .home
-        case "shelf": return BoringViewCoordinator.shared.currentView == .shelf
+        case "home": return NotchViewCoordinator.shared.currentView == .home
+        case "shelf": return NotchViewCoordinator.shared.currentView == .shelf
         default: return false
         }
     }

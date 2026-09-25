@@ -1,6 +1,6 @@
 //
 //  MusicManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 03/08/24.
 //
@@ -36,7 +36,7 @@ class MusicManager: ObservableObject {
     @Published var isPlaying = false
     @Published var album: String = "Self Love"
     @Published var isPlayerIdle: Bool = true
-    @Published var animations: BoringAnimations = .init()
+    @Published var animations: NotchAnimations = .init()
     @Published var avgColor: NSColor = .white
     @Published var bundleIdentifier: String? = nil
     @Published var songDuration: TimeInterval = 0
@@ -47,7 +47,7 @@ class MusicManager: ObservableObject {
     @Published var repeatMode: RepeatMode = .off
     @Published var volume: Double = 0.5
     @Published var volumeControlSupported: Bool = true
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @Published var usingAppIconForArtwork: Bool = false
     @Published var currentLyrics: String = ""
     @Published var isFetchingLyrics: Bool = false

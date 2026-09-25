@@ -1,6 +1,6 @@
 //
 //  ClipboardManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import AppKit

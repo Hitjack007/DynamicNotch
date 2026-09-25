@@ -1,6 +1,6 @@
 //
 //  SharingStateManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-10-10.
 //
@@ -10,7 +10,7 @@ import Combine
 import Foundation
 
 extension Notification.Name {
-	static let sharingDidFinish = Notification.Name("com.boringNotch.sharingDidFinish")
+	static let sharingDidFinish = Notification.Name("com.dynamicNotch.sharingDidFinish")
 }
 
 @MainActor

@@ -1,6 +1,6 @@
 //
 //  ExtensionsSettingsView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  The "Extensions" settings section: a searchable list of stored
 //  ExtensionRecords with an enable toggle, an edit button (opens

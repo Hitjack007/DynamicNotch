@@ -1,6 +1,6 @@
 //
 //  SystemStatsManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Darwin

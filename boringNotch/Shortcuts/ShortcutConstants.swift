@@ -1,6 +1,6 @@
 //
 //  Constants.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 16/08/2024.
 //

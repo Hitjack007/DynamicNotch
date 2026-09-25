@@ -1,6 +1,6 @@
 //
-//  BoringViewModel.swift
-//  boringNotch
+//  NotchViewModel.swift
+//  DynamicNotch
 //
 //  Created by Mark Greene on 04/08/24.
 //
@@ -9,11 +9,11 @@ import Combine
 import Defaults
 import SwiftUI
 
-class BoringViewModel: NSObject, ObservableObject {
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+class NotchViewModel: NSObject, ObservableObject {
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @ObservedObject var detector = FullscreenMediaDetector.shared
 
-    let animationLibrary: BoringAnimations = .init()
+    let animationLibrary: NotchAnimations = .init()
     let animation: Animation?
 
     @Published var contentType: ContentType = .normal

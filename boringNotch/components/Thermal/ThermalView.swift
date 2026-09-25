@@ -1,6 +1,6 @@
 //
 //  ThermalView.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import SwiftUI
@@ -165,7 +165,7 @@ struct ThermalView: View {
 // MARK: - Closed-notch thermal alert strip
 
 struct ThermalClosedAlert: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     let temp: Float
 
     var body: some View {

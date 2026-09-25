@@ -1,6 +1,6 @@
 //
 //  AIUsageThresholdState.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Edge-trigger bookkeeping for AI usage alerts.
 //

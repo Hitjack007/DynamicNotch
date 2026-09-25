@@ -1,6 +1,6 @@
 //
 //  TestView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 14/08/2024.
 //

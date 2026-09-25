@@ -1,6 +1,6 @@
 //
 //  AIUsageLiveActivity.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Compact closed-notch live activity for AI usage (Claude or ChatGPT).
 //  Layout: [ring OR %] [black notch center] [time remaining]
@@ -10,7 +10,7 @@ import Defaults
 import SwiftUI
 
 struct AIUsageLiveActivity: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject private var claudeManager = ClaudeUsageManager.shared
     @ObservedObject private var chatgptManager = ChatGPTUsageManager.shared
     @ObservedObject private var batteryModel = BatteryStatusViewModel.shared

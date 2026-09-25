@@ -1,6 +1,6 @@
 //
 //  ExtensionClosedAlert.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Generic closed-notch banner for the `notification.showInApp` action —
 //  same visual shape as ThermalClosedAlert (components/Thermal/ThermalView.swift),
@@ -10,7 +10,7 @@
 import SwiftUI
 
 struct ExtensionClosedAlert: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     let icon: String
     let title: String
     let message: String

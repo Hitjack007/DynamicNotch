@@ -1,6 +1,6 @@
 //
 //  ThermalManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Foundation
@@ -315,6 +315,6 @@ final class ThermalManager: ObservableObject {
         guard maxTemp >= threshold else { return }
         if let last = lastAlertDate, Date().timeIntervalSince(last) < 60 { return }
         lastAlertDate = Date()
-        BoringViewCoordinator.shared.showThermalAlert(temp: maxTemp)
+        NotchViewCoordinator.shared.showThermalAlert(temp: maxTemp)
     }
 }

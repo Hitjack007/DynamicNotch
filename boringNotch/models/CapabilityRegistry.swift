@@ -1,6 +1,6 @@
 //
 //  CapabilityRegistry.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Single source of truth for every trigger and action the extensions system
 //  supports. Add a new capability by adding one case to `TriggerID`/`ActionID`

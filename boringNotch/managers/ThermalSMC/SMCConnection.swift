@@ -1,6 +1,6 @@
 //
 //  SMCConnection.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Low-level interface to Apple's System Management Controller via IOKit.
 //  Adapted from ThermalForge / agoodkind/macos-smc-fan (MIT).

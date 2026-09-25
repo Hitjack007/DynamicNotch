@@ -1,6 +1,6 @@
 //
 //  OnboardingView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-06-23.
 //
@@ -220,7 +220,7 @@ struct OnboardingView: View {
                 DisplaySetupView(
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
-                            BoringViewCoordinator.shared.firstLaunch = false
+                            NotchViewCoordinator.shared.firstLaunch = false
                             step = .extensionsHighlight
                         }
                     }

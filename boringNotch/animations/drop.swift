@@ -1,6 +1,6 @@
 //
 //  drop.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on  04/08/24.
 //
@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 
-public class BoringAnimations {
+public class NotchAnimations {
     @Published var notchStyle: Style = .notch
     
     init() {

@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 07/08/2024.
 //
@@ -158,8 +158,8 @@ struct SettingsView: View {
 }
 
 struct GeneralSettings: View {
-    @EnvironmentObject var vm: BoringViewModel
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @EnvironmentObject var vm: NotchViewModel
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
 
     @Default(.mirrorShape) var mirrorShape
     @Default(.showEmojis) var showEmojis
@@ -420,12 +420,12 @@ struct Downloads: View {
 }
 
 struct HUD: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @Default(.inlineHUD) var inlineHUD
     @Default(.enableGradient) var enableGradient
     @Default(.optionKeyAction) var optionKeyAction
     @Default(.hudReplacement) var hudReplacement
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @State private var accessibilityAuthorized = false
     @State private var showHUDCustomizer = false
 
@@ -567,7 +567,7 @@ struct HUD: View {
 struct Media: View {
     @Default(.waitInterval) var waitInterval
     @Default(.mediaController) var mediaController
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @Default(.hideNotchOption) var hideNotchOption
     @Default(.enableSneakPeek) private var enableSneakPeek
     @Default(.sneakPeekStyles) var sneakPeekStyles
@@ -1241,7 +1241,7 @@ struct Shelf: View {
     var body: some View {
         Form {
             Section {
-                Defaults.Toggle(key: .boringShelf) {
+                Defaults.Toggle(key: .shelfEnabled) {
                     Text("Enable shelf")
                 }
                 Defaults.Toggle(key: .openShelfByDefault) {
@@ -1509,7 +1509,7 @@ struct Shelf: View {
 //}
 
 struct Appearance: View {
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @Default(.mirrorShape) var mirrorShape
     @Default(.sliderColor) var sliderColor
     @Default(.idleNotchLeftWidget) var idleNotchLeftWidget
@@ -1601,7 +1601,7 @@ struct Appearance: View {
 struct DisplaysSettings: View {
     @State private var screens: [(uuid: String, name: String)] = []
     @State private var selectedUUID: String = ""
-    @ObservedObject private var coordinator = BoringViewCoordinator.shared
+    @ObservedObject private var coordinator = NotchViewCoordinator.shared
     @Default(.showOnAllDisplays) var showOnAllDisplays
     @Default(.automaticallySwitchDisplay) var automaticallySwitchDisplay
 
@@ -2084,7 +2084,7 @@ struct HUDCustomizerSheet: View {
     @Default(.hudBrightness) var hudBrightness
     @Default(.hudBacklight) var hudBacklight
     // TODO: Add "Microphone Mute" toggle here (using Defaults[.hudMic]) once mic mute
-    // detection is wired up — see sneakPeekEvent in BoringViewCoordinator.swift.
+    // detection is wired up — see sneakPeekEvent in NotchViewCoordinator.swift.
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -2299,7 +2299,7 @@ struct ThermalSettings: View {
                 Text("Fan Curve")
             } footer: {
                 if hasFans {
-                    Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when boring.notch quits.")
+                    Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when DynamicNotch quits.")
                 }
             }
             .disabled(!showThermalTab)

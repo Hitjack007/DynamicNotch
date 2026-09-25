@@ -1,6 +1,6 @@
 //
 //  KeychainHelper.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Foundation

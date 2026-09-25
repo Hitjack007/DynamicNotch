@@ -1,6 +1,6 @@
 //
 //  ClaudeUsageManager.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import Defaults

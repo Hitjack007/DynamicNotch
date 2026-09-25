@@ -1,6 +1,6 @@
 //
 //  TemporaryFileStorageService.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-09-24.
 //

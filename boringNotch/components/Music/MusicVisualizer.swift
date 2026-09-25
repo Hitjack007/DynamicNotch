@@ -1,6 +1,6 @@
 //
 //  MusicVisualizer.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 02/08/24.
 //

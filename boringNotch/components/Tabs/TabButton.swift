@@ -1,6 +1,6 @@
 //
 //  TabButton.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024-08-24.
 //

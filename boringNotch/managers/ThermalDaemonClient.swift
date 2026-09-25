@@ -1,6 +1,6 @@
 //
 //  ThermalDaemonClient.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Thin client for the BoringNotchThermalDaemon Unix-socket IPC.
 //  Unix domain socket calls to a local daemon complete in < 2ms, so they

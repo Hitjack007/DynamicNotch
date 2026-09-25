@@ -1,6 +1,6 @@
 //
 //  SoftwareUpdater.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 09/08/2024.
 //

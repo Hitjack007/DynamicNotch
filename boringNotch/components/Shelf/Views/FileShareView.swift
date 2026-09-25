@@ -1,6 +1,6 @@
 //
 //  FileShareView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-09-24.
 //
@@ -11,7 +11,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct FileShareView: View {
-    @EnvironmentObject private var vm: BoringViewModel
+    @EnvironmentObject private var vm: NotchViewModel
     @StateObject private var quickShare = QuickShareService.shared
     @Default(.quickShareProvider) var quickShareProvider: String
 

@@ -1,6 +1,6 @@
 //
 //  FanCurveEditorView.swift
-//  boringNotch
+//  DynamicNotch
 //
 
 import SwiftUI

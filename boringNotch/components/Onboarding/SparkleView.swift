@@ -1,6 +1,6 @@
 //
 //  SparkleView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024. 09. 26..
 //

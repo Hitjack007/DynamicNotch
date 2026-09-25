@@ -1,6 +1,6 @@
 //
 //  ShelfStateViewModel.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-10-09.
 

@@ -1,6 +1,6 @@
 //
 //  ExtensionEditorView.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Manual editing surface for one extension: name/summary fields plus a raw
 //  JSON editor for its rules. This is intentionally the only way to author

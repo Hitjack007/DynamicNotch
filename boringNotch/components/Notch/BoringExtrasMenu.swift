@@ -1,13 +1,13 @@
 //
-//  BoringExtrasMenu.swift
-//  boringNotch
+//  NotchExtrasMenu.swift
+//  DynamicNotch
 //
 //  Created by Mark Greene on 04/08/24.
 //
 
 import SwiftUI
 
-struct BoringLargeButtons: View {
+struct NotchLargeButtons: View {
     var action: () -> Void
     var icon: Image
     var title: String
@@ -27,8 +27,8 @@ struct BoringLargeButtons: View {
     }
 }
 
-struct BoringExtrasMenu : View {
-    @ObservedObject var vm: BoringViewModel
+struct NotchExtrasMenu : View {
+    @ObservedObject var vm: NotchViewModel
     
     var body: some View {
         VStack{
@@ -41,9 +41,9 @@ struct BoringExtrasMenu : View {
     }
     
     var github: some View {
-        BoringLargeButtons(
+        NotchLargeButtons(
             action: {
-                if let url = URL(string: "https://github.com/TheBoredTeam/boring.notch") {
+                if let url = URL(string: "https://github.com/Hitjack007/DynamicNotch") {
                     NSWorkspace.shared.open(url)
                 }
             },
@@ -71,7 +71,7 @@ struct BoringExtrasMenu : View {
     }
     
     var hide: some View {
-        BoringLargeButtons(
+        NotchLargeButtons(
             action: {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     //vm.openMusic()
@@ -83,7 +83,7 @@ struct BoringExtrasMenu : View {
     }
     
     var close: some View {
-        BoringLargeButtons(
+        NotchLargeButtons(
             action: {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -99,5 +99,5 @@ struct BoringExtrasMenu : View {
 
 
 #Preview {
-    BoringExtrasMenu(vm: .init())
+    NotchExtrasMenu(vm: .init())
 }

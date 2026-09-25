@@ -1,13 +1,13 @@
 //
-//  BoringNotchWindow.swift
-//  boringNotch
+//  DynamicNotchWindow.swift
+//  DynamicNotch
 //
 //  Created by Mark Greene on 06/08/24.
 //
 
 import Cocoa
 
-class BoringNotchWindow: NSPanel {
+class DynamicNotchWindow: NSPanel {
     override init(
         contentRect: NSRect,
         styleMask: NSWindow.StyleMask,

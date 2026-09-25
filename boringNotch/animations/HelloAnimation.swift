@@ -1,6 +1,6 @@
 //
 //  HelloAnimation.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 08/08/24.
 //

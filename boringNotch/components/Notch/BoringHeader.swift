@@ -1,6 +1,6 @@
 //
-//  BoringHeader.swift
-//  boringNotch
+//  NotchHeader.swift
+//  DynamicNotch
 //
 //  Created by Mark Greene on 04/08/24.
 //
@@ -8,16 +8,16 @@
 import Defaults
 import SwiftUI
 
-struct BoringHeader: View {
-    @EnvironmentObject var vm: BoringViewModel
+struct NotchHeader: View {
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
-    @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @ObservedObject var coordinator = NotchViewCoordinator.shared
     @StateObject var tvm = ShelfStateViewModel.shared
     @ObservedObject var caffeineManager = CaffeineManager.shared
     var body: some View {
         HStack(spacing: 0) {
             HStack {
-                if (!tvm.isEmpty || coordinator.alwaysShowTabs) && Defaults[.boringShelf] {
+                if (!tvm.isEmpty || coordinator.alwaysShowTabs) && Defaults[.shelfEnabled] {
                     TabSelectionView()
                 } else if vm.notchState == .open {
                     EmptyView()
@@ -96,7 +96,7 @@ struct BoringHeader: View {
                             .buttonStyle(PlainButtonStyle())
                         }
                         if Defaults[.showBatteryIndicator] {
-                            BoringBatteryView(
+                            NotchBatteryView(
                                 batteryWidth: 30,
                                 isCharging: batteryModel.isCharging,
                                 isInLowPowerMode: batteryModel.isInLowPowerMode,
@@ -131,5 +131,5 @@ struct BoringHeader: View {
 }
 
 #Preview {
-    BoringHeader().environmentObject(BoringViewModel())
+    NotchHeader().environmentObject(NotchViewModel())
 }

@@ -1,6 +1,6 @@
 //
 //  AppleMusicController.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2025-03-29.
 //

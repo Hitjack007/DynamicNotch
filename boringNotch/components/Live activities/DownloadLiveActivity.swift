@@ -2,7 +2,7 @@ import Defaults
 import SwiftUI
 
 struct DownloadLiveActivity: View {
-    @EnvironmentObject var vm: BoringViewModel
+    @EnvironmentObject var vm: NotchViewModel
     @ObservedObject private var downloadManager = DownloadManager.shared
     @ObservedObject private var batteryModel = BatteryStatusViewModel.shared
     @State private var spinAngle: Double = 0

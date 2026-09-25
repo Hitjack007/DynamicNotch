@@ -1,6 +1,6 @@
 //
 //  Constants.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 2024. 10. 17..
 //
@@ -221,7 +221,7 @@ extension Defaults.Keys {
     // MARK: General
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
-    // Same UserDefaults key as BoringViewCoordinator's `@AppStorage("musicLiveActivityEnabled")`
+    // Same UserDefaults key as NotchViewCoordinator's `@AppStorage("musicLiveActivityEnabled")`
     // so both APIs read/write one persisted value — this is the global source of truth
     // for the primary display's music live activity.
     static let musicLiveActivityEnabled = Key<Bool>("musicLiveActivityEnabled", default: true)
@@ -314,7 +314,7 @@ extension Defaults.Keys {
     static let hudBacklight = Key<Bool>("hudBacklight", default: true)
     // hudMic is dormant — mic detection is not yet wired up. Keep the key so the
     // preference persists once the feature is implemented (see sneakPeekEvent in
-    // BoringViewCoordinator.swift for where to add the observer).
+    // NotchViewCoordinator.swift for where to add the observer).
     static let hudMic = Key<Bool>("hudMic", default: true)
     static let inlineHUD = Key<Bool>("inlineHUD", default: false)
     static let enableGradient = Key<Bool>("enableGradient", default: false)
@@ -327,7 +327,8 @@ extension Defaults.Keys {
     static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
     
     // MARK: Shelf
-    static let boringShelf = Key<Bool>("boringShelf", default: true)
+    // Raw Defaults key stays "boringShelf" so existing users' saved preference isn't reset.
+    static let shelfEnabled = Key<Bool>("boringShelf", default: true)
     static let openShelfByDefault = Key<Bool>("openShelfByDefault", default: true)
     static let shelfTapToOpen = Key<Bool>("shelfTapToOpen", default: true)
     static let quickShareProvider = Key<String>("quickShareProvider", default: QuickShareProvider.defaultProvider.id)

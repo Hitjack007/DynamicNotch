@@ -1,6 +1,6 @@
 //
 //  ExtensionEventBus.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Subscribes to every existing manager's own publishers/notifications and
 //  normalizes them into ExtensionTriggerEvent, one function per TriggerID

@@ -1,6 +1,6 @@
 //
 //  PanGesture.swift
-//  boringNotch
+//  DynamicNotch
 //
 //  Created by Mark Greene on 21/08/2024.
 //
