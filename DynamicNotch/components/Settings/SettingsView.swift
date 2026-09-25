@@ -2143,6 +2143,8 @@ struct ThermalSettings: View {
     @Default(.fanCurvePoints) var fanCurvePoints
     @Default(.fanCurvePreset) var fanCurvePreset
     @Default(.thermalNotchPresets) var thermalNotchPresets
+    @Default(.fanFloorEnabled) var fanFloorEnabled
+    @Default(.fanFloorLevel) var fanFloorLevel
 
     @State private var daemonAvailable: Bool = false
     @State private var hasFans: Bool = true
@@ -2244,6 +2246,27 @@ struct ThermalSettings: View {
                         Text(err)
                             .font(.caption)
                             .foregroundStyle(.red)
+                    }
+
+                    if fanFloorEnabled {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Fan floor active: \(Int(fanFloorLevel * 100))%")
+                                    .font(.subheadline)
+                                Text("Set by an extension. The curve can't go below this until you disable it here.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button("Disable") {
+                                fanFloorEnabled = false
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                        }
+                        .padding(.vertical, 2)
                     }
 
                     Picker("Fan Curve", selection: $fanCurvePreset) {

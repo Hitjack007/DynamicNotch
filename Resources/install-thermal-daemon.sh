@@ -172,7 +172,7 @@ private final class RampController {
     private let maxStep: Float = 225     // 450 RPM/s × 0.5 s tick
     private let tickInterval: TimeInterval = 0.5
     private let upDelay: TimeInterval = 2.0
-    private let downDelay: TimeInterval = 5.0
+    private let downDelay: TimeInterval = 3.0
 
     init(fans: FanControl) {
         self.fans = fans
