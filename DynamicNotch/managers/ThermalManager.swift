@@ -226,11 +226,11 @@ final class ThermalManager: ObservableObject {
         guard abs(fraction - lastAppliedFraction) >= 0.02 else { return }
         lastAppliedFraction = fraction
 
-        if fraction <= 0 {
-            resetToAuto()
-        } else {
-            applyFraction(fraction)
-        }
+        // fraction == 0 is a real curve position (temp at/below the lowest breakpoint,
+        // fan pinned at its floor) — not "no one wants control." Route it through
+        // applyFraction() like every other fraction so it ramps down instead of
+        // snapping straight to Apple's automatic control via resetToAuto().
+        applyFraction(fraction)
     }
 
     private func evaluateCurve(_ pts: [FanCurvePoint], at temp: Float) -> Float {
