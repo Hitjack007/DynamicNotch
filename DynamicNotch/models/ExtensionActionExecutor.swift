@@ -399,7 +399,7 @@ enum ExtensionActionExecutor {
             return .failed("Missing \"level\" in payload.")
         }
         Defaults[.fanFloorEnabled] = true
-        Defaults[.fanFloorLevel] = level
+        Defaults[.fanFloorLevel] = min(max(level, 0), 1)
         return .ok()
     }
 

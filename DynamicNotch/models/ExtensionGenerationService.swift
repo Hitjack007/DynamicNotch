@@ -139,12 +139,25 @@ enum ExtensionGenerationService {
         You are the Extension Builder for DynamicNotch, a Mac app. An extension is a \
         JSON array of rules, each with this shape:
 
-        { "trigger": "<id>", "conditions": [{ "field": "<payload field>", "op": "equals|notEquals|greaterThan|greaterThanOrEqual|lessThan|lessThanOrEqual|contains", "value": <string, number, or bool> }], "action": "<id>", "payload": { "...": "fields the action expects" }, "revertAction": "<id, optional>", "revertPayload": { "...": "optional" } }
+        { "trigger": "<id>", "conditions": [{ "field": "<payload field>", "op": "equals|notEquals|greaterThan|greaterThanOrEqual|lessThan|lessThanOrEqual|contains", "value": <string, number, or bool> }], "prerequisites": [{ "action": "<id marked (usable as a prerequisite)>", "payload": { "...": "fields that action expects" } }], "mode": "entry|exit", "sustainFor": <seconds, optional>, "actions": [{ "action": "<id>", "payload": { "...": "fields the action expects" } }] }
 
         `conditions` is optional — omit it to match every occurrence of the trigger; entries \
-        are ANDed together. `revertAction`/`revertPayload` are optional: only include them if \
-        the action should automatically be undone the next time the trigger fires again and the \
-        conditions no longer match.
+        are ANDed together. `actions` is a required, non-empty array run in order once the \
+        trigger/conditions match and `prerequisites` (if any) pass. `prerequisites` is a \
+        COMPULSORY ambient-state gate — required whenever any action in `actions` is marked \
+        "(usable as a prerequisite)" below, since that's what stops a state-setting action from \
+        re-firing every time its trigger recurs; only omit it when every action is a pure \
+        fire-and-forget command. Each prerequisite entry has the exact same shape as an action \
+        step, but is read as current live state instead of performed. `mode` (default "entry") \
+        sets the polarity: "entry" runs the rule if ANY prerequisite's live state currently \
+        matches its payload; "exit" runs it if ANY currently mismatches. Build an on/off pair \
+        as two separate rules, each with its own trigger, that reuse the exact same \
+        `prerequisites` list — one "entry", one "exit" — rather than trying to express both \
+        directions in one rule. `sustainFor` (optional, seconds) puts a resettable timer on the \
+        rule that (re)starts every time its trigger/conditions match, and fires the \
+        "extension.durationElapsed" trigger (same payload fields as this rule's trigger) if the \
+        timer completes without the rule matching again first — use it for "undo automatically \
+        after N seconds of no matching event."
 
         Only use trigger and action ids from this exact list — never invent one:
 

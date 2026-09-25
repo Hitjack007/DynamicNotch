@@ -2728,7 +2728,10 @@ struct AIUsageSettings: View {
     }
 
     private func checkFullDiskAccess() -> Bool {
-        let path = NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db"
+        // The per-user TCC.db (~/Library/Application Support/com.apple.TCC/TCC.db) no longer
+        // exists on newer macOS versions, which made this check always report "not granted".
+        // The system-wide db is still present and still gated behind Full Disk Access.
+        let path = "/Library/Application Support/com.apple.TCC/TCC.db"
         return FileManager.default.isReadableFile(atPath: path)
     }
 
