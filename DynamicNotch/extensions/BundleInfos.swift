@@ -28,7 +28,7 @@ extension Bundle {
     }
 }
 
-struct BundleAppIcon: View {
+struct AppIconBadgeView: View {
     var body: some View {
         Bundle.main.iconFileName
             .flatMap { NSImage(named: $0) }
@@ -37,9 +37,5 @@ struct BundleAppIcon: View {
 }
 
 func isExtensionRunning(_ bundleID: String) -> Bool {
-    if let _ = NSWorkspace.shared.runningApplications.first(where: {$0.bundleIdentifier == bundleID}) {
-        return true
-    }
-    
-    return false
+    NSWorkspace.shared.runningApplications.contains(where: { $0.bundleIdentifier == bundleID })
 }
