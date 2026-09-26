@@ -12,8 +12,7 @@ jobs:
   review:
     if: >
       github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '/review') &&
-      github.actor == github.repository_owner
+      contains(github.event.comment.body, '/review')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -22,18 +21,33 @@ jobs:
       issues: write
       id-token: write
       actions: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+      PR_NUMBER: ${{ github.event.issue.number }}
     steps:
+      - name: Reject non-owner
+        if: github.actor != github.repository_owner
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Only the owner of this repository can use /review."
+          exit 1
+
+      - name: Check secret is configured
+        if: env.CLAUDE_CODE_OAUTH_TOKEN == ''
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Error: cannot connect — the CLAUDE_CODE_OAUTH_TOKEN secret may need refreshing."
+          exit 1
+
       - name: Checkout main
         uses: actions/checkout@v6
         with:
           fetch-depth: 1
 
       - name: Run Claude review
+        id: review
         uses: anthropics/claude-code-action@v1
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --max-turns 8
             --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
@@ -58,7 +72,12 @@ jobs:
               the change is safe — covers real bugs, bad architecture, redundant or
               duplicate functionality, high complexity, or genuine uncertainty
               about intent. Slightly longer than the MERGE case: explain why, and
-              specifically what could break.
+              specifically what could break. This is also the default whenever a
+              PR bundles unrelated changes together behind a vague or absent
+              rationale (e.g. an unnecessary rename shipped alongside an unrelated
+              bugfix, described only as "cleanup") — treat that bundling itself as
+              a reason to inspect, even if every individual piece of the diff is
+              technically safe on its own.
             - CLOSE: reserve this ONLY for a direct violation of this repo's
               AI_AGENTS.md contributor policy, a deliberate attempt to obfuscate
               the code or add needless complexity, or code that looks like it
@@ -74,3 +93,8 @@ jobs:
 
             Do not add a header, name, emoji, or any section beyond the
             recommendation line and its paragraph. Keep the whole comment concise.
+
+      - name: Report failure
+        if: failure() && steps.review.outcome == 'failure'
+        run: |
+          gh pr comment "$PR_NUMBER" --body "Error: this review could not be completed. If this keeps happening, check whether the CLAUDE_CODE_OAUTH_TOKEN secret has expired."
