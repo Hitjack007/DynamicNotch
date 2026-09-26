@@ -1,0 +1,76 @@
+name: PR Review (/review)
+
+on:
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: pr-review-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  review:
+    if: >
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '/review') &&
+      github.actor == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude review
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: |
+            --max-turns 8
+            --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"
+          prompt: |
+            Review pull request #${{ github.event.issue.number }} in this repository.
+            Read the diff with `gh pr diff ${{ github.event.issue.number }}` and the
+            title/body with `gh pr view ${{ github.event.issue.number }}`.
+
+            Use the PR title and body as context for *why* the change was made. If
+            that context doesn't make the intent clear, default to
+            "PULL AND INSPECT LOCALLY" rather than assuming good intent.
+
+            Post exactly one comment on the PR with
+            `gh pr comment ${{ github.event.issue.number }} --body "..."`,
+            containing only:
+
+            Recommendation: <MERGE|PULL AND INSPECT LOCALLY|CLOSE>
+
+            Then one paragraph, chosen by the recommendation:
+            - MERGE: short paragraph on what the change does and why it's safe.
+            - PULL AND INSPECT LOCALLY: the default whenever you're not confident
+              the change is safe — covers real bugs, bad architecture, redundant or
+              duplicate functionality, high complexity, or genuine uncertainty
+              about intent. Slightly longer than the MERGE case: explain why, and
+              specifically what could break.
+            - CLOSE: reserve this ONLY for a direct violation of this repo's
+              AI_AGENTS.md contributor policy, a deliberate attempt to obfuscate
+              the code or add needless complexity, or code that looks like it
+              smuggles in a security issue (e.g. a backdoor, credential
+              exfiltration, arbitrary code execution). Ordinary bugs or a bad
+              approach are NOT grounds for CLOSE — use PULL AND INSPECT LOCALLY
+              for those instead.
+
+            Give extra scrutiny to changes touching cookie readers
+            (SafariCookieReader.swift, ChromeCookieReader.swift),
+            KeychainHelper.swift, entitlements files, code signing, or release
+            scripts, regardless of which recommendation you land on.
+
+            Do not add a header, name, emoji, or any section beyond the
+            recommendation line and its paragraph. Keep the whole comment concise.
