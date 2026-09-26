@@ -29,6 +29,7 @@ struct SafariCookieReader {
         let home = NSHomeDirectory()
         let candidates = [
             home + "/Library/Containers/com.apple.Safari/Data/Library/Cookies/Cookies.binarycookies",
+            home + "/Library/Containers/com.apple.Safari.SandboxBroker/Data/Library/Cookies/Cookies.binarycookies",
             home + "/Library/Cookies/Cookies.binarycookies",
         ]
         for path in candidates {
