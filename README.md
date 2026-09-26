@@ -8,16 +8,19 @@ Make your MacBook's notch actually useful. DynamicNotch turns the notch into a l
 
 - **Dynamic notch sizing** — expands and contracts based on what's happening on screen
 - **Responsive spectrogram** — real-time audio visualizer driven by live capture
-- **Fan & thermal monitoring** — live fan speed and CPU temperature
+- **Fan & thermal monitoring** — live fan speed and CPU temperature, with a custom fan curve editor
 - **CPU usage** — at a glance, always visible
 - **Caffeine** — prevent sleep directly from the notch
 - **Custom system HUDs** — replaces macOS volume, brightness, and keyboard backlight overlays
 - **Music playback** — album art, controls, and now-playing info
 - **Calendar & Reminders** — upcoming events in the notch
 - **File shelf** — drag files in, AirDrop them out
+- **Downloads** — track in-progress browser downloads from the notch
 - **Mirror** — quick webcam view
 - **Battery indicator** — charging status and percentage
 - **Gesture controls** — swipe to open/close
+- **Extensions** — describe a small automation in plain English (e.g. turn Caffeine on when Xcode is frontmost) and DynamicNotch runs it every time, no code required
+- **AI Usage** — tracks your Claude and ChatGPT usage and surfaces an alert in the notch as you approach your limit
 
 ---
 
