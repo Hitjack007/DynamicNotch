@@ -156,6 +156,40 @@ struct ExtensionRule: Codable, Identifiable, Equatable {
         guard event.id == trigger else { return false }
         return conditions.allSatisfy { $0.isSatisfied(by: event.payload) }
     }
+
+    /// Actions in `actions` that are `prerequisiteEligible` but not
+    /// referenced in `prerequisites` — the exact condition
+    /// `CapabilityRegistry.issues(in:)` flags, exposed here too so the
+    /// picker rule builder can render the same inline nudge without
+    /// re-deriving or string-parsing it back out of a generated message.
+    ///
+    /// Exempts `.durationElapsed`: unlike ordinary triggers, it only fires
+    /// once per armed `sustainFor` timer — it's the "exit" signal itself
+    /// (see TIPS), not a frequently-recurring event a gate needs to guard
+    /// against, so requiring one here would be pure friction with nothing
+    /// to gate against.
+    var actionsMissingPrerequisiteGate: [ActionID] {
+        guard trigger != .durationElapsed else { return [] }
+        let gated = Set(prerequisites.map(\.action))
+        return actions.map(\.action).filter { CapabilityRegistry.action($0).prerequisiteEligible && !gated.contains($0) }
+    }
+}
+
+extension MatchCondition.Operator {
+    /// Plain-language phrasing for the condition builder's operator picker —
+    /// reads as part of a sentence ("field" + this + "value"), e.g. "name
+    /// contains Xcode" or "level is at least 50".
+    var displayName: String {
+        switch self {
+        case .equals: return "is"
+        case .notEquals: return "isn't"
+        case .greaterThan: return "is greater than"
+        case .greaterThanOrEqual: return "is at least"
+        case .lessThan: return "is less than"
+        case .lessThanOrEqual: return "is at most"
+        case .contains: return "contains"
+        }
+    }
 }
 
 struct ExtensionRecord: Codable, Identifiable, Equatable {
@@ -165,4 +199,47 @@ struct ExtensionRecord: Codable, Identifiable, Equatable {
     var enabled: Bool = true
     var rules: [ExtensionRule] = []
     var createdAt: Date = Date()
+}
+
+/// A stored extension `ExtensionPersistenceService` couldn't decode — kept
+/// instead of dropped, so a trigger/action id renamed or removed in a later
+/// release (or a bad hand edit) doesn't silently delete the extension the
+/// next time anything else is saved. `rawJSON` is written back to disk
+/// unchanged until the person fixes or deletes it.
+struct UnreadableExtension: Identifiable, Equatable {
+    var id: UUID
+    /// Best-effort, read directly from the raw JSON without validation.
+    var name: String
+    var summary: String
+    /// Plain-language reason it failed to decode.
+    var reason: String
+    var rawJSON: Data
+}
+
+/// Either a normally-decoded extension or one that failed to decode.
+/// `ExtensionsManager` and the Settings UI work in terms of this instead of
+/// `ExtensionRecord` directly, so an unreadable entry stays visible — with
+/// no toggle, since it can't be dispatched — rather than vanishing.
+enum StoredExtension: Identifiable, Equatable {
+    case readable(ExtensionRecord)
+    case unreadable(UnreadableExtension)
+
+    var id: UUID {
+        switch self {
+        case .readable(let record): return record.id
+        case .unreadable(let unreadable): return unreadable.id
+        }
+    }
+
+    var name: String {
+        switch self {
+        case .readable(let record): return record.name
+        case .unreadable(let unreadable): return unreadable.name
+        }
+    }
+
+    var record: ExtensionRecord? {
+        if case .readable(let record) = self { return record }
+        return nil
+    }
 }

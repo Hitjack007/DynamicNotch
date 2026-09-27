@@ -14,6 +14,11 @@
 //  trigger, gated by the same prerequisites in the opposite polarity, so
 //  every dispatch is a fresh, stateless check against live ambient state.
 //
+//  `extensions` holds `StoredExtension`, not `ExtensionRecord` — an entry
+//  that failed to decode (see ExtensionPersistenceService) stays in the
+//  list as `.unreadable` so it's visible in Settings, but `handle(_:)` below
+//  only ever dispatches `.readable` records.
+//
 
 import Combine
 import Foundation
@@ -22,7 +27,7 @@ import Foundation
 final class ExtensionsManager: ObservableObject {
     static let shared = ExtensionsManager()
 
-    @Published private(set) var extensions: [ExtensionRecord] = []
+    @Published private(set) var extensions: [StoredExtension] = []
 
     private let store = ExtensionPersistenceService.shared
     private var eventCancellable: AnyCancellable?
@@ -50,29 +55,37 @@ final class ExtensionsManager: ObservableObject {
     // MARK: - CRUD
 
     func add(_ record: ExtensionRecord) {
-        extensions.append(record)
+        extensions.append(.readable(record))
         persist()
     }
 
+    /// Also used to save a fixed-up `.unreadable` entry: matching by id
+    /// turns it back into `.readable` in place.
     func update(_ record: ExtensionRecord) {
         guard let index = extensions.firstIndex(where: { $0.id == record.id }) else { return }
-        cancelSustainTimers(in: extensions[index])
-        extensions[index] = record
+        if case .readable(let existing) = extensions[index] {
+            cancelSustainTimers(in: existing)
+        }
+        extensions[index] = .readable(record)
         persist()
     }
 
-    func remove(_ id: ExtensionRecord.ID) {
-        if let record = extensions.first(where: { $0.id == id }) {
+    func remove(_ id: UUID) {
+        if let item = extensions.first(where: { $0.id == id }), case .readable(let record) = item {
             cancelSustainTimers(in: record)
         }
         extensions.removeAll { $0.id == id }
         persist()
     }
 
-    func setEnabled(_ id: ExtensionRecord.ID, enabled: Bool) {
-        guard let index = extensions.firstIndex(where: { $0.id == id }) else { return }
-        if !enabled { cancelSustainTimers(in: extensions[index]) }
-        extensions[index].enabled = enabled
+    /// No-ops for an unreadable entry — there's nothing to enable.
+    func setEnabled(_ id: UUID, enabled: Bool) {
+        guard let index = extensions.firstIndex(where: { $0.id == id }),
+              case .readable(var record) = extensions[index]
+        else { return }
+        if !enabled { cancelSustainTimers(in: record) }
+        record.enabled = enabled
+        extensions[index] = .readable(record)
         persist()
     }
 
@@ -98,7 +111,8 @@ final class ExtensionsManager: ObservableObject {
     // MARK: - Dispatch
 
     private func handle(_ event: ExtensionTriggerEvent) {
-        for record in extensions where record.enabled {
+        for item in extensions {
+            guard case .readable(let record) = item, record.enabled else { continue }
             for rule in record.rules where rule.trigger == event.id {
                 dispatch(rule, event: event)
             }

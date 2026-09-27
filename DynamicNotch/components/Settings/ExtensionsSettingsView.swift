@@ -7,6 +7,10 @@
 //  ExtensionEditorView for manual JSON editing), and an explicit, confirmed
 //  delete per row. "+" opens the same editor in create mode.
 //
+//  Extensions that failed to decode (see ExtensionPersistenceService) show
+//  up as their own row with a warning triangle in place of the toggle —
+//  they can't be enabled or run, only fixed or deleted.
+//
 
 import SwiftUI
 
@@ -14,11 +18,13 @@ import SwiftUI
 private enum ExtensionEditorTarget: Identifiable {
     case new
     case existing(ExtensionRecord)
+    case fix(UnreadableExtension)
 
     var id: String {
         switch self {
         case .new: return "new"
         case .existing(let record): return record.id.uuidString
+        case .fix(let unreadable): return unreadable.id.uuidString
         }
     }
 }
@@ -27,13 +33,14 @@ struct ExtensionsSettings: View {
     @ObservedObject private var manager = ExtensionsManager.shared
     @State private var searchText = ""
     @State private var editorTarget: ExtensionEditorTarget?
-    @State private var recordPendingDeletion: ExtensionRecord?
+    @State private var itemPendingDeletion: StoredExtension?
 
-    private var filteredExtensions: [ExtensionRecord] {
+    private var filteredExtensions: [StoredExtension] {
         guard !searchText.isEmpty else { return manager.extensions }
-        return manager.extensions.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText)
-                || $0.summary.localizedCaseInsensitiveContains(searchText)
+        return manager.extensions.filter { item in
+            if item.name.localizedCaseInsensitiveContains(searchText) { return true }
+            if let record = item.record { return record.summary.localizedCaseInsensitiveContains(searchText) }
+            return false
         }
     }
 
@@ -55,12 +62,21 @@ struct ExtensionsSettings: View {
                         Text("No extensions match \u{201C}\(searchText)\u{201D}.")
                             .foregroundStyle(.secondary)
                     } else {
-                        ForEach(filteredExtensions) { record in
-                            ExtensionSettingsRow(
-                                record: record,
-                                onEditRequested: { editorTarget = .existing(record) },
-                                onDeleteRequested: { recordPendingDeletion = record }
-                            )
+                        ForEach(filteredExtensions) { item in
+                            switch item {
+                            case .readable(let record):
+                                ExtensionSettingsRow(
+                                    record: record,
+                                    onEditRequested: { editorTarget = .existing(record) },
+                                    onDeleteRequested: { itemPendingDeletion = item }
+                                )
+                            case .unreadable(let unreadable):
+                                UnreadableExtensionRow(
+                                    unreadable: unreadable,
+                                    onFixRequested: { editorTarget = .fix(unreadable) },
+                                    onDeleteRequested: { itemPendingDeletion = item }
+                                )
+                            }
                         }
                     }
                 }
@@ -90,30 +106,41 @@ struct ExtensionsSettings: View {
                 ExtensionEditorView(record: record, isNew: false) { updated in
                     manager.update(updated)
                 }
+            case .fix(let unreadable):
+                ExtensionEditorView(unreadable: unreadable) { fixed in
+                    manager.update(fixed)
+                }
             }
         }
         .confirmationDialog(
-            "Delete \u{201C}\(recordPendingDeletion?.name ?? "")\u{201D}?",
+            "Delete \u{201C}\(itemPendingDeletion?.name ?? "")\u{201D}?",
             isPresented: Binding(
-                get: { recordPendingDeletion != nil },
+                get: { itemPendingDeletion != nil },
                 set: { isPresented in
-                    if !isPresented { recordPendingDeletion = nil }
+                    if !isPresented { itemPendingDeletion = nil }
                 }
             ),
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                if let record = recordPendingDeletion {
-                    manager.remove(record.id)
+                if let item = itemPendingDeletion {
+                    manager.remove(item.id)
                 }
-                recordPendingDeletion = nil
+                itemPendingDeletion = nil
             }
             Button("Cancel", role: .cancel) {
-                recordPendingDeletion = nil
+                itemPendingDeletion = nil
             }
         } message: {
-            Text("This can't be undone. Anything it turned on (like Caffeine) will be reverted first if it supports that.")
+            Text(deletionMessage)
         }
+    }
+
+    private var deletionMessage: String {
+        if let item = itemPendingDeletion, item.record != nil {
+            return "This can't be undone. Anything it turned on (like Caffeine) will be reverted first if it supports that."
+        }
+        return "This can't be undone."
     }
 }
 
@@ -159,6 +186,45 @@ private struct ExtensionSettingsRow: View {
         if !record.summary.isEmpty { return record.summary }
         if record.rules.isEmpty { return "No rules yet" }
         return "\(record.rules.count) rule\(record.rules.count == 1 ? "" : "s")"
+    }
+}
+
+/// A stored extension that failed to decode. No toggle — it can't be
+/// enabled or dispatched — just the reason it's broken and a way to fix or
+/// remove it.
+private struct UnreadableExtensionRow: View {
+    let unreadable: UnreadableExtension
+    let onFixRequested: () -> Void
+    let onDeleteRequested: () -> Void
+
+    var body: some View {
+        HStack {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .imageScale(.medium)
+                    .help(unreadable.reason)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(unreadable.name)
+                        .foregroundStyle(.secondary)
+                    Text("Can't be loaded: \(unreadable.reason)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer()
+
+            Button("Fix\u{2026}", action: onFixRequested)
+                .buttonStyle(.borderless)
+
+            Button(role: .destructive, action: onDeleteRequested) {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.borderless)
+            .help("Delete \(unreadable.name)")
+        }
     }
 }
 
