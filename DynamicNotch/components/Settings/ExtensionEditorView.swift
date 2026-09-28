@@ -373,8 +373,8 @@ struct ExtensionEditorView: View {
                 parseError = "\"\(ineligible.rawValue)\" has no readable state, so it can't be used in \"prerequisites\"."
                 return
             }
-            parsedRules = rules
             parseError = nil
+            parsedRules = rules
             safetyIssues = CapabilityRegistry.issues(in: rules)
         } catch {
             parsedRules = []
@@ -388,7 +388,15 @@ struct ExtensionEditorView: View {
     /// direction, through `validate()` above) — the two views never drift
     /// because they always resolve to the same encoded string. Also keeps
     /// `safetyIssues` current for edits that didn't go through `validate()`.
+    ///
+    /// Guarded on `parseError == nil`: `validate()` clears `parsedRules` to
+    /// `[]` on any parse failure, which is also a change `onChange` sees —
+    /// without this guard, typing through a momentarily-invalid JSON string
+    /// (deleting a bracket to paste a new rule, etc.) would round-trip
+    /// straight back through here and overwrite the in-progress text with
+    /// "[]". Only sync when the last parse actually succeeded.
     private func syncJSONFromParsedRules() {
+        guard parseError == nil else { return }
         safetyIssues = CapabilityRegistry.issues(in: parsedRules)
         guard let data = try? Self.encoder.encode(parsedRules) else { return }
         jsonText = String(data: data, encoding: .utf8) ?? jsonText
@@ -417,24 +425,19 @@ struct ExtensionEditorView: View {
     }
 
     /// Scaffolds an "exit" rule for a `requiresPairedExitRule` action that's
-    /// currently on with nothing to turn it back off — copies the on-rule's
-    /// trigger as a starting point (correct in the common on/off-same-event
-    /// pair shown throughout TIPS) and the same payload as the prerequisite
-    /// gate, but leaves the trigger picker as the one thing worth
-    /// double-checking: there's no safe way to guess whether "undo" should
-    /// really mean the same event, app quit, thermal normal, or a timer.
+    /// currently on with nothing to turn it back off — finds the rule that
+    /// turns it on and delegates to `makingExitCounterpart()`, the same
+    /// helper `addExitCounterpart` uses, so both scaffold paths reuse the
+    /// on-rule's own prerequisites instead of each rebuilding a gate from
+    /// the action's payload (which gets the entry/exit polarity backwards).
+    /// The trigger it inherits is still worth double-checking: there's no
+    /// safe way to guess whether "undo" should really mean the same event,
+    /// app quit, thermal normal, or a timer.
     private func scaffoldExitRule(for actionID: ActionID) {
-        let onPayload = parsedRules.flatMap(\.actions).first { $0.action == actionID }?.payload ?? [:]
-        let onTrigger = parsedRules.first { $0.actions.contains { $0.action == actionID } }?.trigger
-            ?? CapabilityRegistry.triggers[0].id
-        var offPayload = onPayload
-        offPayload["enabled"] = .bool(false)
-        let exitRule = ExtensionRule(
-            trigger: onTrigger,
-            actions: [ExtensionActionStep(action: actionID, payload: offPayload)],
-            prerequisites: [ExtensionActionStep(action: actionID, payload: onPayload)],
-            mode: .exit
-        )
+        guard let onRule = parsedRules.first(where: { rule in
+            rule.actions.contains { $0.action == actionID && ($0.payload["enabled"]?.boolValue ?? true) }
+        }) else { return }
+        let exitRule = onRule.makingExitCounterpart()
         parsedRules.append(exitRule)
         ruleIDPendingAutoOpen = exitRule.id
     }
@@ -763,6 +766,13 @@ private struct RuleSummaryRow: View {
                     onAction: { rule.scaffoldPrerequisite(for: actionID) }
                 )
             }
+            ForEach(rule.actionsWithRedundantPrerequisite, id: \.self) { actionID in
+                RecordLevelNudgeBanner(
+                    message: "\u{201C}\(CapabilityRegistry.action(actionID).label)\u{201D}'s gate matches its own action \u{2014} it will never run except when it's already a no-op.",
+                    actionTitle: "Fix Gate",
+                    onAction: { rule.fixRedundantPrerequisite(for: actionID) }
+                )
+            }
             ForEach(actionsNeedingExitRule, id: \.self) { actionID in
                 RecordLevelNudgeBanner(
                     message: "\u{201C}\(CapabilityRegistry.action(actionID).label)\u{201D} is turned on but nothing in this extension turns it back off.",
@@ -880,6 +890,13 @@ private struct RuleDetailEditorView: View {
             Divider()
 
             List {
+                ForEach(rule.actionsWithRedundantPrerequisite, id: \.self) { actionID in
+                    RecordLevelNudgeBanner(
+                        message: "\u{201C}\(CapabilityRegistry.action(actionID).label)\u{201D}'s gate matches its own action \u{2014} it will never run except when it's already a no-op.",
+                        actionTitle: "Fix Gate",
+                        onAction: { rule.fixRedundantPrerequisite(for: actionID) }
+                    )
+                }
                 ForEach(actionsNeedingExitRule, id: \.self) { actionID in
                     RecordLevelNudgeBanner(
                         message: "\u{201C}\(CapabilityRegistry.action(actionID).label)\u{201D} is turned on but nothing in this extension turns it back off.",
@@ -918,13 +935,6 @@ private struct RuleDetailEditorView: View {
                 }
 
                 Section {
-                    if !rule.prerequisites.isEmpty {
-                        Picker("Run", selection: $rule.mode) {
-                            Text("while this matches").tag(PrerequisiteMode.entry)
-                            Text("while this doesn't match").tag(PrerequisiteMode.exit)
-                        }
-                        .pickerStyle(.segmented)
-                    }
                     ForEach(rule.prerequisites.indices.map { RuleRowID(section: "prerequisite", index: $0) }, id: \.self) { rowID in
                         PrerequisiteRow(
                             step: $rule.prerequisites[rowID.index],

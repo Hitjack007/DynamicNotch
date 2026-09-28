@@ -34,11 +34,12 @@ struct CapabilityRegistryTests {
         }
     }
 
-    @Test("prerequisiteEligible agrees with the six ids ExtensionActionExecutor.currentlyMatches hard-codes as non-eligible")
+    @Test("prerequisiteEligible agrees with the ids ExtensionActionExecutor.currentlyMatches hard-codes as non-eligible")
     func prerequisiteEligibilityMatchesExecutorSwitch() {
         let nonEligibleInExecutor: Set<ActionID> = [
             .notificationRequest, .notificationShowInApp, .sneakPeekShow,
             .mediaNextTrack, .mediaPreviousTrack, .shortcutRun,
+            .audioOutputSet, .volumeSet, .brightnessSet, .clipboardSetText,
         ]
         for descriptor in CapabilityRegistry.actions {
             let isEligible = descriptor.prerequisiteEligible

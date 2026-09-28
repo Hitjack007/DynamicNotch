@@ -63,16 +63,13 @@ enum ExtensionActionExecutor {
         case .hudReplacementSet: return hudReplacementCurrentlyMatches(payload)
         case .aiUsageProviderSet: return aiUsageProviderCurrentlyMatches(payload)
         case .notchSetTab: return notchTabCurrentlyMatches(payload)
-        case .audioOutputSet: return audioOutputCurrentlyMatches(payload)
-        case .volumeSet: return volumeCurrentlyMatches(payload)
-        case .brightnessSet: return brightnessCurrentlyMatches(payload)
-        case .clipboardSetText: return clipboardCurrentlyMatches(payload)
         case .appOpen: return appOpenCurrentlyMatches(payload)
         case .appQuit: return appQuitCurrentlyMatches(payload)
         case .mediaPlayPause: return mediaPlayPauseCurrentlyMatches(payload)
         case .fanFloorSet: return fanFloorCurrentlyMatches(payload)
         case .notificationRequest, .notificationShowInApp, .sneakPeekShow,
-             .mediaNextTrack, .mediaPreviousTrack, .shortcutRun:
+             .mediaNextTrack, .mediaPreviousTrack, .shortcutRun,
+             .audioOutputSet, .volumeSet, .brightnessSet, .clipboardSetText:
             return false
         }
     }
@@ -157,15 +154,6 @@ enum ExtensionActionExecutor {
         return .failed("No output device matching \"\(name)\".")
     }
 
-    static func audioOutputCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
-        guard let name = payload["deviceName"]?.stringValue else { return false }
-        let manager = AudioOutputManager.shared
-        guard let current = manager.outputDevices.first(where: { $0.id == manager.currentDeviceID }) else {
-            return false
-        }
-        return current.name.localizedCaseInsensitiveContains(name)
-    }
-
     // MARK: - Sneak peek
 
     static func performSneakPeekShow(_ payload: [String: ExtensionValue]) -> ExtensionActionResult {
@@ -193,22 +181,12 @@ enum ExtensionActionExecutor {
         return .ok()
     }
 
-    static func volumeCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
-        guard let level = payload["level"]?.doubleValue else { return false }
-        return abs(Double(VolumeManager.shared.rawVolume) - level) < 0.01
-    }
-
     static func performBrightnessSet(_ payload: [String: ExtensionValue]) -> ExtensionActionResult {
         guard let level = payload["level"]?.doubleValue else {
             return .failed("Missing \"level\" in payload.")
         }
         BrightnessManager.shared.setAbsolute(value: Float(level))
         return .ok()
-    }
-
-    static func brightnessCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
-        guard let level = payload["level"]?.doubleValue else { return false }
-        return abs(Double(BrightnessManager.shared.rawBrightness) - level) < 0.01
     }
 
     // MARK: - Apps
@@ -225,7 +203,9 @@ enum ExtensionActionExecutor {
 
     static func appOpenCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
         guard let bundleId = payload["bundleIdentifier"]?.stringValue else { return false }
-        return !NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).isEmpty
+        let expectedRunning = payload["running"]?.boolValue ?? true
+        let isRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).isEmpty
+        return isRunning == expectedRunning
     }
 
     static func performAppQuit(_ payload: [String: ExtensionValue]) -> ExtensionActionResult {
@@ -242,7 +222,9 @@ enum ExtensionActionExecutor {
 
     static func appQuitCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
         guard let bundleId = payload["bundleIdentifier"]?.stringValue else { return false }
-        return NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).isEmpty
+        let expectedRunning = payload["running"]?.boolValue ?? false
+        let isRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).isEmpty
+        return isRunning == expectedRunning
     }
 
     // MARK: - Clipboard
@@ -255,11 +237,6 @@ enum ExtensionActionExecutor {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
         return .ok()
-    }
-
-    static func clipboardCurrentlyMatches(_ payload: [String: ExtensionValue]) -> Bool {
-        guard let text = payload["text"]?.stringValue else { return false }
-        return NSPasteboard.general.string(forType: .string) == text
     }
 
     // MARK: - Webcam
@@ -394,6 +371,9 @@ enum ExtensionActionExecutor {
         guard enabled else {
             Defaults[.fanFloorEnabled] = false
             return .ok()
+        }
+        guard ThermalManager.shared.isAvailable else {
+            return .failed("Fan control isn't available on this Mac (or the Thermal tab is off).")
         }
         guard let level = payload["level"]?.doubleValue else {
             return .failed("Missing \"level\" in payload.")

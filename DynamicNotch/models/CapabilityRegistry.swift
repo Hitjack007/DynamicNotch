@@ -92,13 +92,20 @@ struct PayloadFieldDescriptor: Sendable {
     /// continuous. Only set where snapping actually matters (fan speed);
     /// most range fields stay continuous.
     let step: Double?
+    /// For `.bool` fields only: what an absent key means to this action's own
+    /// `performXxx`/`currentlyMatches` pair — must mirror their `?? default`
+    /// fallback exactly. Defaults to `true` (every bool field but `appQuit`'s
+    /// `running` follows that convention). Lets `scaffoldPrerequisite` negate
+    /// a field generically instead of hardcoding a per-action exception.
+    let boolDefault: Bool
 
-    init(key: String, label: String, type: PayloadFieldType, isRequired: Bool = true, step: Double? = nil) {
+    init(key: String, label: String, type: PayloadFieldType, isRequired: Bool = true, step: Double? = nil, boolDefault: Bool = true) {
         self.key = key
         self.step = step
         self.label = label
         self.type = type
         self.isRequired = isRequired
+        self.boolDefault = boolDefault
     }
 }
 
@@ -237,6 +244,7 @@ enum CapabilityRegistry {
         "\"prerequisites\" is a COMPULSORY ambient-state gate, checked AFTER the trigger/conditions match and BEFORE actions run \u{2014} required whenever any action inside \"actions\" is marked (usable as a prerequisite) below, since that's exactly what stops a state-setting action from re-firing every time its trigger recurs. Only omit \"prerequisites\" when every action in the rule is NOT marked (usable as a prerequisite) \u{2014} a pure fire-and-forget command with nothing to gate on. Each entry has the exact same shape as an action step (\"action\" + \"payload\"), but is read as current live state instead of performed.",
         "\"mode\" controls how \"prerequisites\" are evaluated: \"entry\" (default) runs the rule if ANY prerequisite's live state currently matches its payload, skipping only if ALL currently mismatch. \"exit\" runs the rule if ANY prerequisite's live state currently MISmatches its payload, skipping only if ALL currently match. Pair an \"entry\" rule and an \"exit\" rule that reuse the exact same prerequisites and payload values, but each with their own independent trigger, to build an on/off pair \u{2014} e.g. entry trigger \"app.frontmostChanged\"/Xcode with prerequisites [caffeine.set: {enabled:false}] mode entry, and a separate exit rule with trigger \"app.frontmostChanged\"/Safari, the SAME prerequisites, mode \"exit\".",
         "\"sustainFor\" (optional, seconds) puts a resettable timer on a rule: every time this rule's trigger/conditions match, its \"actions\" run as normal AND this timer (re)starts. If the timer ever completes without being reset first, it fires the \"extension.durationElapsed\" trigger, with a payload identical to the fields of whatever trigger set the timer. For a handful of triggers with an obvious \"current value\" (app.frontmostChanged, volume.changed, brightness.changed, media.playbackChanged, caffeine.stateChanged, webcam.activeChanged, audioDevice.changed, thermal.stateChanged) the timer ALSO keeps resetting on its own every few seconds for as long as that live value keeps satisfying the same conditions \u{2014} so it measures continuous real time in that state, not just \"how long since the last matching event.\" Other triggers can only reset it via an actual recurring event. Use this for \"undo after N straight minutes of this\" \u{2014} e.g. trigger \"app.frontmostChanged\" with condition name contains \"Xcode\", actions [caffeine.set: {enabled:true}], sustainFor 7200 (2 hours); then a separate rule with trigger \"extension.durationElapsed\" and the SAME condition (name contains \"Xcode\") to turn Caffeine back off once Xcode has been away from the foreground \u{2014} whether quit, or just not reactivated \u{2014} for a full 2 hours. This is independent of the ordinary \"Xcode quit\" exit rule you'd also write for the immediate case.",
+        "\"app.open\"/\"app.quit\" each read back \"is this app currently running\" through their own \"running\" field (app.open defaults it to true, app.quit defaults it to false), so each is its own correct prerequisite gate — NOT the other action. Gating \"app.open\" on \"only if not already running\" means a prerequisite of app.open with the SAME bundleIdentifier and \"running\":false; gating \"app.quit\" on \"only if currently running\" means a prerequisite of app.quit with \"running\":true.",
     ]
 
     static let triggers: [TriggerDescriptor] = [
@@ -525,7 +533,7 @@ enum CapabilityRegistry {
             payloadFields: ["deviceName: String"],
             payloadSchema: [PayloadFieldDescriptor(key: "deviceName", label: "Device Name", type: .string)],
             implementedBy: "ExtensionActionExecutor.performAudioOutputSet(_:)",
-            prerequisiteEligible: true
+            prerequisiteEligible: false
         ),
         ActionDescriptor(
             id: .sneakPeekShow, label: "Flash the in-notch HUD",
@@ -546,7 +554,7 @@ enum CapabilityRegistry {
             payloadFields: ["level: Double (0-1)"],
             payloadSchema: [PayloadFieldDescriptor(key: "level", label: "Level", type: .doubleRange(0...1))],
             implementedBy: "ExtensionActionExecutor.performVolumeSet(_:)",
-            prerequisiteEligible: true
+            prerequisiteEligible: false
         ),
         ActionDescriptor(
             id: .brightnessSet, label: "Set brightness",
@@ -555,23 +563,29 @@ enum CapabilityRegistry {
             payloadFields: ["level: Double (0-1)"],
             payloadSchema: [PayloadFieldDescriptor(key: "level", label: "Level", type: .doubleRange(0...1))],
             implementedBy: "ExtensionActionExecutor.performBrightnessSet(_:)",
-            prerequisiteEligible: true
+            prerequisiteEligible: false
         ),
         ActionDescriptor(
             id: .appOpen, label: "Open an app",
-            summary: "Launches or activates an app by bundle identifier.",
+            summary: "Launches or activates an app by bundle identifier. \"running\" (default true) is what a prerequisite gate reads back — leave it out when just performing the action.",
             tier: .realAction,
-            payloadFields: ["bundleIdentifier: String"],
-            payloadSchema: [PayloadFieldDescriptor(key: "bundleIdentifier", label: "Bundle Identifier", type: .string)],
+            payloadFields: ["bundleIdentifier: String", "running: Bool (default true)"],
+            payloadSchema: [
+                PayloadFieldDescriptor(key: "bundleIdentifier", label: "Bundle Identifier", type: .string),
+                PayloadFieldDescriptor(key: "running", label: "Running", type: .bool, isRequired: false),
+            ],
             implementedBy: "ExtensionActionExecutor.performAppOpen(_:)",
             prerequisiteEligible: true
         ),
         ActionDescriptor(
             id: .appQuit, label: "Quit an app",
-            summary: "Terminates a running app by bundle identifier.",
+            summary: "Terminates a running app by bundle identifier. \"running\" (default false) is what a prerequisite gate reads back — leave it out when just performing the action.",
             tier: .realAction,
-            payloadFields: ["bundleIdentifier: String"],
-            payloadSchema: [PayloadFieldDescriptor(key: "bundleIdentifier", label: "Bundle Identifier", type: .string)],
+            payloadFields: ["bundleIdentifier: String", "running: Bool (default false)"],
+            payloadSchema: [
+                PayloadFieldDescriptor(key: "bundleIdentifier", label: "Bundle Identifier", type: .string),
+                PayloadFieldDescriptor(key: "running", label: "Running", type: .bool, isRequired: false, boolDefault: false),
+            ],
             implementedBy: "ExtensionActionExecutor.performAppQuit(_:)",
             prerequisiteEligible: true
         ),
@@ -582,7 +596,7 @@ enum CapabilityRegistry {
             payloadFields: ["text: String"],
             payloadSchema: [PayloadFieldDescriptor(key: "text", label: "Text", type: .string)],
             implementedBy: "ExtensionActionExecutor.performClipboardSetText(_:)",
-            prerequisiteEligible: true
+            prerequisiteEligible: false
         ),
         ActionDescriptor(
             id: .webcamSet, label: "Turn webcam preview on/off",
@@ -684,7 +698,7 @@ enum CapabilityRegistry {
     // MARK: - Safety validation
 
     /// Human-readable problems with an otherwise-decodable rule set — closes
-    /// two gaps between what TIPS already documents and what was actually
+    /// three gaps between what TIPS already documents and what was actually
     /// enforced in code before this:
     ///
     /// 1. Any `prerequisiteEligible` action referenced in a rule's `actions`
@@ -693,6 +707,14 @@ enum CapabilityRegistry {
     /// 2. Any action marked `requiresPairedExitRule` (currently only
     ///    `fanFloorSet`) used with `enabled: true` must have some *other*
     ///    rule in the same record with `mode == .exit` gated on it.
+    /// 3. In an `entry`-mode rule specifically, a prerequisite step's `.bool`
+    ///    field(s) can't equal its matching action step's own field — that's
+    ///    the opposite of what "entry" means (see TIPS): the gate should
+    ///    read the state the action *isn't* in yet, not the one it's headed
+    ///    to. (This check only applies to `entry` mode — `exit`-mode rules
+    ///    built by `makingExitCounterpart()` deliberately set the action's
+    ///    payload to match its own prerequisite, so equality there is the
+    ///    correct, intended shape.)
     ///
     /// Empty result means the rule set is safe to save. Called from
     /// `ExtensionEditorView` for both the JSON-typed and picker-built paths,
@@ -710,14 +732,29 @@ enum CapabilityRegistry {
             issues.append("\"\(actionID.rawValue)\" is turned on but no rule turns it back off.")
         }
 
+        for (index, rule) in rules.enumerated() {
+            for actionID in rule.actionsWithRedundantPrerequisite {
+                issues.append("Rule \(index + 1): \"\(actionID.rawValue)\"'s prerequisite matches its own action's state \u{2014} it will never run except when it would already be a no-op.")
+            }
+        }
+
         return issues
     }
 
     /// The subset of `requiresPairedExitRule` actions that are turned on
-    /// somewhere in `rules` with no other rule's `.exit`-mode gate covering
-    /// them. Exposed separately from `issues(in:)` so the rule builder UI can
-    /// render its record-level banner directly from this instead of parsing
-    /// `issues(in:)`'s generated text back apart.
+    /// somewhere in `rules` with no other rule's `.exit`-mode gate actually
+    /// turning them back off. Exposed separately from `issues(in:)` so the
+    /// rule builder UI can render its record-level banner directly from this
+    /// instead of parsing `issues(in:)`'s generated text back apart.
+    ///
+    /// Requires more than an `.exit`-mode rule merely *referencing* the
+    /// action in `prerequisites` — a rule can satisfy that structurally
+    /// while still being wired backwards (see `scaffoldExitRule`'s original
+    /// bug, where the gate polarity was inverted and the "exit" rule only
+    /// ever fired while the action was already off). Also requiring one of
+    /// its `actions` to actually set the action to its off state closes that
+    /// gap: a rule can no longer satisfy this check without actually
+    /// relinquishing control.
     static func actionsRequiringExitRule(in rules: [ExtensionRule]) -> [ActionID] {
         ActionID.allCases.filter { actionID in
             guard action(actionID).requiresPairedExitRule else { return false }
@@ -726,7 +763,9 @@ enum CapabilityRegistry {
             }
             guard turnsOn else { return false }
             let hasExit = rules.contains { rule in
-                rule.mode == .exit && rule.prerequisites.contains { $0.action == actionID }
+                rule.mode == .exit
+                    && rule.prerequisites.contains { $0.action == actionID }
+                    && rule.actions.contains { $0.action == actionID && !($0.payload["enabled"]?.boolValue ?? true) }
             }
             return !hasExit
         }

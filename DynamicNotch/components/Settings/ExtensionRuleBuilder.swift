@@ -252,7 +252,16 @@ struct ConditionRow: View {
                     }
                 }
 
-                if let selectedField {
+                if let selectedField, case .bool = selectedField.type {
+                    // No separate value control for bool fields — "is"/
+                    // "isn't" alone carries the polarity now (see
+                    // `canonicalizeBoolValue()`). A checkbox captioned with
+                    // the same field name shown by the picker above it read
+                    // as comparing the field to itself, and paired with the
+                    // operator it let you build a double negative (operator
+                    // "isn't" + unchecked = the opposite of what either
+                    // control looks like it says).
+                } else if let selectedField {
                     PayloadFieldEditorView(field: selectedField, payload: valuePayloadBinding(for: selectedField))
                 }
             }
@@ -264,6 +273,7 @@ struct ConditionRow: View {
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color.secondary.opacity(0.06)))
+        .onAppear(perform: canonicalizeBoolValue)
     }
 
     private var fieldBinding: Binding<String> {
@@ -273,10 +283,27 @@ struct ConditionRow: View {
                 condition.field = newKey
                 if let newField = fields.first(where: { $0.key == newKey }) {
                     condition.op = newField.type.applicableOperators.first ?? .equals
-                    condition.value = newField.type.defaultValue
+                    if case .bool = newField.type {
+                        condition.value = .bool(true)
+                    } else {
+                        condition.value = newField.type.defaultValue
+                    }
                 }
             }
         )
+    }
+
+    /// A `.bool` condition's `value` is always pinned to `true` — "is"/
+    /// "isn't" alone expresses polarity. Rules saved before this existed (or
+    /// hand-typed/generated JSON) can still have `value: false`; flipping
+    /// the operator alongside pinning the value preserves what the
+    /// condition actually matches instead of silently changing its meaning
+    /// (equals+false and notEquals+true both mean "isn't", so they map to
+    /// each other, not to a bare value flip).
+    private func canonicalizeBoolValue() {
+        guard let selectedField, case .bool = selectedField.type, condition.value != .bool(true) else { return }
+        condition.op = condition.op == .equals ? .notEquals : .equals
+        condition.value = .bool(true)
     }
 
     /// `PayloadFieldEditorView` reads/writes a `[String: ExtensionValue]`
@@ -393,7 +420,7 @@ private struct OnOffInlineToggle: View {
 
     private var binding: Binding<Bool> {
         Binding(
-            get: { payload[field.key]?.boolValue ?? false },
+            get: { payload[field.key]?.boolValue ?? true },
             set: { payload[field.key] = .bool($0) }
         )
     }
@@ -408,10 +435,16 @@ private struct OnOffInlineToggle: View {
 extension ExtensionRule {
     mutating func addCondition() {
         guard let firstField = CapabilityRegistry.trigger(trigger).payloadSchema.first else { return }
+        let value: ExtensionValue
+        if case .bool = firstField.type {
+            value = .bool(true)
+        } else {
+            value = firstField.type.defaultValue
+        }
         conditions.append(MatchCondition(
             field: firstField.key,
             op: firstField.type.applicableOperators.first ?? .equals,
-            value: firstField.type.defaultValue
+            value: value
         ))
     }
 
@@ -425,13 +458,64 @@ extension ExtensionRule {
         actions.append(ExtensionActionStep(action: firstAction.id))
     }
 
-    /// The one-click fix behind the inline "needs a prerequisite gate"
-    /// nudge: copies the same payload the offending action step already
-    /// uses, so the gate starts out matching what it's actually gating.
+    /// Shared by `scaffoldPrerequisite` (adds a new gate) and
+    /// `fixRedundantPrerequisite` (repairs one that already exists but got
+    /// the polarity wrong): starts from the action step's own payload, then
+    /// negates every `.bool` field (relative to that field's own
+    /// `boolDefault`, matching the executor's `?? default` fallback) — an
+    /// "entry" gate needs the *opposite* state of what the action sets, not
+    /// the same one (see TIPS: turning something on is gated on it currently
+    /// being off). Non-bool fields (e.g. a target volume level) have no
+    /// well-defined opposite, so they're carried over unchanged for the user
+    /// to review.
+    private static func negatedGatePayload(from actionPayload: [String: ExtensionValue], for actionID: ActionID) -> [String: ExtensionValue] {
+        var gatePayload = actionPayload
+        for field in CapabilityRegistry.action(actionID).payloadSchema {
+            guard case .bool = field.type else { continue }
+            let current = gatePayload[field.key]?.boolValue ?? field.boolDefault
+            gatePayload[field.key] = .bool(!current)
+        }
+        return gatePayload
+    }
+
+    /// The one-click fix behind the inline "needs a prerequisite gate" nudge.
     mutating func scaffoldPrerequisite(for actionID: ActionID) {
         guard !prerequisites.contains(where: { $0.action == actionID }) else { return }
-        let matchingPayload = actions.first { $0.action == actionID }?.payload ?? [:]
-        prerequisites.append(ExtensionActionStep(action: actionID, payload: matchingPayload))
+        let actionPayload = actions.first { $0.action == actionID }?.payload ?? [:]
+        prerequisites.append(ExtensionActionStep(action: actionID, payload: Self.negatedGatePayload(from: actionPayload, for: actionID)))
+    }
+
+    /// The one-click fix behind the inline "gate matches its own action"
+    /// nudge (see `actionsWithRedundantPrerequisite`): re-derives the
+    /// existing gate's payload from scratch instead of leaving it as-is,
+    /// since a hand-edited or generated gate can get here by copying the
+    /// action's payload verbatim rather than negating it.
+    mutating func fixRedundantPrerequisite(for actionID: ActionID) {
+        guard let index = prerequisites.firstIndex(where: { $0.action == actionID }) else { return }
+        let actionPayload = actions.first { $0.action == actionID }?.payload ?? [:]
+        prerequisites[index].payload = Self.negatedGatePayload(from: actionPayload, for: actionID)
+    }
+
+    /// Actions in `actions` whose matching `prerequisites` entry has the
+    /// same `.bool` field value(s) as the action itself — a gate that can
+    /// only ever pass when the action would already be a no-op (see TIPS).
+    /// Only meaningful in `entry` mode: an `exit`-mode rule built by
+    /// `makingExitCounterpart()` deliberately sets the action's payload to
+    /// match its own prerequisite, so equality there is the correct,
+    /// intended shape, not a bug.
+    var actionsWithRedundantPrerequisite: [ActionID] {
+        guard mode == .entry else { return [] }
+        return actions.compactMap { action in
+            guard let prerequisite = prerequisites.first(where: { $0.action == action.action }) else { return nil }
+            let schema = CapabilityRegistry.action(action.action).payloadSchema
+            let isRedundant = schema.contains { field in
+                guard case .bool = field.type else { return false }
+                let actionValue = action.payload[field.key]?.boolValue ?? field.boolDefault
+                let prerequisiteValue = prerequisite.payload[field.key]?.boolValue ?? field.boolDefault
+                return actionValue == prerequisiteValue
+            }
+            return isRedundant ? action.action : nil
+        }
     }
 
     /// A starting point for this rule's "undo" counterpart — per TIPS, an
