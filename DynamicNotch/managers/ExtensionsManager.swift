@@ -90,7 +90,7 @@ final class ExtensionsManager: ObservableObject {
     }
 
     private func persist() {
-        store.save(extensions)
+        extensions = store.save(extensions)
     }
 
     // MARK: - Manual run (for a future "Try it now" button)

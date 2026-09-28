@@ -14,6 +14,14 @@
 //  writes those bytes straight back — so a broken extension survives every
 //  save until the person fixes or deletes it themselves.
 //
+//  The reverse direction (a record that fails to *encode*) is handled the
+//  same way in spirit: `save()` returns the possibly-adjusted list so the
+//  caller can update its published state, converting any unencodable record
+//  into an `.unreadable` entry instead of silently omitting it from the
+//  file. Unlike a decode failure, there's no already-valid JSON to fall
+//  back to, so whatever can still be salvaged is written to a separate
+//  quarantine file for later inspection.
+//
 
 import Foundation
 
@@ -65,14 +73,29 @@ final class ExtensionPersistenceService {
         }
     }
 
-    func save(_ items: [StoredExtension]) {
-        let objects: [Any] = items.compactMap { item -> Any? in
+    /// Returns the list back, with any record that failed to encode replaced
+    /// by an `.unreadable` entry — callers should assign this back to their
+    /// own published state (see `ExtensionsManager.persist()`) so a
+    /// quarantined record shows up in the list immediately, instead of just
+    /// quietly missing from the next launch.
+    @discardableResult
+    func save(_ items: [StoredExtension]) -> [StoredExtension] {
+        var objects: [Any] = []
+        let result: [StoredExtension] = items.map { item in
             switch item {
             case .readable(let record):
-                guard let data = try? encoder.encode(record) else { return nil }
-                return try? JSONSerialization.jsonObject(with: data)
+                do {
+                    let data = try encoder.encode(record)
+                    objects.append(try JSONSerialization.jsonObject(with: data))
+                    return item
+                } catch {
+                    return .unreadable(quarantine(record, error: error))
+                }
             case .unreadable(let unreadable):
-                return try? JSONSerialization.jsonObject(with: unreadable.rawJSON)
+                if let object = try? JSONSerialization.jsonObject(with: unreadable.rawJSON) {
+                    objects.append(object)
+                }
+                return item
             }
         }
         do {
@@ -81,6 +104,43 @@ final class ExtensionPersistenceService {
         } catch {
             print("Failed to save extensions: \(error.localizedDescription)")
         }
+        return result
+    }
+
+    /// A record that fails to encode has no already-valid JSON to fall back
+    /// to (unlike a load-time decode failure), so this retries once with a
+    /// lenient float strategy — the one plausible real-world cause is a
+    /// stray NaN/Infinity `Double` in a payload, which the default `.throw`
+    /// strategy rejects — before giving up and quarantining just the
+    /// identifying fields. Either way, the result is written to its own
+    /// dated file rather than silently vanishing from `extensions.json`.
+    private func quarantine(_ record: ExtensionRecord, error: Error) -> UnreadableExtension {
+        let lenientEncoder = JSONEncoder()
+        lenientEncoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        lenientEncoder.dateEncodingStrategy = .iso8601
+        lenientEncoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "inf", negativeInfinity: "-inf", nan: "nan")
+
+        let rawJSON: Data
+        if let rescued = try? lenientEncoder.encode(record) {
+            rawJSON = rescued
+        } else {
+            rawJSON = (try? JSONSerialization.data(withJSONObject: [
+                "id": record.id.uuidString, "name": record.name, "summary": record.summary,
+            ], options: [.prettyPrinted, .sortedKeys])) ?? Data("{}".utf8)
+        }
+
+        let quarantineURL = fileURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("extensions.quarantine-\(record.id.uuidString).json")
+        try? rawJSON.write(to: quarantineURL)
+
+        return UnreadableExtension(
+            id: record.id,
+            name: record.name,
+            summary: record.summary,
+            reason: "Couldn't be saved (\(Self.describe(error))) — a copy was written to \(quarantineURL.lastPathComponent).",
+            rawJSON: rawJSON
+        )
     }
 
     /// Copies an unparseable file aside before anything can overwrite it —
