@@ -10,7 +10,7 @@ body:
       value: |
         ## Feature Request
         
-        Thanks for helping make **DynamicNotch** better! Please check [existing requests](https://github.com/Hitjack007/DynamicNotch/issues?q=is%3Aissue) before submitting to avoid duplicates.
+        Thanks for helping make **DynamicNotch** better! Please check [existing requests](https://github.com/Hitjack007/DynamicNotch/issues?q=is%3Aissue+is%3Aopen) before submitting to avoid duplicates.
 
   - type: textarea
     id: problem

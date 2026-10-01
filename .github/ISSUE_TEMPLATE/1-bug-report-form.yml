@@ -11,6 +11,15 @@ body:
       value: |
         Thanks for taking the time to fill out this bug report!
   - type: textarea
+    id: attachments
+    attributes:
+      label: "Attach Files & Screenshots Here"
+      description: "Drag & drop files, or paste from clipboard."
+      placeholder: "Drop files here..."
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
     id: what-happened
     attributes:
       label: What happened? What are the steps to reproduce the issue?
