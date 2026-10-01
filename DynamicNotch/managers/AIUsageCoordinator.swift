@@ -119,7 +119,10 @@ final class AIUsageCoordinator: ObservableObject {
         let source = activeSource
         await source.refreshNow()
         // Never evaluate alerts against a reading we could not trust.
-        guard source.isAuthenticated, !source.hasError else { return }
+        guard source.isAuthenticated, !source.hasError else {
+            AppLogger.aiUsage.notice("AI usage poll for \(source.displayName): skipping alerts, authenticated=\(source.isAuthenticated), hasError=\(source.hasError)")
+            return
+        }
         evaluateAlerts(for: source)
     }
 

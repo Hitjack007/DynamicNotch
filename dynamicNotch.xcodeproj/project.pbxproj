@@ -113,6 +113,11 @@
 		4D73E1A3301EB0870084A6A1 /* ThermalManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */; };
 		4D73E1A5301EB0920084A6A1 /* ThermalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D73E1A4301EB0920084A6A1 /* ThermalView.swift */; };
 		4D73E1A7301EF3920084A6A1 /* MediaRemoteAdapter.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 112B0EBA2E30DD5000562D6C /* MediaRemoteAdapter.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4D88163E306DE6E80088E826 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D88163D306DE6E80088E826 /* AppLogger.swift */; };
+		4D881640306DE6F40088E826 /* DiagnosticsCollector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D88163F306DE6F40088E826 /* DiagnosticsCollector.swift */; };
+		4D881642306DF8AE0088E826 /* CrashReportScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D881641306DF8AE0088E826 /* CrashReportScanner.swift */; };
+		4D881644306DF9160088E826 /* CrashReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D881643306DF9160088E826 /* CrashReportView.swift */; };
+		4D881646306DF9F60088E826 /* BugReportExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D881645306DF9F60088E826 /* BugReportExporter.swift */; };
 		4DA88E0C301F3C3E0095857C /* FanCurveEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E0B301F3C3E0095857C /* FanCurveEditorView.swift */; };
 		4DA88E0E301F3F700095857C /* ThermalDaemonClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */; };
 		4DA88E11301F42F10095857C /* install-thermal-daemon.sh in Resources */ = {isa = PBXBuildFile; fileRef = 4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */; };
@@ -346,6 +351,11 @@
 		4D73E1A0301EB0750084A6A1 /* SMCKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCKeys.swift; sourceTree = "<group>"; };
 		4D73E1A2301EB0870084A6A1 /* ThermalManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalManager.swift; sourceTree = "<group>"; };
 		4D73E1A4301EB0920084A6A1 /* ThermalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalView.swift; sourceTree = "<group>"; };
+		4D88163D306DE6E80088E826 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		4D88163F306DE6F40088E826 /* DiagnosticsCollector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsCollector.swift; sourceTree = "<group>"; };
+		4D881641306DF8AE0088E826 /* CrashReportScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportScanner.swift; sourceTree = "<group>"; };
+		4D881643306DF9160088E826 /* CrashReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrashReportView.swift; sourceTree = "<group>"; };
+		4D881645306DF9F60088E826 /* BugReportExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BugReportExporter.swift; sourceTree = "<group>"; };
 		4DA88E0B301F3C3E0095857C /* FanCurveEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FanCurveEditorView.swift; sourceTree = "<group>"; };
 		4DA88E0D301F3F700095857C /* ThermalDaemonClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalDaemonClient.swift; sourceTree = "<group>"; };
 		4DA88E10301F41FE0095857C /* install-thermal-daemon.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "install-thermal-daemon.sh"; sourceTree = "<group>"; };
@@ -746,6 +756,7 @@
 				14CEF41B2C5CAED400855D72 /* Preview Content */,
 				112FB72F2CCF12CC0015238C /* private */,
 				11CC44A12CEE614100C7244B /* NotchViewCoordinator.swift */,
+				4D88163C306DE6E80088E826 /* utils */,
 			);
 			path = DynamicNotch;
 			sourceTree = "<group>";
@@ -825,6 +836,17 @@
 				4DA88E0B301F3C3E0095857C /* FanCurveEditorView.swift */,
 			);
 			path = Thermal;
+			sourceTree = "<group>";
+		};
+		4D88163C306DE6E80088E826 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				4D88163D306DE6E80088E826 /* AppLogger.swift */,
+				4D88163F306DE6F40088E826 /* DiagnosticsCollector.swift */,
+				4D881641306DF8AE0088E826 /* CrashReportScanner.swift */,
+				4D881645306DF9F60088E826 /* BugReportExporter.swift */,
+			);
+			path = utils;
 			sourceTree = "<group>";
 		};
 		4DA88E0F301F41FE0095857C /* Resources */ = {
@@ -982,6 +1004,7 @@
 				4DED0E43305E8DB5005D32A2 /* ExtensionEditorView.swift */,
 				4DED0E5F305F3F1B005D32A2 /* SettingsNavigator.swift */,
 				4DED108F306890DC005D32A2 /* ExtensionRuleBuilder.swift */,
+				4D881643306DF9160088E826 /* CrashReportView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -1240,6 +1263,7 @@
 				59D8C23C2E589FAA00147B33 /* VolumeManager.swift in Sources */,
 				1163988D2DF5CAB40052E6AF /* EventModel.swift in Sources */,
 				14D570B92C5E98A20011E668 /* drop.swift in Sources */,
+				4D88163E306DE6E80088E826 /* AppLogger.swift in Sources */,
 				11EFCD702E8E92D600D0B974 /* ShelfItemViewModel.swift in Sources */,
 				1153BDA72D99B22200979FB0 /* YouTubeMusicController.swift in Sources */,
 				1163988F2DF5CC870052E6AF /* CalendarModel.swift in Sources */,
@@ -1253,6 +1277,7 @@
 				1113ABC52E80E27000EC13B2 /* ShelfItemView.swift in Sources */,
 				4D319FA93039073300D4AE2F /* ClipboardManager.swift in Sources */,
 				1113ABC62E80E27000EC13B2 /* ShelfPersistenceService.swift in Sources */,
+				4D881646306DF9F60088E826 /* BugReportExporter.swift in Sources */,
 				1113ABC82E80E27000EC13B2 /* ShelfItem.swift in Sources */,
 				4DA88EDE303167E90095857C /* ChromeCookieReader.swift in Sources */,
 				1113ABCA2E80E27000EC13B2 /* ShelfSelectionModel.swift in Sources */,
@@ -1269,6 +1294,7 @@
 				5917FD112E57891600E87F1C /* MediaKeyInterceptor.swift in Sources */,
 				14C08BC12C8E03AD000F8AA0 /* NSImage+Extensions.swift in Sources */,
 				149E0B9A2C737D40006418B1 /* WebcamView.swift in Sources */,
+				4D881642306DF8AE0088E826 /* CrashReportScanner.swift in Sources */,
 				1471639A2C5D35FF0068B555 /* MusicManager.swift in Sources */,
 				4D426D123057B6EB00DDF2C2 /* ChatGPTUsageManager.swift in Sources */,
 				B1B112932C6A577E00093D8F /* MouseTracker.swift in Sources */,
@@ -1366,9 +1392,11 @@
 				14288E0C2C6F8EC000B9F80C /* AppIcons.swift in Sources */,
 				4DED0D34305E1125005D32A2 /* AIUsageNotifier.swift in Sources */,
 				B1C448982C972CC4001F0858 /* ListItemPopover.swift in Sources */,
+				4D881640306DE6F40088E826 /* DiagnosticsCollector.swift in Sources */,
 				B19016242CC15B5000E3F12E /* Constants.swift in Sources */,
 				1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */,
 				11CFC6632E09918400748C80 /* MusicControllerSelectionView.swift in Sources */,
+				4D881644306DF9160088E826 /* CrashReportView.swift in Sources */,
 				4D73E1A3301EB0870084A6A1 /* ThermalManager.swift in Sources */,
 				B1F0A0022E60000100000001 /* BrightnessManager.swift in Sources */,
 			);

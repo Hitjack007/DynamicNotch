@@ -84,20 +84,27 @@ public final class SMCConnection {
         var iterator: io_iterator_t = 0
         defer { IOObjectRelease(iterator) }
 
-        guard
-            IOServiceGetMatchingServices(
-                kIOMainPortDefault,
-                IOServiceMatching("AppleSMC"),
-                &iterator
-            ) == kIOReturnSuccess
-        else { return nil }
+        let matchResult = IOServiceGetMatchingServices(
+            kIOMainPortDefault,
+            IOServiceMatching("AppleSMC"),
+            &iterator
+        )
+        guard matchResult == kIOReturnSuccess else {
+            AppLogger.thermal.error("SMCConnection: IOServiceGetMatchingServices failed, kern_return_t=\(matchResult)")
+            return nil
+        }
 
         let service = IOIteratorNext(iterator)
-        guard service != 0 else { return nil }
+        guard service != 0 else {
+            AppLogger.thermal.error("SMCConnection: no AppleSMC service found")
+            return nil
+        }
         defer { IOObjectRelease(service) }
 
         var conn: io_connect_t = 0
-        guard IOServiceOpen(service, mach_task_self_, 0, &conn) == kIOReturnSuccess else {
+        let openResult = IOServiceOpen(service, mach_task_self_, 0, &conn)
+        guard openResult == kIOReturnSuccess else {
+            AppLogger.thermal.error("SMCConnection: IOServiceOpen failed, kern_return_t=\(openResult)")
             return nil
         }
         self.connection = conn
@@ -138,13 +145,24 @@ public final class SMCConnection {
 
         input.key = fourCharCode(key)
         input.data8 = SMCCommand.readKeyInfo.rawValue
-        guard callSMC(&input, &output) == kIOReturnSuccess else { return false }
+        let infoResult = callSMC(&input, &output)
+        guard infoResult == kIOReturnSuccess else {
+            AppLogger.thermal.error("SMCConnection.writeKey(\(key)): readKeyInfo failed, kern_return_t=\(infoResult)")
+            return false
+        }
 
         input.data8 = SMCCommand.writeBytes.rawValue
         input.keyInfo.dataSize = output.keyInfo.dataSize
         input.bytes = arrayToTuple(bytes)
 
-        guard callSMC(&input, &output) == kIOReturnSuccess else { return false }
+        let writeResult = callSMC(&input, &output)
+        guard writeResult == kIOReturnSuccess else {
+            AppLogger.thermal.error("SMCConnection.writeKey(\(key)): write call failed, kern_return_t=\(writeResult)")
+            return false
+        }
+        if output.result != 0 {
+            AppLogger.thermal.error("SMCConnection.writeKey(\(key)): SMC rejected write, result=\(output.result)")
+        }
         return output.result == 0
     }
 

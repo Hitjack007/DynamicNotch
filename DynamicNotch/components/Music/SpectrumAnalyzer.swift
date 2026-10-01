@@ -64,6 +64,7 @@ final class SpectrumAnalyzer: NSObject, ObservableObject {
             isCapturing = true
         } catch {
             // Permission denied or hardware unavailable — bars stay at minimum
+            AppLogger.audio.debug("SpectrumAnalyzer: capture failed to start, \(type(of: error))")
         }
     }
 

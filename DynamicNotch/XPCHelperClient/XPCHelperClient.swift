@@ -28,13 +28,19 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
         let conn = NSXPCConnection(serviceName: serviceName)
         
         conn.interruptionHandler = { [weak self] in
+            // Fires when the helper process itself dies (crash, kill) - the connection
+            // object may still be reusable once the helper relaunches, unlike invalidation.
+            AppLogger.xpc.notice("XPC connection to DynamicNotchXPCHelper interrupted (helper process died)")
             Task { @MainActor in
                 self?.connection = nil
                 self?.remoteService = nil
             }
         }
-        
+
         conn.invalidationHandler = { [weak self] in
+            // Fires when the connection itself can never be used again (e.g. the helper's
+            // launchd job is unavailable/disabled) - distinct from interruption above.
+            AppLogger.xpc.error("XPC connection to DynamicNotchXPCHelper invalidated")
             Task { @MainActor in
                 self?.connection = nil
                 self?.remoteService = nil
@@ -102,12 +108,16 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
             let service = await MainActor.run {
                 ensureRemoteService()
             }
-            try? await service.withService { service in
-                service.requestAccessibilityAuthorization()
+            do {
+                try await service.withService { service in
+                    service.requestAccessibilityAuthorization()
+                }
+            } catch {
+                AppLogger.xpc.error("XPC requestAccessibilityAuthorization failed, \(type(of: error))")
             }
         }
     }
-    
+
     nonisolated func isAccessibilityAuthorized() async -> Bool {
         do {
             let service = await MainActor.run {
@@ -123,10 +133,11 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
             }
             return result
         } catch {
+            AppLogger.xpc.error("XPC isAccessibilityAuthorized failed, \(type(of: error))")
             return false
         }
     }
-    
+
     nonisolated func ensureAccessibilityAuthorization(promptIfNeeded: Bool) async -> Bool {
         do {
             let service = await MainActor.run {
@@ -142,6 +153,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
             }
             return result
         } catch {
+            AppLogger.xpc.error("XPC ensureAccessibilityAuthorization failed, \(type(of: error))")
             return false
         }
     }
@@ -159,10 +171,11 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
                 }
             }
         } catch {
+            AppLogger.xpc.error("XPC isKeyboardBrightnessAvailable failed, \(type(of: error))")
             return false
         }
     }
-    
+
     nonisolated func currentKeyboardBrightness() async -> Float? {
         do {
             let service = await MainActor.run {
@@ -175,10 +188,11 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
             }
             return result?.floatValue
         } catch {
+            AppLogger.xpc.error("XPC currentKeyboardBrightness failed, \(type(of: error))")
             return nil
         }
     }
-    
+
     nonisolated func setKeyboardBrightness(_ value: Float) async -> Bool {
         do {
             let service = await MainActor.run {
@@ -190,6 +204,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
                 }
             }
         } catch {
+            AppLogger.xpc.error("XPC setKeyboardBrightness failed, \(type(of: error))")
             return false
         }
     }
@@ -207,10 +222,11 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
                 }
             }
         } catch {
+            AppLogger.xpc.error("XPC isScreenBrightnessAvailable failed, \(type(of: error))")
             return false
         }
     }
-    
+
     nonisolated func currentScreenBrightness() async -> Float? {
         do {
             let service = await MainActor.run {
@@ -223,10 +239,11 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
             }
             return result?.floatValue
         } catch {
+            AppLogger.xpc.error("XPC currentScreenBrightness failed, \(type(of: error))")
             return nil
         }
     }
-    
+
     nonisolated func setScreenBrightness(_ value: Float) async -> Bool {
         do {
             let service = await MainActor.run {
@@ -238,6 +255,7 @@ final class XPCHelperClient: NSObject, @unchecked Sendable {
                 }
             }
         } catch {
+            AppLogger.xpc.error("XPC setScreenBrightness failed, \(type(of: error))")
             return false
         }
     }

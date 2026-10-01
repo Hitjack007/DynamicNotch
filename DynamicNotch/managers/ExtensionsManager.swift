@@ -128,9 +128,19 @@ final class ExtensionsManager: ObservableObject {
             armSustainTimer(rule: rule, seconds: sustainFor, payload: event.payload)
         }
 
-        guard prerequisitesPass(rule) else { return }
+        guard prerequisitesPass(rule) else {
+            AppLogger.extensions.debug("Extension rule \(rule.id): trigger \(event.id.rawValue) matched but prerequisites gate blocked it")
+            return
+        }
         for step in rule.actions {
-            Task { await ExtensionActionExecutor.perform(step.action, payload: step.payload) }
+            Task {
+                let result = await ExtensionActionExecutor.perform(step.action, payload: step.payload)
+                if result.success {
+                    AppLogger.extensions.info("Extension rule \(rule.id): action \(step.action.rawValue) succeeded (\(result.message ?? "no message"))")
+                } else {
+                    AppLogger.extensions.error("Extension rule \(rule.id): action \(step.action.rawValue) failed (\(result.message ?? "no message"))")
+                }
+            }
         }
     }
 

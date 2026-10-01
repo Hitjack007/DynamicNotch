@@ -15,13 +15,33 @@ import os
 
 /// Ordered timeline of app-launch milestones, tagged with elapsed time since process init.
 /// If the app is ever killed during launch, the last line printed here is the last thing
-/// that happened before it died — check Console.app filtered to subsystem/category "AppLaunch".
-private let launchLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.app", category: "AppLaunch")
+/// that happened before it died — check Console.app filtered to subsystem "com.mark.dynamicnotch",
+/// category "launch", or the curated diagnostics log (DiagnosticsCollector).
 private let launchStart = Date()
 
 func logLaunchStep(_ step: String) {
     let elapsedMs = Date().timeIntervalSince(launchStart) * 1000
-    launchLogger.notice("🚀 [Launch +\(String(format: "%6.1f", elapsedMs), privacy: .public)ms] \(step, privacy: .public)")
+    AppLogger.launch.notice("[Launch +\(String(format: "%6.1f", elapsedMs))ms] \(step)")
+}
+
+/// Previously `updaterDelegate: nil` on SPUStandardUpdaterController, so update check,
+/// download, and install failures were never recorded anywhere.
+final class SparkleUpdaterDelegate: NSObject, SPUUpdaterDelegate {
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: Error) {
+        AppLogger.updates.notice("Sparkle: no update found, \(type(of: error))")
+    }
+
+    func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
+        AppLogger.updates.error("Sparkle: update cycle aborted, \(type(of: error))")
+    }
+
+    func updater(_ updater: SPUUpdater, didFinishUpdateCycleFor updateCheck: SPUUpdateCheck, error: Error?) {
+        if let error {
+            AppLogger.updates.error("Sparkle: update cycle finished with error, \(type(of: error))")
+        } else {
+            AppLogger.updates.notice("Sparkle: update cycle finished successfully")
+        }
+    }
 }
 
 @main
@@ -31,12 +51,15 @@ struct DynamicNotchApp: App {
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
+    // Held here, not just passed in: SPUStandardUpdaterController does not retain its
+    // delegate, so a locally-scoped delegate would be deallocated immediately.
+    private let sparkleUpdaterDelegate = SparkleUpdaterDelegate()
 
     init() {
         logLaunchStep("App init() started")
 
         updaterController = SPUStandardUpdaterController(
-            startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+            startingUpdater: true, updaterDelegate: sparkleUpdaterDelegate, userDriverDelegate: nil)
         logLaunchStep("Sparkle updater controller created")
 
         // Initialize the settings window controller with the updater controller
@@ -77,6 +100,15 @@ struct DynamicNotchApp: App {
             Button("Show What's New") {
                 DispatchQueue.main.async {
                     appDelegate.debugShowLatestWhatsNew()
+                }
+            }
+            // Fabricates a fake .ips in the real DiagnosticReports folder and opens
+            // Settings -> About directly, so the CrashReportScanner/CrashReportView/GitHub
+            // flow can be exercised repeatedly without actually terminating the app.
+            Button("Simulate Crash") {
+                CrashReportScanner.simulateCrash()
+                DispatchQueue.main.async {
+                    SettingsWindowController.shared.showWindow(selecting: "About")
                 }
             }
             #endif
@@ -543,7 +575,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         _ = ClipboardManager.shared
 
+        checkForNewCrashReports()
+        BugReportExporter.cleanupOldExportsIfDue()
+
         logLaunchStep("applicationDidFinishLaunching finished")
+    }
+
+    /// Opens Settings -> About when a new, unacknowledged crash is found, so it's
+    /// surfaced right after the crash rather than silently waiting for the user to
+    /// think to check. AboutSettings' own .task does the actual lookup + sheet
+    /// presentation, so this and the manual "Check for Crash Reports" row both end up
+    /// going through the exact same code path.
+    private func checkForNewCrashReports() {
+        guard !CrashReportScanner.findNewCrashReports().isEmpty else { return }
+        AppLogger.general.notice("New crash report(s) found, opening Settings to surface them")
+        DispatchQueue.main.async {
+            SettingsWindowController.shared.showWindow(selecting: "About")
+        }
     }
 
     private func checkForAppTranslocation() {

@@ -54,6 +54,7 @@ final class ThermalManager: ObservableObject {
     func start() {
         guard smc == nil else { return }
         guard let conn = SMCConnection() else {
+            AppLogger.thermal.error("ThermalManager: failed to open SMCConnection, thermal/fan features unavailable")
             isAvailable = false
             return
         }

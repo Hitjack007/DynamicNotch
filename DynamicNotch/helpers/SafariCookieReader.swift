@@ -32,9 +32,23 @@ struct SafariCookieReader {
             home + "/Library/Cookies/Cookies.binarycookies",
         ]
         for path in candidates {
-            guard let data = try? Data(contentsOf: URL(fileURLWithPath: path)) else { continue }
-            if let result = parseFile(data, cookieName: cookieName, domain: domain) { return result }
+            do {
+                let data = try Data(contentsOf: URL(fileURLWithPath: path))
+                if let result = parseFile(data, cookieName: cookieName, domain: domain) { return result }
+            } catch {
+                // A missing Full Disk Access grant and "file doesn't exist" both land
+                // here via `try?` elsewhere in the codebase, making them indistinguishable
+                // - NSCocoaErrorDomain code 257 (noPermissionError) is specifically the
+                // permission case, which is worth telling apart from a plain missing file.
+                let nsError = error as NSError
+                if nsError.domain == NSCocoaErrorDomain, nsError.code == 257 {
+                    AppLogger.keychain.error("Safari cookie reader: permission denied reading \(path) (Full Disk Access likely not granted)")
+                } else {
+                    AppLogger.keychain.debug("Safari cookie reader: no readable file at \(path)")
+                }
+            }
         }
+        AppLogger.keychain.debug("Safari cookie reader: \(cookieName) cookie not found for domain \(domain)")
         return nil
     }
 
@@ -42,7 +56,10 @@ struct SafariCookieReader {
 
     private static func parseFile(_ data: Data, cookieName: String, domain: String) -> String? {
         guard data.count >= 8,
-              String(bytes: data[0..<4], encoding: .ascii) == "cook" else { return nil }
+              String(bytes: data[0..<4], encoding: .ascii) == "cook" else {
+            AppLogger.keychain.error("Safari cookie reader: file missing expected \"cook\" magic header")
+            return nil
+        }
 
         let pageCount = Int(be32(data, 4))
         var cursor = 8

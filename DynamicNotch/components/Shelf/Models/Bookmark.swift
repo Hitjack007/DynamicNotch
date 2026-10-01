@@ -25,10 +25,10 @@ struct Bookmark: Sendable, Equatable, Codable {
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
-            NSLog("✅ Successfully created bookmark for \(url.path)")
+            AppLogger.shelf.debug("Successfully created bookmark for \(url.lastPathComponent)")
             self.data = bookmark
         } catch {
-            NSLog("❌ Failed to create bookmark for \(url.path): \(error.localizedDescription)")
+            AppLogger.shelf.error("Failed to create bookmark for \(url.lastPathComponent), \(type(of: error))")
             throw error
         }
     }
@@ -44,12 +44,12 @@ struct Bookmark: Sendable, Equatable, Codable {
                 bookmarkDataIsStale: &isStale
             )
             if isStale, let newData = try? url.bookmarkData(options: [.withSecurityScope]) {
-                NSLog("⚠️ Bookmark was stale for \(url.path), refreshed")
+                AppLogger.shelf.debug("Bookmark was stale for \(url.lastPathComponent), refreshed")
                 return (url, newData)
             }
             return (url, nil)
         } catch {
-            NSLog("❌ Failed to resolve bookmark: \(error.localizedDescription)")
+            AppLogger.shelf.error("Failed to resolve bookmark, \(type(of: error))")
             return (nil, nil)
         }
     }

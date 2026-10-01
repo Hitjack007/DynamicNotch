@@ -32,7 +32,7 @@ class TemporaryFileStorageService {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
 
         guard url.path.hasPrefix(tempDirectory.path) else {
-            print("Attempted to remove temporary file outside temp directory: \(url.path)")
+            AppLogger.shelf.error("Attempted to remove temporary file outside temp directory: \(url.lastPathComponent)")
             return
         }
 
@@ -40,18 +40,18 @@ class TemporaryFileStorageService {
 
         do {
             try FileManager.default.removeItem(at: url)
-            print("Deleted file: \(url.path)")
+            AppLogger.shelf.debug("Deleted temp file \(url.lastPathComponent)")
 
             let contents = try FileManager.default.contentsOfDirectory(atPath: folderURL.path)
             if contents.isEmpty {
                 try FileManager.default.removeItem(at: folderURL)
-                print("Folder was empty, deleted folder: \(folderURL.path)")
+                AppLogger.shelf.debug("Temp folder was empty, deleted folder \(folderURL.lastPathComponent)")
             } else {
-                print("Folder not deleted — it still contains \(contents.count) item(s).")
+                AppLogger.shelf.debug("Temp folder not deleted — still contains \(contents.count) item(s)")
             }
 
         } catch {
-            print("Error: \(error.localizedDescription)")
+            AppLogger.shelf.error("TemporaryFileStorageService: removeTemporaryFileIfNeeded failed, \(type(of: error))")
         }
     }
     
@@ -72,7 +72,9 @@ class TemporaryFileStorageService {
                 try data.write(to: fileURL)
                 return fileURL
             } catch {
-                print("Error: \(error)")
+                // Swift.type(of:) is required here, not the bare global function, because
+                // this method's own `type: TempFileType` parameter shadows it.
+                AppLogger.shelf.error("TemporaryFileStorageService: failed to create temp file, \(Swift.type(of: error))")
                 return nil
             }
             
@@ -82,7 +84,7 @@ class TemporaryFileStorageService {
             let fileURL = dirURL.appendingPathComponent(filename)
             
             guard let data = string.data(using: .utf8) else {
-                print("❌ Failed to convert text to data")
+                AppLogger.shelf.error("TemporaryFileStorageService: failed to convert text to data")
                 return nil
             }
             
@@ -91,7 +93,9 @@ class TemporaryFileStorageService {
                 try data.write(to: fileURL)
                 return fileURL
             } catch {
-                print("Error: \(error)")
+                // Swift.type(of:) is required here, not the bare global function, because
+                // this method's own `type: TempFileType` parameter shadows it.
+                AppLogger.shelf.error("TemporaryFileStorageService: failed to create temp file, \(Swift.type(of: error))")
                 return nil
             }
             
@@ -102,7 +106,7 @@ class TemporaryFileStorageService {
             
             let weblocContent = createWeblocContent(for: url)
             guard let data = weblocContent.data(using: String.Encoding.utf8) else {
-                print("❌ Failed to create webloc data")
+                AppLogger.shelf.error("TemporaryFileStorageService: failed to create webloc data")
                 return nil
             }
             
@@ -111,7 +115,9 @@ class TemporaryFileStorageService {
                 try data.write(to: fileURL)
                 return fileURL
             } catch {
-                print("Error: \(error)")
+                // Swift.type(of:) is required here, not the bare global function, because
+                // this method's own `type: TempFileType` parameter shadows it.
+                AppLogger.shelf.error("TemporaryFileStorageService: failed to create temp file, \(Swift.type(of: error))")
                 return nil
             }
         }
@@ -122,7 +128,7 @@ class TemporaryFileStorageService {
             try data.write(to: url)
             return url
         } catch {
-            print("❌ Failed to create temp file at \(url.path): \(error)")
+            AppLogger.shelf.error("Failed to create temp file at \(url.lastPathComponent), \(type(of: error))")
             return nil
         }
     }
@@ -134,7 +140,7 @@ class TemporaryFileStorageService {
         do {
             try FileManager.default.createDirectory(at: workingDir, withIntermediateDirectories: true)
         } catch {
-            print("❌ Failed to create zip working directory: \(error)")
+            AppLogger.shelf.error("Failed to create zip working directory, \(type(of: error))")
             return nil
         }
 
@@ -149,7 +155,7 @@ class TemporaryFileStorageService {
                 proc.waitUntilExit()
                 return proc.terminationStatus == 0
             } catch {
-                print("❌ Failed to run zip: \(error)")
+                AppLogger.shelf.error("Failed to run zip, \(type(of: error))")
                 return false
             }
         }
@@ -200,7 +206,7 @@ class TemporaryFileStorageService {
                     try FileManager.default.copyItem(at: src, to: dest)
                 }
             } catch {
-                print("⚠️ Failed to copy \(src.path) to working dir: \(error)")
+                AppLogger.shelf.error("Failed to copy \(src.lastPathComponent) to working dir, \(type(of: error))")
             }
         }
 
@@ -218,7 +224,7 @@ class TemporaryFileStorageService {
                     }
                 }
             } catch {
-                print("⚠️ Failed to cleanup working directory after zip: \(error)")
+                AppLogger.shelf.error("Failed to cleanup working directory after zip, \(type(of: error))")
             }
             return archiveURL
         } else {

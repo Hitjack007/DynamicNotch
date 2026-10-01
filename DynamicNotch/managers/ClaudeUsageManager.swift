@@ -137,9 +137,19 @@ final class ClaudeUsageManager: ObservableObject {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
-            guard let http = response as? HTTPURLResponse else { return }
-            guard http.statusCode != 401 else { authState = .expired; return }
-            guard http.statusCode == 200 else { return }
+            guard let http = response as? HTTPURLResponse else {
+                AppLogger.aiUsage.error("Claude discoverOrgID: response was not an HTTPURLResponse")
+                return
+            }
+            guard http.statusCode != 401 else {
+                AppLogger.auth.notice("Claude discoverOrgID: session expired (401)")
+                authState = .expired
+                return
+            }
+            guard http.statusCode == 200 else {
+                AppLogger.aiUsage.error("Claude discoverOrgID: unexpected status \(http.statusCode)")
+                return
+            }
 
             // Handles both [{id: "..."}, ...] and [{uuid: "..."}, ...] shapes
             if let orgs = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
@@ -147,14 +157,18 @@ final class ClaudeUsageManager: ObservableObject {
                let id = (first["id"] ?? first["uuid"]) as? String
             {
                 if KeychainHelper.save(id, account: "claude.orgID") {
+                    AppLogger.auth.notice("Claude: authenticated, org ID discovered")
                     authState = .authenticated
                 } else {
+                    AppLogger.keychain.error("Claude discoverOrgID: failed to save org ID to Keychain")
                     authState = .error("Could not save organization info to the Keychain.")
                 }
             } else {
+                AppLogger.aiUsage.error("Claude discoverOrgID: could not parse org info from response")
                 authState = .error("Could not parse org info from Claude API response.")
             }
         } catch {
+            AppLogger.aiUsage.error("Claude discoverOrgID: request failed, \(type(of: error))")
             authState = .error(error.localizedDescription)
         }
     }
@@ -167,11 +181,17 @@ final class ClaudeUsageManager: ObservableObject {
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse else {
+                AppLogger.aiUsage.error("Claude fetchUsage: response was not an HTTPURLResponse")
                 lastError = "Unexpected response from Claude."
                 return
             }
-            guard http.statusCode != 401 else { authState = .expired; return }
+            guard http.statusCode != 401 else {
+                AppLogger.auth.notice("Claude fetchUsage: session expired (401)")
+                authState = .expired
+                return
+            }
             guard http.statusCode == 200 else {
+                AppLogger.aiUsage.error("Claude fetchUsage: unexpected status \(http.statusCode)")
                 lastError = "Claude returned HTTP \(http.statusCode)."
                 return
             }
@@ -182,12 +202,16 @@ final class ClaudeUsageManager: ObservableObject {
         } catch {
             // Keep last-good data on transient network errors, but stop
             // presenting it as a live reading.
+            AppLogger.aiUsage.error("Claude fetchUsage: request failed, \(type(of: error))")
             lastError = error.localizedDescription
         }
     }
 
     private func parseUsage(_ data: Data) {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            AppLogger.aiUsage.error("Claude parseUsage: response was not valid JSON")
+            return
+        }
 
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

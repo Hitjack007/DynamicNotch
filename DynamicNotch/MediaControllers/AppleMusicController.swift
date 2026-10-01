@@ -129,8 +129,14 @@ class AppleMusicController: MediaControllerProtocol {
     }
     
     func updatePlaybackInfo() async {
-        guard let descriptor = try? await fetchPlaybackInfoAsync() else { return }
-        guard descriptor.numberOfItems >= 11 else { return }
+        guard let descriptor = try? await fetchPlaybackInfoAsync() else {
+            AppLogger.media.debug("Apple Music: playback info fetch failed or returned nil")
+            return
+        }
+        guard descriptor.numberOfItems >= 11 else {
+            AppLogger.media.debug("Apple Music: playback info descriptor had \(descriptor.numberOfItems) items, expected 11")
+            return
+        }
         var updatedState = self.playbackState
         
         updatedState.isPlaying = descriptor.atIndex(1)?.booleanValue ?? false

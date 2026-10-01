@@ -35,6 +35,9 @@ final class ExtensionPersistenceService {
     private init() {
         let fm = FileManager.default
         let support = try? fm.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        if support == nil {
+            AppLogger.extensions.fault("ExtensionPersistenceService: could not resolve Application Support directory, falling back to temporary directory (extensions will not survive a reboot)")
+        }
         let dir = (support ?? fm.temporaryDirectory)
             .appendingPathComponent("boringNotch", isDirectory: true)
             .appendingPathComponent("Extensions", isDirectory: true)
@@ -55,10 +58,13 @@ final class ExtensionPersistenceService {
     }
 
     func load() -> [StoredExtension] {
-        guard let data = try? Data(contentsOf: fileURL) else { return [] }
+        guard let data = try? Data(contentsOf: fileURL) else {
+            AppLogger.extensions.debug("ExtensionPersistenceService: no existing extensions.json (first run or none saved yet)")
+            return []
+        }
 
         guard let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [Any] else {
-            print("⚠️ Extensions persistence file is not a valid JSON array")
+            AppLogger.extensions.error("ExtensionPersistenceService: extensions.json is not a valid JSON array, backing up and starting fresh")
             backUp(data)
             return []
         }
@@ -68,6 +74,7 @@ final class ExtensionPersistenceService {
             do {
                 return .readable(try decoder.decode(ExtensionRecord.self, from: itemData))
             } catch {
+                AppLogger.extensions.error("ExtensionPersistenceService: one extension failed to decode, \(Self.describe(error))")
                 return .unreadable(Self.unreadableExtension(from: jsonItem, rawJSON: itemData, error: error))
             }
         }
@@ -89,6 +96,7 @@ final class ExtensionPersistenceService {
                     objects.append(try JSONSerialization.jsonObject(with: data))
                     return item
                 } catch {
+                    AppLogger.extensions.error("ExtensionPersistenceService: extension \(record.id) failed to encode, quarantining, \(Self.describe(error))")
                     return .unreadable(quarantine(record, error: error))
                 }
             case .unreadable(let unreadable):
@@ -102,7 +110,7 @@ final class ExtensionPersistenceService {
             let data = try JSONSerialization.data(withJSONObject: objects, options: [.prettyPrinted, .sortedKeys])
             try data.write(to: fileURL, options: .atomic)
         } catch {
-            print("Failed to save extensions: \(error.localizedDescription)")
+            AppLogger.extensions.error("ExtensionPersistenceService: failed to write extensions.json, \(type(of: error))")
         }
         return result
     }

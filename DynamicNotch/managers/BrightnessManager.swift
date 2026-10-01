@@ -62,6 +62,8 @@ final class BrightnessManager: ObservableObject {
 				if await client.setScreenBrightness(xpcTarget) {
 					publish(brightness: xpcTarget, touchDate: true)
 					NotchViewCoordinator.shared.toggleSneakPeek(status: true, type: .brightness, value: CGFloat(xpcTarget))
+				} else {
+					AppLogger.general.error("BrightnessManager.setRelative: both DisplayServices and XPC fallback failed")
 				}
 			}
 		}
@@ -77,6 +79,7 @@ final class BrightnessManager: ObservableObject {
 			if await client.setScreenBrightness(clamped) {
 				publish(brightness: clamped, touchDate: true)
 			} else {
+				AppLogger.general.error("BrightnessManager.setAbsolute: both DisplayServices and XPC fallback failed")
 				refresh()
 			}
 		}
@@ -104,19 +107,34 @@ private enum DisplayServicesAPI {
     typealias GetFn = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32
     typealias SetFn = @convention(c) (CGDirectDisplayID, Float) -> Int32
 
-    static let getFn: GetFn? = handle
-        .flatMap { dlsym($0, "DisplayServicesGetBrightness") }
-        .map { unsafeBitCast($0, to: GetFn.self) }
+    static let getFn: GetFn? = {
+        if handle == nil {
+            AppLogger.general.fault("BrightnessManager: dlopen of DisplayServices.framework failed")
+        }
+        guard let fn = handle.flatMap({ dlsym($0, "DisplayServicesGetBrightness") }) else {
+            AppLogger.general.fault("BrightnessManager: dlsym(DisplayServicesGetBrightness) failed")
+            return nil
+        }
+        return unsafeBitCast(fn, to: GetFn.self)
+    }()
 
     // Absolute-value setter — used by setAbsolute.
-    static let setFn: SetFn? = handle
-        .flatMap { dlsym($0, "DisplayServicesSetBrightness") }
-        .map { unsafeBitCast($0, to: SetFn.self) }
+    static let setFn: SetFn? = {
+        guard let fn = handle.flatMap({ dlsym($0, "DisplayServicesSetBrightness") }) else {
+            AppLogger.general.fault("BrightnessManager: dlsym(DisplayServicesSetBrightness) failed")
+            return nil
+        }
+        return unsafeBitCast(fn, to: SetFn.self)
+    }()
 
     // Delta-based smooth setter — second arg is a SIGNED STEP (±0.0625), not an absolute target.
-    static let setSmoothFn: SetFn? = handle
-        .flatMap { dlsym($0, "DisplayServicesSetBrightnessSmooth") }
-        .map { unsafeBitCast($0, to: SetFn.self) }
+    static let setSmoothFn: SetFn? = {
+        guard let fn = handle.flatMap({ dlsym($0, "DisplayServicesSetBrightnessSmooth") }) else {
+            AppLogger.general.fault("BrightnessManager: dlsym(DisplayServicesSetBrightnessSmooth) failed")
+            return nil
+        }
+        return unsafeBitCast(fn, to: SetFn.self)
+    }()
 
     static func get() -> Float? {
         guard let fn = getFn else { return nil }

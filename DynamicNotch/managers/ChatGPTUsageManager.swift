@@ -120,41 +120,59 @@ final class ChatGPTUsageManager: ObservableObject {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
-            guard let http = response as? HTTPURLResponse else { return }
-            guard http.statusCode != 401 else { authState = .expired; return }
+            guard let http = response as? HTTPURLResponse else {
+                AppLogger.aiUsage.error("ChatGPT exchangeSessionCookies: response was not an HTTPURLResponse")
+                return
+            }
+            guard http.statusCode != 401 else {
+                AppLogger.auth.notice("ChatGPT exchangeSessionCookies: session expired (401)")
+                authState = .expired
+                return
+            }
             guard http.statusCode == 200 else {
+                AppLogger.aiUsage.error("ChatGPT exchangeSessionCookies: unexpected status \(http.statusCode)")
                 authState = .error("Session exchange failed (HTTP \(http.statusCode)).")
                 return
             }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                AppLogger.aiUsage.error("ChatGPT exchangeSessionCookies: could not parse session response")
                 authState = .error("Could not parse session response.")
                 return
             }
 
             guard let accessToken = json["accessToken"] as? String else {
+                AppLogger.aiUsage.error("ChatGPT exchangeSessionCookies: no access token in session response")
                 authState = .error("No access token in session response.")
                 return
             }
 
             guard KeychainHelper.save(accessToken, account: "chatgpt.accessToken") else {
+                AppLogger.keychain.error("ChatGPT exchangeSessionCookies: failed to save access token to Keychain")
                 authState = .error("Could not save the access token to the Keychain.")
                 return
             }
 
             // Best effort — the refresh path degrades to a manual re-auth without it.
             if let sessionToken = json["sessionToken"] as? String {
-                _ = KeychainHelper.save(sessionToken, account: "chatgpt.sessionToken")
+                if !KeychainHelper.save(sessionToken, account: "chatgpt.sessionToken") {
+                    AppLogger.keychain.error("ChatGPT exchangeSessionCookies: failed to save session token to Keychain (non-fatal, refresh path degrades to manual re-auth)")
+                }
             }
 
+            AppLogger.auth.notice("ChatGPT: authenticated via session cookie exchange")
             authState = .authenticated
         } catch {
+            AppLogger.aiUsage.error("ChatGPT exchangeSessionCookies: request failed, \(type(of: error))")
             authState = .error(error.localizedDescription)
         }
     }
 
     private func refreshAccessToken() async -> String? {
-        guard let sessionToken = KeychainHelper.load(account: "chatgpt.sessionToken"),
-              let url = URL(string: "https://chatgpt.com/api/auth/session") else { return nil }
+        guard let sessionToken = KeychainHelper.load(account: "chatgpt.sessionToken") else {
+            AppLogger.keychain.notice("ChatGPT refreshAccessToken: no session token in Keychain, cannot refresh")
+            return nil
+        }
+        guard let url = URL(string: "https://chatgpt.com/api/auth/session") else { return nil }
 
         var req = URLRequest(url: url)
         req.setValue("__Secure-next-auth.session-token=\(sessionToken)", forHTTPHeaderField: "Cookie")
@@ -165,20 +183,35 @@ final class ChatGPTUsageManager: ObservableObject {
         )
         req.setValue("https://chatgpt.com", forHTTPHeaderField: "Referer")
 
-        guard let (data, response) = try? await URLSession.shared.data(for: req),
-              let http = response as? HTTPURLResponse,
-              http.statusCode == 200,
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let newAccessToken = json["accessToken"] as? String else { return nil }
+        guard let (data, response) = try? await URLSession.shared.data(for: req) else {
+            AppLogger.aiUsage.error("ChatGPT refreshAccessToken: request failed")
+            return nil
+        }
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            let status = (response as? HTTPURLResponse)?.statusCode
+            AppLogger.aiUsage.error("ChatGPT refreshAccessToken: unexpected status \(status.map(String.init) ?? "none")")
+            return nil
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let newAccessToken = json["accessToken"] as? String else {
+            AppLogger.aiUsage.error("ChatGPT refreshAccessToken: could not parse response or no access token present")
+            return nil
+        }
 
         // Without persistence the token would be refreshed on every poll forever,
         // so treat a failed write as a failed refresh and require a re-authentication.
-        guard KeychainHelper.save(newAccessToken, account: "chatgpt.accessToken") else { return nil }
-
-        if let newSessionToken = json["sessionToken"] as? String {
-            _ = KeychainHelper.save(newSessionToken, account: "chatgpt.sessionToken")
+        guard KeychainHelper.save(newAccessToken, account: "chatgpt.accessToken") else {
+            AppLogger.keychain.error("ChatGPT refreshAccessToken: failed to save refreshed access token to Keychain")
+            return nil
         }
 
+        if let newSessionToken = json["sessionToken"] as? String {
+            if !KeychainHelper.save(newSessionToken, account: "chatgpt.sessionToken") {
+                AppLogger.keychain.error("ChatGPT refreshAccessToken: failed to save refreshed session token to Keychain (non-fatal)")
+            }
+        }
+
+        AppLogger.auth.notice("ChatGPT: access token refreshed")
         return newAccessToken
     }
 
@@ -196,11 +229,17 @@ final class ChatGPTUsageManager: ObservableObject {
         do {
             let (data, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse else {
+                AppLogger.aiUsage.error("ChatGPT fetchUsage: response was not an HTTPURLResponse")
                 lastError = "Unexpected response from ChatGPT."
                 return
             }
-            guard http.statusCode != 401 else { authState = .expired; return }
+            guard http.statusCode != 401 else {
+                AppLogger.auth.notice("ChatGPT fetchUsage: session expired (401)")
+                authState = .expired
+                return
+            }
             guard http.statusCode == 200 else {
+                AppLogger.aiUsage.error("ChatGPT fetchUsage: unexpected status \(http.statusCode)")
                 lastError = "ChatGPT returned HTTP \(http.statusCode)."
                 return
             }
@@ -211,12 +250,16 @@ final class ChatGPTUsageManager: ObservableObject {
         } catch {
             // Keep last-good data on transient network errors, but stop
             // presenting it as a live reading.
+            AppLogger.aiUsage.error("ChatGPT fetchUsage: request failed, \(type(of: error))")
             lastError = error.localizedDescription
         }
     }
 
     private func parseUsage(_ data: Data) {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            AppLogger.aiUsage.error("ChatGPT parseUsage: response was not valid JSON")
+            return
+        }
 
         if let rateLimit = json["rate_limit"] as? [String: Any],
            let primaryWindow = rateLimit["primary_window"] as? [String: Any] {

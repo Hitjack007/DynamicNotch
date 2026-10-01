@@ -193,18 +193,28 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
             let scriptURL = Bundle.main.url(forResource: "mediaremote-adapter", withExtension: "pl"),
             let frameworkPath = Bundle.main.privateFrameworksPath?.appending("/MediaRemoteAdapter.framework")
         else {
+            // assertionFailure is a no-op in Release, so without this log this failure
+            // was previously completely invisible outside of a Debug build.
+            AppLogger.media.fault("NowPlaying: could not find mediaremote-adapter.pl script or framework path")
             assertionFailure("Could not find mediaremote-adapter.pl script or framework path")
             return
         }
-        
+
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
         process.arguments = [scriptURL.path, frameworkPath, "stream"]
-        
+
         let pipeHandler = JSONLinesPipeHandler()
         process.standardOutput = await pipeHandler.getPipe()
-        
+
         self.process = process
         self.pipeHandler = pipeHandler
+
+        // Previously had no termination handler at all, so if the perl adapter crashed
+        // or was killed mid-stream, now playing info would just silently stop updating
+        // with no trace of why.
+        process.terminationHandler = { terminatedProcess in
+            AppLogger.media.error("NowPlaying: mediaremote-adapter.pl terminated, status=\(terminatedProcess.terminationStatus), reason=\(terminatedProcess.terminationReason.rawValue)")
+        }
 
         do {
             try process.run()
@@ -212,6 +222,7 @@ final class NowPlayingController: ObservableObject, MediaControllerProtocol {
                 await self?.processJSONStream()
             }
         } catch {
+            AppLogger.media.fault("NowPlaying: failed to launch mediaremote-adapter.pl, \(type(of: error))")
             assertionFailure("Failed to launch mediaremote-adapter.pl: \(error)")
         }
     }
@@ -367,7 +378,9 @@ actor JSONLinesPipeHandler {
                 await onLine(decodedObject)
             }
         } catch {
-            print("Error processing JSON stream: \(error)")
+            // Swift.type(of:) is required here, not the bare global function, because this
+            // generic method's own `type: T.Type` parameter shadows it.
+            AppLogger.media.error("NowPlaying: JSON stream processing failed, \(Swift.type(of: error))")
         }
     }
     
@@ -399,7 +412,7 @@ actor JSONLinesPipeHandler {
             let decodedObject = try JSONDecoder().decode(T.self, from: data)
             await onLine(decodedObject)
         } catch {
-            // Ignore lines that can't be decoded
+            AppLogger.media.debug("NowPlaying: dropped undecodable adapter line (\(line.count) chars)")
         }
     }
     
@@ -420,7 +433,7 @@ actor JSONLinesPipeHandler {
             try fileHandle.close()
             try pipe.fileHandleForWriting.close()
         } catch {
-            print("Error closing pipe handler: \(error)")
+            AppLogger.media.error("NowPlaying: error closing pipe handler, \(type(of: error))")
         }
     }
 }

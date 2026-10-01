@@ -74,7 +74,7 @@ final class MediaKeyInterceptor {
     // MARK: - Event Tap
 
     func start(promptIfNeeded: Bool = false) async {
-        logger.fault("start() invoked — eventTap=\(self.eventTap != nil), hudReplacement=\(Defaults[.hudReplacement]), AX=\(AXIsProcessTrusted())")
+        logger.notice("start() invoked — eventTap=\(self.eventTap != nil), hudReplacement=\(Defaults[.hudReplacement]), AX=\(AXIsProcessTrusted())")
         guard eventTap == nil else { return }
 
         guard Defaults[.hudReplacement] else {
@@ -118,9 +118,8 @@ final class MediaKeyInterceptor {
 
         let tapCreated = eventTap != nil
         let tapLevelName = SUPPRESS_OSD_USE_HID_TAP ? "cgHIDEventTap" : "cgSessionEventTap"
-        logger.fault("[MediaKeys] CGEventTap created: \(tapCreated ? "yes" : "no", privacy: .public)")
-        logger.fault("[MediaKeys] Tap level: \(tapLevelName, privacy: .public)")
-        logger.fault("[MediaKeys] IOHIDManager: REMOVED")
+        logger.notice("[MediaKeys] CGEventTap created: \(tapCreated ? "yes" : "no", privacy: .public)")
+        logger.notice("[MediaKeys] Tap level: \(tapLevelName, privacy: .public)")
 
         guard let eventTap else {
             logger.error("CGEvent.tapCreate returned nil — Accessibility not granted (AXIsProcessTrusted=\(AXIsProcessTrusted()))")
@@ -132,7 +131,7 @@ final class MediaKeyInterceptor {
             CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         }
         CGEvent.tapEnable(tap: eventTap, enable: true)
-        logger.fault("Event tap started — bundleID=\(Bundle.main.bundleIdentifier ?? "?", privacy: .public)")
+        logger.notice("Event tap started — bundleID=\(Bundle.main.bundleIdentifier ?? "?", privacy: .public)")
 
         startOSDSuppressor()
     }
@@ -178,14 +177,14 @@ final class MediaKeyInterceptor {
         let stateByte = ((data1 & 0xFF00) >> 8)
         let keyDown = stateByte == 0xA
 
-        logger.fault("NX systemDefined: subtype=\(subtype), keyCode=\(keyCode), state=\(String(format: "0x%X", stateByte))")
+        logger.debug("NX systemDefined: subtype=\(subtype), keyCode=\(keyCode), state=\(String(format: "0x%X", stateByte))")
 
         guard subtype == 8 else {
             return Unmanaged.passUnretained(cgEvent)
         }
 
         guard let keyType = NXKeyType(rawValue: keyCode) else {
-            logger.fault("[MediaKeys] sysDefined keyCode=\(keyCode) keyDown=\(keyDown) → no match, passing through")
+            logger.debug("[MediaKeys] sysDefined keyCode=\(keyCode) keyDown=\(keyDown) → no match, passing through")
             return Unmanaged.passUnretained(cgEvent)
         }
 
@@ -204,11 +203,11 @@ final class MediaKeyInterceptor {
         }
 
         if !isCustomHUDEnabled(for: keyType, command: command) {
-            logger.fault("[MediaKeys] custom HUD disabled for \(String(describing: keyType), privacy: .public) — passing through")
+            logger.debug("[MediaKeys] custom HUD disabled for \(String(describing: keyType), privacy: .public) — passing through")
             return Unmanaged.passUnretained(cgEvent)
         }
 
-        logger.fault("[MediaKeys] sysDefined keyCode=\(keyCode) keyDown=true → handling \(String(describing: keyType), privacy: .public)")
+        logger.debug("[MediaKeys] sysDefined keyCode=\(keyCode) keyDown=true → handling \(String(describing: keyType), privacy: .public)")
 
         if option && !shift {
             if handleOptionAction(for: keyType, command: command) {
@@ -244,13 +243,13 @@ final class MediaKeyInterceptor {
         }
 
         if cgEvent.type == .keyUp {
-            logger.fault("[Brightness] keyUp keycode=\(String(format: "0x%02X", rawCode)) → swallowed")
+            logger.debug("[Brightness] keyUp keycode=\(String(format: "0x%02X", rawCode)) → swallowed")
             return nil
         }
 
         // keyDown — apply delta and trigger HUD
         let delta: Float = isBrightnessUp ? step : -step
-        logger.fault("[Brightness] keyDown keycode=\(String(format: "0x%02X", rawCode)) → \(isBrightnessUp ? "brightnessUp" : "brightnessDown", privacy: .public) → HUD triggered, event swallowed")
+        logger.debug("[Brightness] keyDown keycode=\(String(format: "0x%02X", rawCode)) → \(isBrightnessUp ? "brightnessUp" : "brightnessDown", privacy: .public) → HUD triggered, event swallowed")
 
         Task { @MainActor in
             BrightnessManager.shared.setRelative(delta: delta)
@@ -411,7 +410,7 @@ final class MediaKeyInterceptor {
                 if self.checkForOSDWindow() { return }
                 try? await Task.sleep(nanoseconds: 20_000_000)  // 20ms
             }
-            self.logger.fault("[OSD] No OSDUIHelper window found in 500ms window — system may not have shown OSD")
+            self.logger.error("[OSD] No OSDUIHelper window found in 500ms window — system may not have shown OSD")
         }
     }
 
@@ -432,7 +431,7 @@ final class MediaKeyInterceptor {
                   ownerName == "OSDUIHelper",
                   let windowNumber = window[kCGWindowNumber as String] as? Int else { continue }
             let windowID = CGWindowID(windowNumber)
-            logger.fault("[OSD] OSDUIHelper window detected: id=\(windowID)")
+            logger.debug("[OSD] OSDUIHelper window detected: id=\(windowID)")
             suppressOSDWindow(windowID)
             return true
         }
@@ -447,22 +446,22 @@ final class MediaKeyInterceptor {
         if let sym = MediaKeyInterceptor.coreGraphicsHandle.flatMap({ dlsym($0, "CGSSetWindowAlpha") }) {
             let fn = unsafeBitCast(sym, to: SetAlphaFn.self)
             if fn(conn, windowID, 0.0) == .success {
-                logger.fault("[OSD] Suppressed via option A (CGSSetWindowAlpha)")
+                logger.debug("[OSD] Suppressed via option A (CGSSetWindowAlpha)")
                 return
             }
         }
-        logger.fault("[OSD] Option A failed, trying option B")
+        logger.debug("[OSD] Option A failed, trying option B")
 
         // Option B — push window level below all screens
         typealias SetLevelFn = @convention(c) (Int32, CGWindowID, Int32) -> CGError
         if let sym = MediaKeyInterceptor.coreGraphicsHandle.flatMap({ dlsym($0, "CGSSetWindowLevel") }) {
             let fn = unsafeBitCast(sym, to: SetLevelFn.self)
             if fn(conn, windowID, Int32.min) == .success {
-                logger.fault("[OSD] Suppressed via option B (CGSSetWindowLevel)")
+                logger.debug("[OSD] Suppressed via option B (CGSSetWindowLevel)")
                 return
             }
         }
-        logger.fault("[OSD] Option B failed, trying option C")
+        logger.debug("[OSD] Option B failed, trying option C")
 
         // Option C — move window off-screen
         typealias MoveWindowFn = @convention(c) (Int32, CGWindowID, UnsafePointer<CGPoint>) -> CGError
@@ -470,12 +469,12 @@ final class MediaKeyInterceptor {
             let fn = unsafeBitCast(sym, to: MoveWindowFn.self)
             var offscreen = CGPoint(x: -10000, y: -10000)
             if fn(conn, windowID, &offscreen) == .success {
-                logger.fault("[OSD] Suppressed via option C (CGSMoveWindow)")
+                logger.debug("[OSD] Suppressed via option C (CGSMoveWindow)")
                 return
             }
         }
 
-        logger.fault("[OSD] Suppression failed — all CGS options returned errors")
+        logger.error("[OSD] Suppression failed — all CGS options returned errors")
     }
 
     private func openSystemSettings(for keyType: NXKeyType, command: Bool) {

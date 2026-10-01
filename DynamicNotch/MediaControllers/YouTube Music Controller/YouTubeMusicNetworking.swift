@@ -116,15 +116,18 @@ final class YouTubeMusicHTTPClient: ObservableObject {
     
     private func validateResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
+            AppLogger.network.error("YouTube Music HTTP response was not an HTTPURLResponse")
             throw YouTubeMusicError.invalidResponse
         }
-        
+
         switch httpResponse.statusCode {
         case 200..<300:
             break
         case 401, 403:
+            AppLogger.auth.error("YouTube Music HTTP request unauthorized, status=\(httpResponse.statusCode)")
             throw YouTubeMusicError.authenticationRequired
         default:
+            AppLogger.network.error("YouTube Music HTTP request failed, status=\(httpResponse.statusCode)")
             throw YouTubeMusicError.httpError(httpResponse.statusCode)
         }
     }
@@ -169,7 +172,7 @@ actor YouTubeMusicWebSocketClient {
         
         let newTask = session.webSocketTask(with: request)
         newTask.resume()
-        print("[YouTubeMusicWebSocketClient] Attempting WebSocket handshake")
+        AppLogger.network.debug("YouTube Music WS: attempting handshake")
 
         // resume() is fire-and-forget and never throws for a refused or dropped
         // connection — only the first receive() actually surfaces the handshake
@@ -179,12 +182,32 @@ actor YouTubeMusicWebSocketClient {
         do {
             firstMessage = try await receiveWithTimeout(newTask, timeout: 5)
         } catch {
-            print("[YouTubeMusicWebSocketClient] Handshake failed: \(error)")
+            // URLSessionWebSocketTask.response carries the HTTP upgrade response's status
+            // even when the upgrade was rejected, not just when it succeeds — a server
+            // declining with 401/403 arrives here as a generic URLError with no obvious
+            // auth signal unless this is checked. Surfacing it as authenticationRequired
+            // (instead of the raw error) lets the caller actually invalidate the stale
+            // token, rather than retrying the same bad token forever.
+            let statusCode = (newTask.response as? HTTPURLResponse)?.statusCode
+            if statusCode == 401 || statusCode == 403 {
+                AppLogger.auth.error("YouTube Music WS: handshake rejected as unauthorized, status=\(statusCode ?? -1)")
+                newTask.cancel(with: .goingAway, reason: nil)
+                throw YouTubeMusicError.authenticationRequired
+            }
+
+            let statusDescription = statusCode.map(String.init) ?? "none"
+            if error is HandshakeTimeout {
+                AppLogger.network.error("YouTube Music WS: handshake timed out waiting for first message (status=\(statusDescription))")
+            } else if let urlError = error as? URLError {
+                AppLogger.network.error("YouTube Music WS: handshake failed, URLError.Code=\(urlError.code.rawValue) (status=\(statusDescription))")
+            } else {
+                AppLogger.network.error("YouTube Music WS: handshake failed, \(type(of: error)) (status=\(statusDescription))")
+            }
             newTask.cancel(with: .goingAway, reason: nil)
             throw error
         }
 
-        print("[YouTubeMusicWebSocketClient] Handshake succeeded")
+        AppLogger.network.info("YouTube Music WS: handshake succeeded")
         task = newTask
         await handle(firstMessage)
         Task { await listenForMessages() }
@@ -201,7 +224,12 @@ actor YouTubeMusicWebSocketClient {
                 let message = try await currentTask.receive()
                 await handle(message)
             } catch {
-                print("[YouTubeMusicWebSocketClient] Receive failed, disconnecting: \(error)")
+                let closeCode = currentTask.closeCode
+                if let urlError = error as? URLError {
+                    AppLogger.network.error("YouTube Music WS: receive failed, URLError.Code=\(urlError.code.rawValue), closeCode=\(closeCode.rawValue), disconnecting")
+                } else {
+                    AppLogger.network.error("YouTube Music WS: receive failed, \(type(of: error)), closeCode=\(closeCode.rawValue), disconnecting")
+                }
                 break
             }
         }

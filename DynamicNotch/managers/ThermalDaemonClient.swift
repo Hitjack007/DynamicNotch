@@ -127,7 +127,7 @@ final class ThermalDaemonClient: ObservableObject {
                    (nsError.userInfo["NSAppleScriptErrorNumber"] as? Int) == -128 {
                     return .cancelled
                 }
-                NSLog("ThermalDaemonClient.Installer: direct install failed, falling back to Terminal: %@", error.localizedDescription)
+                AppLogger.thermal.error("ThermalDaemonClient.Installer: direct install failed, falling back to Terminal, \(type(of: error))")
                 copyToClipboardAndOpenTerminal(cmd)
                 return .fellBackToTerminal(command: cmd)
             }
@@ -145,7 +145,10 @@ final class ThermalDaemonClient: ObservableObject {
     @discardableResult
     private func send(_ command: String) -> String? {
         let fd = socket(AF_UNIX, SOCK_STREAM, 0)
-        guard fd >= 0 else { return nil }
+        guard fd >= 0 else {
+            AppLogger.thermal.error("ThermalDaemonClient: socket() failed, errno=\(errno) (\(String(cString: strerror(errno))))")
+            return nil
+        }
         defer { Darwin.close(fd) }
 
         // Must exceed the daemon's 600ms Ftst-unlock sleep (first set after auto resets unlocked=false)
@@ -166,7 +169,9 @@ final class ThermalDaemonClient: ObservableObject {
             }
         }
         guard connected == 0 else {
-            NSLog("ThermalDaemonClient: connect() failed errno=%d (%s)", errno, strerror(errno))
+            // .debug, not .error: this fires on every send() for anyone who hasn't
+            // installed the thermal daemon at all, which is the common case, not a fault.
+            AppLogger.thermal.debug("ThermalDaemonClient: connect() failed, errno=\(errno) (\(String(cString: strerror(errno))))")
             isAvailable = false
             return nil
         }
@@ -174,11 +179,17 @@ final class ThermalDaemonClient: ObservableObject {
         isAvailable = true
 
         let cmdBytes = Array((command + "\n").utf8)
-        write(fd, cmdBytes, cmdBytes.count)
+        let written = write(fd, cmdBytes, cmdBytes.count)
+        if written != cmdBytes.count {
+            AppLogger.thermal.error("ThermalDaemonClient: write() sent \(written) of \(cmdBytes.count) bytes for command \"\(command)\"")
+        }
 
         var buf = [UInt8](repeating: 0, count: 256)
         let n = read(fd, &buf, 255)
-        guard n > 0 else { return nil }
+        guard n > 0 else {
+            AppLogger.thermal.error("ThermalDaemonClient: read() returned \(n) for command \"\(command)\", errno=\(errno) (\(String(cString: strerror(errno))))")
+            return nil
+        }
 
         return String(bytes: buf.prefix(Int(n)), encoding: .utf8)?
             .trimmingCharacters(in: .whitespacesAndNewlines)

@@ -29,12 +29,12 @@ extension NSItemProvider {
     
     /// Loads raw data for the given type identifier
     func loadData() async -> Data? {
-        NSLog(String(describing: self.registeredTypeIdentifiers))
+        AppLogger.shelf.debug("NSItemProvider.loadData: registered types \(String(describing: self.registeredTypeIdentifiers))")
         guard hasItemConformingToTypeIdentifier(UTType.data.identifier) else { return nil }
         return await withCheckedContinuation { (cont: CheckedContinuation<Data?, Never>) in
             loadItem(forTypeIdentifier: UTType.data.identifier, options: nil) { item, error in
                 if let error = error {
-                    print("Error loading data for type \(UTType.data.identifier): \(error.localizedDescription)")
+                    AppLogger.shelf.error("Error loading data for type \(UTType.data.identifier), \(type(of: error))")
                     cont.resume(returning: nil)
                     return
                 }
@@ -44,28 +44,28 @@ extension NSItemProvider {
                         return
                     }
                     self.suggestedName = self.suggestedName ?? url.lastPathComponent
-                    
+
                     let fileManager = FileManager.default
                     let folderURL = url.deletingLastPathComponent()
 
                     do {
                         // Delete the file first
                         try fileManager.removeItem(at: url)
-                        print("Deleted file: \(url.path)")
+                        AppLogger.shelf.debug("Deleted file promise temp file \(url.lastPathComponent)")
 
                         // Check folder contents
                         let contents = try fileManager.contentsOfDirectory(atPath: folderURL.path)
                         if contents.isEmpty {
                             try fileManager.removeItem(at: folderURL)
-                            print("Folder was empty, deleted folder: \(folderURL.path)")
+                            AppLogger.shelf.debug("Folder was empty, deleted folder \(folderURL.lastPathComponent)")
                         } else {
-                            print("Folder not deleted — it still contains \(contents.count) item(s).")
+                            AppLogger.shelf.debug("Folder not deleted — still contains \(contents.count) item(s)")
                         }
 
                     } catch {
-                        print("Error: \(error.localizedDescription)")
+                        AppLogger.shelf.error("NSItemProvider.loadData cleanup failed, \(type(of: error))")
                     }
-                    
+
                     cont.resume(returning: data)
                 } else if let data = item as? Data {
                     cont.resume(returning: data)
@@ -106,7 +106,7 @@ extension NSItemProvider {
         await withCheckedContinuation { (cont: CheckedContinuation<URL?, Never>) in
             self.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, error in
                 if let error = error {
-                    print("❌ Error loading item for type \(typeIdentifier): \(error.localizedDescription)")
+                    AppLogger.shelf.error("Error loading item for type \(typeIdentifier), \(type(of: error))")
                     cont.resume(returning: nil)
                     return
                 }

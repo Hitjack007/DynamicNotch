@@ -121,15 +121,15 @@ class MusicManager: ObservableObject {
                         break
                     }
                     if attempt < maxAttempts {
-                        print("Now Playing check returned non-zero (attempt \(attempt)/\(maxAttempts)), retrying in 30s...")
+                        AppLogger.media.notice("Now Playing check returned non-zero (attempt \(attempt)/\(maxAttempts)), retrying in 30s")
                         try? await Task.sleep(for: .seconds(30))
                     } else {
                         finalIsDeprecated = true
                         finalCheckFailed = true
-                        print("Now Playing check failed all \(maxAttempts) attempts.")
+                        AppLogger.media.error("Now Playing check failed all \(maxAttempts) attempts")
                     }
                 } catch {
-                    print("Failed to check deprecation status: \(error). Defaulting to available.")
+                    AppLogger.media.error("Failed to check Now Playing deprecation status, \(type(of: error)). Defaulting to available")
                     break
                 }
             }
@@ -200,7 +200,7 @@ class MusicManager: ObservableObject {
 
     private func setActiveControllerBasedOnPreference() {
         let preferredType = Defaults[.mediaController]
-        print("Preferred Media Controller: \(preferredType)")
+        AppLogger.media.info("Preferred media controller: \(String(describing: preferredType))")
 
         // If NowPlaying is deprecated but that's the preference, use Apple Music instead
         let controllerType = (self.isNowPlayingDeprecated && preferredType == .nowPlaying)
@@ -233,7 +233,7 @@ class MusicManager: ObservableObject {
     private func updateFromPlaybackState(_ state: PlaybackState) {
         // Check for playback state changes (playing/paused)
         if state.isPlaying != self.isPlaying {
-            NSLog("Playback state changed: \(state.isPlaying ? "Playing" : "Paused")")
+            AppLogger.media.debug("Playback state changed: \(state.isPlaying ? "Playing" : "Paused")")
             withAnimation(.smooth) {
                 self.isPlaying = state.isPlaying
             }
@@ -716,7 +716,7 @@ class MusicManager: ObservableObject {
     }
     func openMusicApp() {
         guard let bundleID = bundleIdentifier else {
-            print("Error: appBundleIdentifier is nil")
+            AppLogger.media.error("openMusicApp: bundleIdentifier is nil")
             return
         }
 
@@ -725,13 +725,13 @@ class MusicManager: ObservableObject {
             let configuration = NSWorkspace.OpenConfiguration()
             workspace.openApplication(at: appURL, configuration: configuration) { (app, error) in
                 if let error = error {
-                    print("Failed to launch app with bundle ID: \(bundleID), error: \(error)")
+                    AppLogger.media.error("Failed to launch app with bundle ID \(bundleID), \(type(of: error))")
                 } else {
-                    print("Launched app with bundle ID: \(bundleID)")
+                    AppLogger.media.info("Launched app with bundle ID \(bundleID)")
                 }
             }
         } else {
-            print("Failed to find app with bundle ID: \(bundleID)")
+            AppLogger.media.error("Failed to find app with bundle ID \(bundleID)")
         }
     }
 

@@ -97,8 +97,14 @@ class SpotifyController: MediaControllerProtocol, @unchecked Sendable {
     }
     
     func updatePlaybackInfo() async {
-        guard let descriptor = try? await fetchPlaybackInfoAsync() else { return }
-        guard descriptor.numberOfItems >= 10 else { return }
+        guard let descriptor = try? await fetchPlaybackInfoAsync() else {
+            AppLogger.media.debug("Spotify: playback info fetch failed or returned nil")
+            return
+        }
+        guard descriptor.numberOfItems >= 10 else {
+            AppLogger.media.debug("Spotify: playback info descriptor had \(descriptor.numberOfItems) items, expected 10")
+            return
+        }
         
         let isPlaying = descriptor.atIndex(1)?.booleanValue ?? false
         let currentTrack = descriptor.atIndex(2)?.stringValue ?? "Unknown"

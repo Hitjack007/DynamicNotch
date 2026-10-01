@@ -44,10 +44,13 @@ final class AudioOutputManager: ObservableObject {
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        AudioObjectSetPropertyData(
+        let status = AudioObjectSetPropertyData(
             AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil,
             UInt32(MemoryLayout<AudioDeviceID>.size), &id
         )
+        if status != noErr {
+            AppLogger.audio.error("AudioOutputManager: failed to set default output device \(deviceID), OSStatus=\(status)")
+        }
         refresh()
     }
 
@@ -114,15 +117,23 @@ final class AudioOutputManager: ObservableObject {
             mElement: kAudioObjectPropertyElementMain
         )
         var size: UInt32 = 0
-        guard AudioObjectGetPropertyDataSize(
+        let sizeStatus = AudioObjectGetPropertyDataSize(
             AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size
-        ) == noErr else { return [] }
+        )
+        guard sizeStatus == noErr else {
+            AppLogger.audio.error("AudioOutputManager: failed to get device list size, OSStatus=\(sizeStatus)")
+            return []
+        }
 
         let count = Int(size) / MemoryLayout<AudioDeviceID>.size
         var ids = [AudioDeviceID](repeating: 0, count: count)
-        guard AudioObjectGetPropertyData(
+        let dataStatus = AudioObjectGetPropertyData(
             AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &ids
-        ) == noErr else { return [] }
+        )
+        guard dataStatus == noErr else {
+            AppLogger.audio.error("AudioOutputManager: failed to get device list, OSStatus=\(dataStatus)")
+            return []
+        }
 
         return ids.compactMap { id -> AudioOutputDevice? in
             let transport = transportType(id)

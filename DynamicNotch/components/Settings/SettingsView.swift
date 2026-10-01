@@ -1049,6 +1049,10 @@ struct AboutSettings: View {
     @State private var releaseNotes: String? = nil
     @State private var isLoadingNotes = false
     @State private var showBuildNumber = false
+    @State private var diagnosticsCopied = false
+    @State private var crashReportToShow: CrashReport?
+    @State private var noCrashReportsFoundAlert = false
+    @State private var showReportIssueInstructions = false
 
     init(updater: SPUUpdater) {
         self.updater = updater
@@ -1183,7 +1187,14 @@ struct AboutSettings: View {
                 }
                 LabeledContent("Feedback") {
                     Button("Report an Issue") {
-                        NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch/issues/new")!)
+                        showReportIssueInstructions = true
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+                LabeledContent("Suggestions") {
+                    Button("Request a Feature") {
+                        NSWorkspace.shared.open(URL(string: "https://github.com/Hitjack007/DynamicNotch/issues/new?template=1-feature-request-form.yml")!)
                     }
                     .buttonStyle(.borderless)
                     .foregroundStyle(Color.effectiveAccent)
@@ -1191,10 +1202,73 @@ struct AboutSettings: View {
             } header: {
                 Text("Links")
             }
+
+            Section {
+                LabeledContent("Diagnostic log") {
+                    Button(diagnosticsCopied ? "Copied!" : "Copy Diagnostics") {
+                        let pasteboard = NSPasteboard.general
+                        pasteboard.clearContents()
+                        pasteboard.setString(DiagnosticsCollector.currentContents(), forType: .string)
+                        diagnosticsCopied = true
+                        Task {
+                            try? await Task.sleep(for: .seconds(2))
+                            diagnosticsCopied = false
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+                LabeledContent("Full log") {
+                    Button("Reveal in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([DiagnosticsCollector.fullFileURL])
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+                LabeledContent("Crash reports") {
+                    Button("Check for Crash Reports") {
+                        if let latest = CrashReportScanner.findNewCrashReports(includeAcknowledged: true).first {
+                            crashReportToShow = latest
+                        } else {
+                            noCrashReportsFoundAlert = true
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.effectiveAccent)
+                }
+            } header: {
+                Text("Diagnostics")
+            } footer: {
+                Text("The diagnostic log is small and curated \u{2014} errors plus key milestones \u{2014} and is what gets copied into a bug report. The full log has everything, every level, every category; it can get large, so it's meant to be opened and traced through directly rather than pasted. Both are timestamped identically, so they line up exactly.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .navigationTitle("About")
         .accentColor(.effectiveAccent)
-        .task { await fetchReleaseNotes() }
+        .task {
+            await fetchReleaseNotes()
+            // Surfaces a crash automatically when this page is opened (including the
+            // auto-open from DynamicNotchApp's launch check) - the manual button above
+            // reuses the exact same sheet, just with includeAcknowledged: true.
+            if let latest = CrashReportScanner.findNewCrashReports().first {
+                crashReportToShow = latest
+            }
+        }
+        .sheet(item: $crashReportToShow) { report in
+            CrashReportView(report: report) { crashReportToShow = nil }
+        }
+        .alert("No Crash Reports Found", isPresented: $noCrashReportsFoundAlert) {
+            Button("OK", role: .cancel) {}
+        }
+        .alert("Finder and Your Browser Will Open", isPresented: $showReportIssueInstructions) {
+            Button("Continue") {
+                Task { await BugReportExporter.export() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Finder will open with your diagnostic log and full log selected, and your browser will open to the bug report page. Drag both into the \u{201C}Attach Files & Screenshots\u{201D} field there.")
+        }
     }
 
     @MainActor

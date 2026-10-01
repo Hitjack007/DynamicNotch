@@ -23,7 +23,11 @@ struct KeychainHelper {
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
         SecItemDelete(query as CFDictionary)
-        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+        let status = SecItemAdd(query as CFDictionary, nil)
+        if status != errSecSuccess {
+            AppLogger.keychain.error("Keychain save failed for account \(account), OSStatus=\(status)")
+        }
+        return status == errSecSuccess
     }
 
     static func load(account: String) -> String? {
@@ -35,8 +39,16 @@ struct KeychainHelper {
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess, let data = result as? Data else {
+            // errSecItemNotFound (-25300) is the expected/common case (nothing saved
+            // yet) - only worth a debug log, not error, to avoid spamming on every
+            // startup before the user has authenticated.
+            if status != errSecItemNotFound {
+                AppLogger.keychain.error("Keychain load failed for account \(account), OSStatus=\(status)")
+            }
+            return nil
+        }
         return String(data: data, encoding: .utf8)
     }
 

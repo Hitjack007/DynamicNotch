@@ -66,8 +66,18 @@ struct ChromeCookieReader {
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess, let data = result as? Data else {
+            // errSecItemNotFound just means the browser isn't installed/used - only
+            // worth a debug log. Anything else (e.g. errSecUserCanceled from a denied
+            // Keychain prompt) is worth knowing about when a cookie-read silently fails.
+            if status == errSecItemNotFound {
+                AppLogger.keychain.debug("Chrome cookie reader: no \(variant.keychainService) entry (browser not installed/used)")
+            } else {
+                AppLogger.keychain.error("Chrome cookie reader: Keychain lookup for \(variant.keychainService) failed, OSStatus=\(status)")
+            }
+            return nil
+        }
         return String(data: data, encoding: .utf8)
     }
 
@@ -93,25 +103,37 @@ struct ChromeCookieReader {
                 }
             }
         }
+        if status != kCCSuccess {
+            AppLogger.keychain.error("Chrome cookie reader: PBKDF2 key derivation failed, CCStatus=\(status)")
+        }
         return status == kCCSuccess ? derived : nil
     }
 
     // MARK: - SQLite
 
     private static func readEncryptedCookie(named cookieName: String, variant: ChromeVariant, key: Data, domain: String) -> String? {
-        guard FileManager.default.fileExists(atPath: variant.cookiePath) else { return nil }
+        guard FileManager.default.fileExists(atPath: variant.cookiePath) else {
+            AppLogger.keychain.debug("Chrome cookie reader: no cookie DB at \(variant.cookiePath) (browser not installed/used)")
+            return nil
+        }
 
         // Copy to avoid locking conflict with a running browser instance
         let tmp = NSTemporaryDirectory() + "dynamicnotch_\(variant.keychainAccount)_cookies.db"
         try? FileManager.default.removeItem(atPath: tmp)
-        guard (try? FileManager.default.copyItem(atPath: variant.cookiePath, toPath: tmp)) != nil else { return nil }
+        guard (try? FileManager.default.copyItem(atPath: variant.cookiePath, toPath: tmp)) != nil else {
+            AppLogger.keychain.error("Chrome cookie reader: failed to copy cookie DB for \(variant.keychainAccount)")
+            return nil
+        }
         defer { try? FileManager.default.removeItem(atPath: tmp) }
 
         var db: OpaquePointer?
         // sqlite3_open_v2 allocates a connection handle even when it returns an error,
         // so close must be deferred before the failure guard, not after it.
         defer { sqlite3_close(db) }
-        guard sqlite3_open_v2(tmp, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else { return nil }
+        guard sqlite3_open_v2(tmp, &db, SQLITE_OPEN_READONLY, nil) == SQLITE_OK else {
+            AppLogger.keychain.error("Chrome cookie reader: failed to open cookie DB for \(variant.keychainAccount)")
+            return nil
+        }
 
         let sql = """
             SELECT encrypted_value FROM cookies
@@ -119,13 +141,22 @@ struct ChromeCookieReader {
             ORDER BY creation_utc DESC LIMIT 1
             """
         var stmt: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return nil }
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            AppLogger.keychain.error("Chrome cookie reader: failed to prepare cookie query for \(variant.keychainAccount)")
+            return nil
+        }
         defer { sqlite3_finalize(stmt) }
 
         guard sqlite3_step(stmt) == SQLITE_ROW,
-              let blob = sqlite3_column_blob(stmt, 0) else { return nil }
+              let blob = sqlite3_column_blob(stmt, 0) else {
+            AppLogger.keychain.debug("Chrome cookie reader: no \(cookieName) cookie found for domain \(domain) in \(variant.keychainAccount)")
+            return nil
+        }
         let byteCount = Int(sqlite3_column_bytes(stmt, 0))
-        guard byteCount > 3 else { return nil }
+        guard byteCount > 3 else {
+            AppLogger.keychain.error("Chrome cookie reader: encrypted cookie blob too short (\(byteCount) bytes) for \(variant.keychainAccount)")
+            return nil
+        }
 
         let encrypted = Data(bytes: blob, count: byteCount)
         return decrypt(encrypted, key: key)
@@ -136,7 +167,10 @@ struct ChromeCookieReader {
     private static func decrypt(_ data: Data, key: Data) -> String? {
         // Strip "v10" prefix
         guard data.count > 3,
-              data[0] == 0x76, data[1] == 0x31, data[2] == 0x30 else { return nil }
+              data[0] == 0x76, data[1] == 0x31, data[2] == 0x30 else {
+            AppLogger.keychain.error("Chrome cookie reader: encrypted value missing expected v10 prefix")
+            return nil
+        }
         let ciphertext = data.dropFirst(3)
         let iv = Data(repeating: 0x20, count: kCCBlockSizeAES128)  // 16 ASCII spaces
 
@@ -162,7 +196,10 @@ struct ChromeCookieReader {
                 }
             }
         }
-        guard status == kCCSuccess else { return nil }
+        guard status == kCCSuccess else {
+            AppLogger.keychain.error("Chrome cookie reader: AES decryption failed, CCCryptorStatus=\(status)")
+            return nil
+        }
         return String(data: plaintext.prefix(decryptedLength), encoding: .utf8)
     }
 }

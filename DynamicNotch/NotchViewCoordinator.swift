@@ -108,11 +108,11 @@ class NotchViewCoordinator: ObservableObject {
             if let screen = NSScreen.screens.first(where: { $0.localizedName == legacyName }),
                let uuid = screen.displayUUID {
                 preferredScreenUUID = uuid
-                NSLog("✅ Migrated display preference from name '\(legacyName)' to UUID '\(uuid)'")
+                AppLogger.general.notice("Migrated display preference from name '\(legacyName)' to UUID '\(uuid)'")
             } else {
                 // Fallback to main screen if legacy screen not found
                 preferredScreenUUID = NSScreen.main?.displayUUID
-                NSLog("⚠️ Could not find display named '\(legacyName)', falling back to main screen")
+                AppLogger.general.notice("Could not find display named '\(legacyName)', falling back to main screen")
             }
             // Clear legacy value after migration
             legacyPreferredScreenName = nil
@@ -207,12 +207,12 @@ class NotchViewCoordinator: ObservableObject {
             let value = CGFloat((formatter.number(from: decodedData.value) ?? 0.0).floatValue)
             let icon = decodedData.icon
 
-            print("Decoded: \(decodedData), Parsed value: \(value)")
+            AppLogger.general.debug("Sneak peek decoded, type=\(decodedData.type), value=\(value)")
 
             toggleSneakPeek(status: decodedData.show, type: contentType, value: value, icon: icon)
 
         } else {
-            print("Failed to decode JSON data")
+            AppLogger.general.error("Sneak peek: failed to decode JSON payload")
         }
     }
 

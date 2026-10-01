@@ -444,4 +444,15 @@ extension Defaults.Keys {
     // MARK: Idle Notch Widgets
     static let idleNotchLeftWidget  = Key<IdleNotchWidget>("idleNotchLeftWidget",  default: .none)
     static let idleNotchRightWidget = Key<IdleNotchWidget>("idleNotchRightWidget", default: .none)
+
+    // MARK: Diagnostics
+
+    /// Crash report filenames (from ~/Library/Logs/DiagnosticReports) already shown to
+    /// the user once, via the post-crash banner or the manual "Check for Crash Reports"
+    /// row - so a dismissed crash never resurfaces, without needing a timestamp cutoff.
+    static let acknowledgedCrashReportFilenames = Key<Set<String>>("acknowledgedCrashReportFilenames", default: [])
+
+    /// Last time the exported bug-report bundle folder (BugReportExporter) was swept
+    /// down to just the most recent export. nil means it has never run.
+    static let lastBugReportCleanupDate = Key<Date?>("lastBugReportCleanupDate", default: nil)
 }

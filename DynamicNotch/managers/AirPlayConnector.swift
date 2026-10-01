@@ -24,7 +24,9 @@ final class AirPlayConnector: ObservableObject {
             let deviceID = try await waitForCoreAudioDevice(named: device.name, timeout: 8)
             AudioOutputManager.shared.setDefault(deviceID)
         } catch {
-            // silent failure — device stays greyed out, user can retry
+            // Intentionally silent to the user — device stays greyed out, they can retry.
+            // Still worth a debug-level trace so a "it never connects" report is traceable.
+            AppLogger.audio.debug("AirPlayConnector: failed to wake \(device.name), \(type(of: error))")
         }
     }
 
