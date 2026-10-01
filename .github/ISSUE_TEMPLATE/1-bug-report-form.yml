@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 description: File a bug report.
-title: '[Bug] '
+title: "[Bug] "
 type: Bug
 labels:
   - unconfirmed
@@ -14,11 +14,16 @@ body:
     id: attachments
     attributes:
       label: "Attach Files & Screenshots Here"
-      description: "Drag & drop files, or paste from clipboard."
+      description: >-
+        Please copy and paste any relevant log output, or drag a log file into
+        the attachments field above. This will be automatically formatted
+        into code, so no need for backticks. If you really don't want to
+        attach logs, write "Not adding logs or similar" here — just know that
+        skipping this can slow down how quickly we're able to diagnose and
+        fix the issue
       placeholder: "Drop files here..."
-      render: markdown
     validations:
-      required: false
+      required: true
   - type: textarea
     id: what-happened
     attributes:
@@ -69,7 +74,7 @@ body:
     attributes:
       label: Music Source? (If relevant)
       description: >-
-         If this issue is related to music, what music source did you select in DynamicNotch settings?
+        If this issue is related to music, what music source did you select in DynamicNotch settings?
       options:
         - Now Playing
         - Apple Music
@@ -89,19 +94,11 @@ body:
       label: Website (If using browser for music)
     validations:
       required: false
-  - type: textarea
-    id: logs
-    attributes:
-      label: Relevant log output
-      description: >-
-        Please copy and paste any relevant log output. This will be
-        automatically formatted into code, so no need for backticks.
-      render: shell
   - type: checkboxes
     id: checks
     attributes:
       label: Checks
-      description: 
+      description:
       options:
         - label: I haven't found any duplicates with my issue.
           required: true
