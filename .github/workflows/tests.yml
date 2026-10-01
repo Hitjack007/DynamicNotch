@@ -1,0 +1,19 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          xcodebuild test \
+            -project dynamicNotch.xcodeproj \
+            -scheme DynamicNotch \
+            -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO

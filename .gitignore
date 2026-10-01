@@ -54,6 +54,9 @@ CLAUDE.local.md
 *.xcodeproj/xcuserdata
 *.xcodeproj/project.xcuserdata
 
+# Shared scheme kept for CI (xcodebuild test needs a committed scheme)
+!/dynamicNotch.xcodeproj/xcshareddata/xcschemes/DynamicNotch.xcscheme
+
 # Build artifacts
 *.ipa
 *.xcarchive
