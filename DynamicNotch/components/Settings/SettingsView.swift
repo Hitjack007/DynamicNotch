@@ -2839,9 +2839,9 @@ struct AIUsageSettings: View {
                 }
             }
 
-            thresholdStepper("First alert", value: $aiUsageThresholdA)
-            thresholdStepper("Second alert", value: $aiUsageThresholdB)
-            thresholdStepper("Third alert", value: $aiUsageThresholdC)
+            thresholdPicker("First alert", value: $aiUsageThresholdA)
+            thresholdPicker("Second alert", value: $aiUsageThresholdB)
+            thresholdPicker("Third alert", value: $aiUsageThresholdC)
         } header: {
             Text("Notifications")
         } footer: {
@@ -2851,12 +2851,11 @@ struct AIUsageSettings: View {
 
         Section {
             Toggle("Notify when the window resets", isOn: $aiUsageNotifyOnReset)
-            Stepper(
-                "Only if the window reached \(aiUsageResetNotifyMinPercent)%",
-                value: $aiUsageResetNotifyMinPercent,
-                in: 0 ... 100,
-                step: 5
-            )
+            Picker("Only if the window reached", selection: $aiUsageResetNotifyMinPercent) {
+                ForEach(Array(stride(from: 0, through: 100, by: 5)), id: \.self) { percent in
+                    Text("\(percent)%").tag(percent)
+                }
+            }
             .disabled(!aiUsageNotifyOnReset)
         } header: {
             Text("Window Reset")
@@ -2866,13 +2865,13 @@ struct AIUsageSettings: View {
         .disabled(!showAIUsageTab || !aiUsageNotificationsEnabled)
     }
 
-    private func thresholdStepper(_ label: String, value: Binding<Int>) -> some View {
-        Stepper(
-            value.wrappedValue == 0 ? "\(label): Off" : "\(label) at \(value.wrappedValue)%",
-            value: value,
-            in: 0 ... 100,
-            step: 5
-        )
+    private func thresholdPicker(_ label: String, value: Binding<Int>) -> some View {
+        Picker(label, selection: value) {
+            Text("Off").tag(0)
+            ForEach(Array(stride(from: 5, through: 100, by: 5)), id: \.self) { percent in
+                Text("\(percent)%").tag(percent)
+            }
+        }
         .disabled(!aiUsageNotificationsEnabled)
     }
 
