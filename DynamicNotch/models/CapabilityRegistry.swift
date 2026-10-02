@@ -242,8 +242,8 @@ enum CapabilityRegistry {
         "To match which app is frontmost/launched/quit, use condition field \"name\" with op \"contains\" and the app's plain display name (e.g. \"Xcode\", \"Safari\") \u{2014} not \"bundleIdentifier\". Exact bundle identifiers are easy to get wrong from memory; the display name is not.",
         "A rule can run several actions: \"actions\" is an array, run in order, once the trigger matches and prerequisites (if any) pass.",
         "\"prerequisites\" is a COMPULSORY ambient-state gate, checked AFTER the trigger/conditions match and BEFORE actions run \u{2014} required whenever any action inside \"actions\" is marked (usable as a prerequisite) below, since that's exactly what stops a state-setting action from re-firing every time its trigger recurs. Only omit \"prerequisites\" when every action in the rule is NOT marked (usable as a prerequisite) \u{2014} a pure fire-and-forget command with nothing to gate on. Each entry has the exact same shape as an action step (\"action\" + \"payload\"), but is read as current live state instead of performed.",
-        "\"mode\" controls how \"prerequisites\" are evaluated: \"entry\" (default) runs the rule if ANY prerequisite's live state currently matches its payload, skipping only if ALL currently mismatch. \"exit\" runs the rule if ANY prerequisite's live state currently MISmatches its payload, skipping only if ALL currently match — AND only after this extension's entry rule has itself fired (run its actions) since the last time the exit rule fired; an exit rule can never run before its entry rule has. An extension can have at most one entry rule and at most one exit rule in total, so pair them by reusing the exact same prerequisites and payload values, each with their own independent trigger — e.g. entry trigger \"app.frontmostChanged\"/Xcode with prerequisites [caffeine.set: {enabled:false}] mode entry, and a separate exit rule with trigger \"app.frontmostChanged\"/Safari, the SAME prerequisites, mode \"exit\".",
-        "\"sustainFor\" (optional, seconds) puts a resettable timer on a rule: every time this rule's trigger/conditions match, its \"actions\" run as normal AND this timer (re)starts. If the timer ever completes without being reset first, it fires the \"extension.durationElapsed\" trigger, with a payload identical to the fields of whatever trigger set the timer. For a handful of triggers with an obvious \"current value\" (app.frontmostChanged, volume.changed, brightness.changed, media.playbackChanged, caffeine.stateChanged, webcam.activeChanged, audioDevice.changed, thermal.stateChanged) the timer ALSO keeps resetting on its own every few seconds for as long as that live value keeps satisfying the same conditions \u{2014} so it measures continuous real time in that state, not just \"how long since the last matching event.\" Other triggers can only reset it via an actual recurring event. Use this for \"undo after N straight minutes of this\" \u{2014} e.g. an entry rule with trigger \"app.frontmostChanged\", condition name contains \"Xcode\", actions [caffeine.set: {enabled:true}], sustainFor 7200 (2 hours); then your extension's one exit rule, with trigger \"extension.durationElapsed\" and the SAME condition and prerequisites, to turn Caffeine back off once Xcode has been away from the foreground for a full 2 hours. Since an extension only gets one exit rule, \"extension.durationElapsed\" and an immediate \"Xcode quit\" trigger can't both drive separate exit rules in the same extension \u{2014} pick whichever undo signal fits, or split the immediate and delayed cases across two separate extensions.",
+        "\"mode\" controls how \"prerequisites\" are evaluated: \"entry\" (default) runs the rule if ANY prerequisite's live state currently matches its payload, skipping only if ALL currently mismatch. \"exit\" runs the rule if ANY prerequisite's live state currently MISmatches its payload, skipping only if ALL currently match — AND only after this extension's entry rule has itself fired (run its actions) since the last time an exit rule fired; an exit rule can never run before its entry rule has. An extension can have at most ONE entry rule, but any number of exit rules sharing that same gate — whichever one's trigger fires first is the one that actually runs, and it disarms the rest until the entry rule fires again. Pair them by reusing the exact same prerequisites and payload values, each with its own independent trigger — e.g. entry trigger \"app.frontmostChanged\"/Xcode with prerequisites [caffeine.set: {enabled:false}] mode entry, and a separate exit rule with trigger \"app.frontmostChanged\"/Safari, the SAME prerequisites, mode \"exit\".",
+        "\"sustainFor\" (optional, seconds) puts a resettable timer on a rule: every time this rule's trigger/conditions match, its \"actions\" run as normal AND this timer (re)starts. If the timer ever completes without being reset first, it fires the \"extension.durationElapsed\" trigger, with a payload identical to the fields of whatever trigger set the timer. For a handful of triggers with an obvious \"current value\" (app.frontmostChanged, volume.changed, brightness.changed, media.playbackChanged, caffeine.stateChanged, webcam.activeChanged, audioDevice.changed, thermal.stateChanged) the timer ALSO keeps resetting on its own every few seconds for as long as that live value keeps satisfying the same conditions \u{2014} so it measures continuous real time in that state, not just \"how long since the last matching event.\" Other triggers can only reset it via an actual recurring event. Use this for \"undo after N straight minutes of this\" \u{2014} e.g. an entry rule with trigger \"app.frontmostChanged\", condition name contains \"Xcode\", actions [caffeine.set: {enabled:true}], sustainFor 7200 (2 hours); then an exit rule with trigger \"extension.durationElapsed\" and the SAME condition and prerequisites, to turn Caffeine back off once Xcode has been away from the foreground \u{2014} whether quit, or just not reactivated \u{2014} for a full 2 hours. An extension can have any number of exit rules sharing the one entry rule's gate, so this is independent of the ordinary \"Xcode quit\" exit rule you'd also write for the immediate case \u{2014} whichever of the two fires first is the one that actually runs; the other just stays quiet until the entry rule arms things again.",
         "\"app.open\"/\"app.quit\" each read back \"is this app currently running\" through their own \"running\" field (app.open defaults it to true, app.quit defaults it to false), so each is its own correct prerequisite gate — NOT the other action. Gating \"app.open\" on \"only if not already running\" means a prerequisite of app.open with the SAME bundleIdentifier and \"running\":false; gating \"app.quit\" on \"only if currently running\" means a prerequisite of app.quit with \"running\":true.",
     ]
 
@@ -732,17 +732,19 @@ enum CapabilityRegistry {
             issues.append("\"\(actionID.rawValue)\" is turned on but no rule turns it back off.")
         }
 
-        // An extension is capped at one entry rule and one exit rule (see
-        // PrerequisiteMode and ExtensionsManager's "armed" dispatch gate) —
-        // `exit` only fires after its extension's `entry` rule has actually
-        // run, so pairing has to be unambiguous: exactly one of each.
+        // An extension is capped at one entry rule (see PrerequisiteMode and
+        // ExtensionsManager's "armed" dispatch gate): since any entry match
+        // arms the extension, two entry rules would make "armed" ambiguous
+        // about which one is responsible. Exit rules aren't capped — any
+        // number of them can share the gate, each independently checked
+        // against live state; whichever one fires first disarms the
+        // extension, so the rest simply stay quiet until the entry rule
+        // fires again. That's how an immediate "app quit" exit and a
+        // fallback "extension.durationElapsed" exit coexist in one
+        // extension: either can be the one that actually undoes the entry.
         let entryRuleCount = rules.filter { $0.mode == .entry }.count
         if entryRuleCount > 1 {
             issues.append("An extension can have at most one entry rule \u{2014} found \(entryRuleCount).")
-        }
-        let exitRuleCount = rules.filter { $0.mode == .exit }.count
-        if exitRuleCount > 1 {
-            issues.append("An extension can have at most one exit rule \u{2014} found \(exitRuleCount).")
         }
 
         for (index, rule) in rules.enumerated() {
@@ -855,11 +857,13 @@ enum CapabilityRegistry {
         "entry" runs the rule if ANY prerequisite's live state currently matches its payload, skipping only if ALL \
         currently mismatch; "exit" runs the rule if ANY prerequisite's live state currently MISmatches its payload, \
         skipping only if ALL currently match \u{2014} AND only after this extension's entry rule has itself already \
-        fired since the last time the exit rule fired; an exit rule never runs before its entry rule has. An \
-        extension can have at most ONE entry rule and at most ONE exit rule in total. To build the on/off pair, \
-        write two separate rules with their own independent triggers that reuse the exact same `prerequisites` \
-        list \u{2014} one with mode "entry", one with mode "exit" \u{2014} rather than trying to express both \
-        directions in one rule, and never add a second rule of either mode. `actions` is a non-empty array \
+        fired since the last time an exit rule fired; an exit rule never runs before its entry rule has. An \
+        extension can have at most ONE entry rule, but any number of exit rules sharing that same gate \u{2014} \
+        whichever one's trigger fires first is the one that actually runs, disarming the rest until the entry \
+        rule fires again. Build the on/off pair as two separate rules with their own independent triggers that \
+        reuse the exact same `prerequisites` list \u{2014} one with mode "entry", one with mode "exit" \u{2014} \
+        rather than trying to express both directions in one rule; add more exit rules the same way if more than \
+        one event should be able to undo it. `actions` is a non-empty array \
         run in order once the rule's gate passes. `sustainFor` (optional, seconds) is a separate, independent \
         mechanism: it puts a resettable timer on THIS rule that (re)starts every time this rule's trigger/conditions \
         match, and fires the "extension.durationElapsed" trigger (payload identical to this rule's own trigger's \

@@ -5,11 +5,12 @@
 //  The stored shape of one user extension: a name plus a flat list of
 //  rules. Each rule is trigger -> (AND-only conditions) -> (optional
 //  prerequisites gate) -> actions. An extension holds at most one
-//  `entry`-mode rule and one `exit`-mode rule (see `PrerequisiteMode` and
-//  `CapabilityRegistry.issues(in:)`) — the exit side of a pair is a second
-//  rule with its own trigger, not something derived from the entry rule,
-//  but `ExtensionsManager` tracks per-extension "armed" state so that
-//  second rule only ever fires after the first one actually has.
+//  `entry`-mode rule, but any number of `exit`-mode rules sharing that
+//  same gate (see `PrerequisiteMode` and `CapabilityRegistry.issues(in:)`)
+//  — each exit rule is a second rule with its own trigger, not something
+//  derived from the entry rule, but `ExtensionsManager` tracks
+//  per-extension "armed" state so no exit rule fires before the entry
+//  rule has, and whichever exit rule fires first disarms the rest.
 //  See project memory "Extensions Framework" for why.
 //
 
@@ -81,8 +82,9 @@ struct ExtensionActionStep: Codable, Equatable, Sendable {
 
 /// How a rule's `prerequisites` gate its `actions`. Both read the exact same
 /// prerequisite list; only the polarity of "satisfied" flips. An extension
-/// may have at most one rule of each mode (`CapabilityRegistry.issues(in:)`
-/// enforces this), since `ExtensionsManager` pairs them by mode alone.
+/// may have at most one `entry`-mode rule, but any number of `exit`-mode
+/// rules (`CapabilityRegistry.issues(in:)` enforces the entry cap) — see
+/// `exit` below for why one entry rule can safely have several undoers.
 enum PrerequisiteMode: String, Codable, Sendable {
     /// Run if ANY prerequisite's live state currently matches its payload;
     /// skip only if ALL currently mismatch. Used for the "turn something on"
@@ -92,11 +94,16 @@ enum PrerequisiteMode: String, Codable, Sendable {
     case entry
     /// Run if ANY prerequisite's live state currently mismatches its
     /// payload; skip only if ALL currently match — AND only if the
-    /// extension's `entry` rule has armed it since the last time this rule
-    /// fired. An `exit` rule can never fire before its extension's `entry`
-    /// rule has, even if the live ambient state already mismatches on its
-    /// own. Reuses the exact same prerequisite list as its entry
-    /// counterpart — e.g. only turn Caffeine off if it's currently on.
+    /// extension's `entry` rule has armed it since the last time an `exit`
+    /// rule fired. An `exit` rule can never fire before its extension's
+    /// `entry` rule has, even if the live ambient state already mismatches
+    /// on its own. An extension can have several `exit` rules sharing the
+    /// same `entry` rule's arming — e.g. one gated on the triggering app
+    /// quitting for the immediate case, another gated on a `sustainFor`
+    /// timeout as a fallback — and whichever one's trigger actually fires
+    /// first disarms the rest until `entry` fires again. Reuses the exact
+    /// same prerequisite list as its entry counterpart — e.g. only turn
+    /// Caffeine off if it's currently on.
     case exit
 }
 

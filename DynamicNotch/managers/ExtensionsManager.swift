@@ -12,10 +12,11 @@
 //  An "exit" rule is otherwise just another ordinary rule with its own
 //  trigger, gated by the same prerequisites in the opposite polarity, BUT
 //  it additionally requires its extension's "entry" rule to have already
-//  fired since the exit rule last fired — see `armedExtensions` below.
-//  That's the one piece of cross-dispatch state this file keeps; it's
-//  in-memory only, keyed by `ExtensionRecord.id`, and resets on relaunch
-//  exactly like `sustainTimers`.
+//  fired since any exit rule last fired — see `armedExtensions` below. An
+//  extension can have several exit rules sharing one entry rule's arming;
+//  whichever fires first disarms the rest. That's the one piece of
+//  cross-dispatch state this file keeps; it's in-memory only, keyed by
+//  `ExtensionRecord.id`, and resets on relaunch exactly like `sustainTimers`.
 //
 //  `extensions` holds `StoredExtension`, not `ExtensionRecord` — an entry
 //  that failed to decode (see ExtensionPersistenceService) stays in the
@@ -42,10 +43,12 @@ final class ExtensionsManager: ObservableObject {
 
     /// Extensions (keyed by `ExtensionRecord.id`) whose `entry` rule has fired — matched its
     /// trigger/conditions and passed its own prerequisite gate, so its actions actually ran —
-    /// since the last time that extension's `exit` rule fired. A record only appears here
-    /// while "armed"; an `exit` rule's own gate (`prerequisitesPass`) is necessary but not
-    /// sufficient for it to fire — it also needs its extension's id present here. In-memory
-    /// only, like `sustainTimers`: starts empty on every launch.
+    /// since the last time any of that extension's `exit` rules fired. A record only appears
+    /// here while "armed"; an `exit` rule's own gate (`prerequisitesPass`) is necessary but not
+    /// sufficient for it to fire — it also needs its extension's id present here. Whichever of
+    /// an extension's (possibly several) exit rules fires first removes the id, so the rest
+    /// stay quiet until `entry` fires again. In-memory only, like `sustainTimers`: starts empty
+    /// on every launch.
     private var armedExtensions: Set<UUID> = []
 
     private init() {

@@ -151,12 +151,14 @@ enum ExtensionGenerationService {
         step, but is read as current live state instead of performed. `mode` (default "entry") \
         sets the polarity: "entry" runs the rule if ANY prerequisite's live state currently \
         matches its payload; "exit" runs it if ANY currently mismatches, and only after this \
-        extension's entry rule has itself already fired since the last time the exit rule fired \
+        extension's entry rule has itself already fired since the last time an exit rule fired \
         — an exit rule never runs before its entry rule has. An extension can have at most ONE \
-        entry rule and at most ONE exit rule in total. Build the on/off pair as two separate \
-        rules, each with its own trigger, that reuse the exact same `prerequisites` list — one \
-        "entry", one "exit" — rather than trying to express both directions in one rule, and \
-        never add a second rule of either mode. `sustainFor` (optional, seconds) puts a resettable timer on the \
+        entry rule, but any number of exit rules sharing that same gate — whichever one's \
+        trigger fires first is the one that actually runs, disarming the rest until the entry \
+        rule fires again. Build the on/off pair as two separate rules, each with its own \
+        trigger, that reuse the exact same `prerequisites` list — one "entry", one "exit" — \
+        rather than trying to express both directions in one rule; add more exit rules the same \
+        way if more than one event should be able to undo it. `sustainFor` (optional, seconds) puts a resettable timer on the \
         rule that (re)starts every time its trigger/conditions match, and fires the \
         "extension.durationElapsed" trigger (same payload fields as this rule's trigger) if the \
         timer completes without the rule matching again first — use it for "undo automatically \
