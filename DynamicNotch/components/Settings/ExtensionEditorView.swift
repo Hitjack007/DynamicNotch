@@ -639,6 +639,12 @@ private struct RulesStatusView: View {
                 .foregroundStyle(.red)
         } else {
             let actionsNeedingExitRule = CapabilityRegistry.actionsRequiringExitRule(in: parsedRules)
+            // An extension holds at most one entry rule and one exit rule in total (see
+            // CapabilityRegistry.issues(in:)), so once one of either mode exists, the
+            // generic "add another one" entry points are disabled rather than letting
+            // someone build a combination Save will immediately reject.
+            let hasEntryRule = parsedRules.contains { $0.mode == .entry }
+            let hasExitRule = parsedRules.contains { $0.mode == .exit }
             VStack(alignment: .leading, spacing: 10) {
                 ForEach(actionsNeedingExitRule, id: \.self) { actionID in
                     RecordLevelNudgeBanner(
@@ -663,7 +669,8 @@ private struct RulesStatusView: View {
                             onScaffoldExitRule: onScaffoldExitRule,
                             actionsNeedingExitRule: actionsNeedingExitRule.filter { actionID in
                                 parsedRules[index].actions.contains { $0.action == actionID }
-                            }
+                            },
+                            hasExitRule: hasExitRule
                         )
                     }
                 }
@@ -672,6 +679,8 @@ private struct RulesStatusView: View {
                     Label("Add Rule", systemImage: "plus")
                 }
                 .buttonStyle(.borderless)
+                .disabled(hasEntryRule)
+                .help(hasEntryRule ? "This extension already has an entry rule \u{2014} an extension can have at most one." : "")
             }
         }
     }
@@ -723,6 +732,11 @@ private struct RuleSummaryRow: View {
     /// in "Edit Rule" for this exact rule has no other way to see it's
     /// missing its exit counterpart.
     let actionsNeedingExitRule: [ActionID]
+    /// Whether this extension already has an exit rule (possibly this very
+    /// one) — an extension can have at most one, so "Add Exit Rule" is
+    /// disabled once true rather than letting someone build a second one
+    /// Save will immediately reject.
+    let hasExitRule: Bool
 
     @State private var isEditorPresented = false
 
@@ -795,7 +809,8 @@ private struct RuleSummaryRow: View {
                 onRunNow: onRunNow,
                 onAddExitCounterpart: { onAddExitCounterpart(rule) },
                 onScaffoldExitRule: onScaffoldExitRule,
-                actionsNeedingExitRule: actionsNeedingExitRule
+                actionsNeedingExitRule: actionsNeedingExitRule,
+                hasExitRule: hasExitRule
             )
         }
     }
@@ -867,6 +882,8 @@ private struct RuleDetailEditorView: View {
     /// visible from in here, making the exit-rule requirement look
     /// unenforced even though Save was still blocked at the outer layer.
     let actionsNeedingExitRule: [ActionID]
+    /// See `RuleSummaryRow`'s property of the same name.
+    let hasExitRule: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -876,7 +893,8 @@ private struct RuleDetailEditorView: View {
                     .bold()
                 Spacer()
                 Button("Add Exit Rule", action: onAddExitCounterpart)
-                    .help("Add a paired rule that undoes this one \u{2014} same conditions and gate, mode flipped to exit.")
+                    .disabled(hasExitRule)
+                    .help(hasExitRule ? "This extension already has an exit rule \u{2014} an extension can have at most one." : "Add a paired rule that undoes this one \u{2014} same conditions and gate, mode flipped to exit.")
                 Button(action: onRunNow) {
                     Image(systemName: "play.fill")
                 }

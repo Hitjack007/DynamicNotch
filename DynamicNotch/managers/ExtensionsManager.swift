@@ -9,10 +9,13 @@
 //
 //  Gating: once a rule's trigger+conditions match, its `prerequisites` (if
 //  any) decide whether `actions` actually runs — see `PrerequisiteMode`.
-//  There's no separate "was this rule previously matched" state to track
-//  anymore: an "exit" rule is just another ordinary rule with its own
-//  trigger, gated by the same prerequisites in the opposite polarity, so
-//  every dispatch is a fresh, stateless check against live ambient state.
+//  An "exit" rule is otherwise just another ordinary rule with its own
+//  trigger, gated by the same prerequisites in the opposite polarity, BUT
+//  it additionally requires its extension's "entry" rule to have already
+//  fired since the exit rule last fired — see `armedExtensions` below.
+//  That's the one piece of cross-dispatch state this file keeps; it's
+//  in-memory only, keyed by `ExtensionRecord.id`, and resets on relaunch
+//  exactly like `sustainTimers`.
 //
 //  `extensions` holds `StoredExtension`, not `ExtensionRecord` — an entry
 //  that failed to decode (see ExtensionPersistenceService) stays in the
@@ -36,6 +39,14 @@ final class ExtensionsManager: ObservableObject {
     /// In-memory only — timers don't survive a relaunch, they only arm once a matching
     /// event is actually observed while running. See `armSustainTimer`.
     private var sustainTimers: [UUID: Task<Void, Never>] = [:]
+
+    /// Extensions (keyed by `ExtensionRecord.id`) whose `entry` rule has fired — matched its
+    /// trigger/conditions and passed its own prerequisite gate, so its actions actually ran —
+    /// since the last time that extension's `exit` rule fired. A record only appears here
+    /// while "armed"; an `exit` rule's own gate (`prerequisitesPass`) is necessary but not
+    /// sufficient for it to fire — it also needs its extension's id present here. In-memory
+    /// only, like `sustainTimers`: starts empty on every launch.
+    private var armedExtensions: Set<UUID> = []
 
     private init() {
         extensions = store.load()
@@ -66,6 +77,9 @@ final class ExtensionsManager: ObservableObject {
         if case .readable(let existing) = extensions[index] {
             cancelSustainTimers(in: existing)
         }
+        // The edit may have changed what "entry" even means for this extension, so any
+        // previously-armed state no longer necessarily reflects reality.
+        armedExtensions.remove(record.id)
         extensions[index] = .readable(record)
         persist()
     }
@@ -74,6 +88,7 @@ final class ExtensionsManager: ObservableObject {
         if let item = extensions.first(where: { $0.id == id }), case .readable(let record) = item {
             cancelSustainTimers(in: record)
         }
+        armedExtensions.remove(id)
         extensions.removeAll { $0.id == id }
         persist()
     }
@@ -83,7 +98,10 @@ final class ExtensionsManager: ObservableObject {
         guard let index = extensions.firstIndex(where: { $0.id == id }),
               case .readable(var record) = extensions[index]
         else { return }
-        if !enabled { cancelSustainTimers(in: record) }
+        if !enabled {
+            cancelSustainTimers(in: record)
+            armedExtensions.remove(id)
+        }
         record.enabled = enabled
         extensions[index] = .readable(record)
         persist()
@@ -114,12 +132,12 @@ final class ExtensionsManager: ObservableObject {
         for item in extensions {
             guard case .readable(let record) = item, record.enabled else { continue }
             for rule in record.rules where rule.trigger == event.id {
-                dispatch(rule, event: event)
+                dispatch(rule, event: event, record: record)
             }
         }
     }
 
-    private func dispatch(_ rule: ExtensionRule, event: ExtensionTriggerEvent) {
+    private func dispatch(_ rule: ExtensionRule, event: ExtensionTriggerEvent, record: ExtensionRecord) {
         guard rule.matches(event) else { return }
 
         // Independent of prerequisites/actions below — re-arms every time this rule's own
@@ -132,6 +150,17 @@ final class ExtensionsManager: ObservableObject {
             AppLogger.extensions.debug("Extension rule \(rule.id): trigger \(event.id.rawValue) matched but prerequisites gate blocked it")
             return
         }
+
+        if rule.mode == .exit {
+            guard armedExtensions.contains(record.id) else {
+                AppLogger.extensions.debug("Extension rule \(rule.id): exit trigger \(event.id.rawValue) matched and gate passed, but its entry rule hasn't fired yet — skipped")
+                return
+            }
+            armedExtensions.remove(record.id)
+        } else {
+            armedExtensions.insert(record.id)
+        }
+
         for step in rule.actions {
             Task {
                 let result = await ExtensionActionExecutor.perform(step.action, payload: step.payload)

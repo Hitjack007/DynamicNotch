@@ -3,11 +3,13 @@
 //  DynamicNotch
 //
 //  The stored shape of one user extension: a name plus a flat list of
-//  independent rules. Each rule is trigger -> (AND-only conditions) ->
-//  (optional prerequisites gate) -> actions. There is deliberately no
-//  cross-rule priority system — if someone wants a second, unrelated
-//  behavior (or the "exit" side of a pair), that's a second rule with its
-//  own trigger, not something derived from this one.
+//  rules. Each rule is trigger -> (AND-only conditions) -> (optional
+//  prerequisites gate) -> actions. An extension holds at most one
+//  `entry`-mode rule and one `exit`-mode rule (see `PrerequisiteMode` and
+//  `CapabilityRegistry.issues(in:)`) — the exit side of a pair is a second
+//  rule with its own trigger, not something derived from the entry rule,
+//  but `ExtensionsManager` tracks per-extension "armed" state so that
+//  second rule only ever fires after the first one actually has.
 //  See project memory "Extensions Framework" for why.
 //
 
@@ -78,15 +80,22 @@ struct ExtensionActionStep: Codable, Equatable, Sendable {
 }
 
 /// How a rule's `prerequisites` gate its `actions`. Both read the exact same
-/// prerequisite list; only the polarity of "satisfied" flips.
+/// prerequisite list; only the polarity of "satisfied" flips. An extension
+/// may have at most one rule of each mode (`CapabilityRegistry.issues(in:)`
+/// enforces this), since `ExtensionsManager` pairs them by mode alone.
 enum PrerequisiteMode: String, Codable, Sendable {
     /// Run if ANY prerequisite's live state currently matches its payload;
     /// skip only if ALL currently mismatch. Used for the "turn something on"
     /// side of a pair — e.g. only turn Caffeine on if it's currently off.
+    /// Every time this rule's gate actually passes and its actions run, the
+    /// extension becomes "armed" — see `exit` below.
     case entry
     /// Run if ANY prerequisite's live state currently mismatches its
-    /// payload; skip only if ALL currently match. Used for the "undo" side
-    /// of a pair, reusing the exact same prerequisite list as its entry
+    /// payload; skip only if ALL currently match — AND only if the
+    /// extension's `entry` rule has armed it since the last time this rule
+    /// fired. An `exit` rule can never fire before its extension's `entry`
+    /// rule has, even if the live ambient state already mismatches on its
+    /// own. Reuses the exact same prerequisite list as its entry
     /// counterpart — e.g. only turn Caffeine off if it's currently on.
     case exit
 }
