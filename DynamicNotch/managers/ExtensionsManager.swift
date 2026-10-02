@@ -15,8 +15,10 @@
 //  fired since any exit rule last fired — see `armedExtensions` below. An
 //  extension can have several exit rules sharing one entry rule's arming;
 //  whichever fires first disarms the rest. That's the one piece of
-//  cross-dispatch state this file keeps; it's in-memory only, keyed by
-//  `ExtensionRecord.id`, and resets on relaunch exactly like `sustainTimers`.
+//  cross-dispatch state this file keeps; unlike `sustainTimers`, it's
+//  persisted (via `Defaults[.armedExtensionIDs]`) rather than in-memory,
+//  so a crash or relaunch between an entry rule arming and its exit rule
+//  firing doesn't strand the extension "on" with no way to self-correct.
 //
 //  `extensions` holds `StoredExtension`, not `ExtensionRecord` — an entry
 //  that failed to decode (see ExtensionPersistenceService) stays in the
@@ -25,6 +27,7 @@
 //
 
 import Combine
+import Defaults
 import Foundation
 
 @MainActor
@@ -47,12 +50,18 @@ final class ExtensionsManager: ObservableObject {
     /// here while "armed"; an `exit` rule's own gate (`prerequisitesPass`) is necessary but not
     /// sufficient for it to fire — it also needs its extension's id present here. Whichever of
     /// an extension's (possibly several) exit rules fires first removes the id, so the rest
-    /// stay quiet until `entry` fires again. In-memory only, like `sustainTimers`: starts empty
-    /// on every launch.
-    private var armedExtensions: Set<UUID> = []
+    /// stay quiet until `entry` fires again. Backed directly by `Defaults[.armedExtensionIDs]`
+    /// (not a separate in-memory copy) so every read sees the latest persisted value and every
+    /// mutation through the usual `Set` methods (`.insert`, `.remove`, `.contains`) persists
+    /// immediately — a relaunch mid-"on" doesn't lose track of which extensions are armed.
+    private var armedExtensions: Set<UUID> {
+        get { Defaults[.armedExtensionIDs] }
+        set { Defaults[.armedExtensionIDs] = newValue }
+    }
 
     private init() {
         extensions = store.load()
+        pruneArmedExtensions()
         eventCancellable = ExtensionEventBus.shared.eventPublisher
             .sink { [weak self] event in
                 self?.handle(event)
@@ -64,6 +73,16 @@ final class ExtensionsManager: ObservableObject {
     /// disk defensively in case anything touched the file before this ran.
     func activate() {
         extensions = store.load()
+        pruneArmedExtensions()
+    }
+
+    /// Drops any persisted `armedExtensionIDs` whose extension no longer exists (deleted
+    /// through some path that didn't go through `remove(_:)`, or left over from before this
+    /// state was persisted) — otherwise a stale id could sit in `Defaults` forever with
+    /// nothing left to ever read or clear it.
+    private func pruneArmedExtensions() {
+        let liveIDs = Set(extensions.map(\.id))
+        armedExtensions = armedExtensions.intersection(liveIDs)
     }
 
     // MARK: - CRUD
@@ -154,14 +173,16 @@ final class ExtensionsManager: ObservableObject {
             return
         }
 
-        if rule.mode == .exit {
-            guard armedExtensions.contains(record.id) else {
-                AppLogger.extensions.debug("Extension rule \(rule.id): exit trigger \(event.id.rawValue) matched and gate passed, but its entry rule hasn't fired yet — skipped")
-                return
+        switch Self.armedGateDecision(mode: rule.mode, isCurrentlyArmed: armedExtensions.contains(record.id)) {
+        case .skip:
+            AppLogger.extensions.debug("Extension rule \(rule.id): exit trigger \(event.id.rawValue) matched and gate passed, but its entry rule hasn't fired yet — skipped")
+            return
+        case .run(let armedAfter):
+            if armedAfter {
+                armedExtensions.insert(record.id)
+            } else {
+                armedExtensions.remove(record.id)
             }
-            armedExtensions.remove(record.id)
-        } else {
-            armedExtensions.insert(record.id)
         }
 
         for step in rule.actions {
@@ -233,6 +254,26 @@ final class ExtensionsManager: ObservableObject {
             return rule.prerequisites.contains {
                 !ExtensionActionExecutor.currentlyMatches($0.action, payload: $0.payload)
             }
+        }
+    }
+
+    /// Outcome of the post-`prerequisitesPass` "armed" gate (see `armedExtensions`), and the
+    /// armed-state change to apply if the rule runs. Pulled out as a pure function of just
+    /// `mode` and the current armed flag — unlike `prerequisitesPass` above, it touches no
+    /// live system state, so it's unit-testable on its own; see ExtensionsManagerTests.
+    enum ArmedGateDecision: Equatable {
+        case run(armedAfter: Bool)
+        case skip
+    }
+
+    /// `entry` always runs and arms; `exit` only runs (and disarms) if already armed —
+    /// otherwise it's skipped, regardless of how many times its own trigger/gate matches.
+    nonisolated static func armedGateDecision(mode: PrerequisiteMode, isCurrentlyArmed: Bool) -> ArmedGateDecision {
+        switch mode {
+        case .entry:
+            return .run(armedAfter: true)
+        case .exit:
+            return isCurrentlyArmed ? .run(armedAfter: false) : .skip
         }
     }
 }

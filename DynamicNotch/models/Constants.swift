@@ -445,6 +445,14 @@ extension Defaults.Keys {
     static let idleNotchLeftWidget  = Key<IdleNotchWidget>("idleNotchLeftWidget",  default: .none)
     static let idleNotchRightWidget = Key<IdleNotchWidget>("idleNotchRightWidget", default: .none)
 
+    // MARK: Extensions
+
+    /// `ExtensionRecord.id`s whose entry rule has fired since the last time any of their
+    /// exit rules fired — see `ExtensionsManager.armedExtensions`. Persisted (rather than
+    /// in-memory like `sustainTimers`) so a crash or relaunch between an entry rule arming
+    /// and its exit rule firing doesn't strand an extension in its "on" state forever.
+    static let armedExtensionIDs = Key<Set<UUID>>("armedExtensionIDs", default: [])
+
     // MARK: Diagnostics
 
     /// Crash report filenames (from ~/Library/Logs/DiagnosticReports) already shown to
