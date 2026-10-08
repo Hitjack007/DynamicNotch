@@ -42,9 +42,13 @@ struct AIUsageThresholdState: Codable, Defaults.Serializable, Equatable {
 
         // A window rolls when the provider hands us a later reset date. Providers
         // that omit the date still show a cliff in usage, so treat that as a roll too.
+        // A few minutes of tolerance absorbs jitter in the provider's reported
+        // reset time (observed with Claude) without it being mistaken for an
+        // actual rollover — a real rollover moves the date by hours, not seconds.
+        let rolloverTolerance: TimeInterval = 300
         var rolledByDate = false
         if let end = windowEnd, let next = resetsAt {
-            rolledByDate = next > end
+            rolledByDate = next > end.addingTimeInterval(rolloverTolerance)
         }
         let rolledByDrop = hasSample && (lastPercent - pct) >= 50
 
