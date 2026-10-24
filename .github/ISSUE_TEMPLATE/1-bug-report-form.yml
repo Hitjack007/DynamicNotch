@@ -50,6 +50,7 @@ body:
         Settings > About)
       options:
         - Select a version
+        - v27.5
         - v27.4
         - v27.3.3
         - v27.3.2
@@ -59,7 +60,6 @@ body:
         - v27.1
         - v27.0.2
         - v27.0.1
-        - v27.0
     validations:
       required: true
   - type: input
