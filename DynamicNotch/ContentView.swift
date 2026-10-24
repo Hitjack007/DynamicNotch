@@ -48,6 +48,7 @@ struct ContentView: View {
     @Default(.ambientActivityOrder) var ambientActivityOrder
     @Default(.aiUsagePromoteInNotchEnabled) var aiUsagePromoteInNotchEnabled
     @Default(.aiUsagePromoteInNotchAt) var aiUsagePromoteInNotchAt
+    @Default(.liquidGlassEnabled) var liquidGlassEnabled
     @ObservedObject var downloadManager = DownloadManager.shared
 
     // Shared interactive spring for movement/resizing to avoid conflicting animations
@@ -60,6 +61,7 @@ struct ContentView: View {
         guard let target = coordinator.sneakPeekTargetUUID else { return true }
         return target == vm.screenUUID
     }
+
 
     /// Whether the disposable right slot of the current ambient activity
     /// (Music/Download/AI Usage) should show a charging glyph instead of its
@@ -162,6 +164,16 @@ struct ContentView: View {
         return chinWidth
     }
 
+    /// Makes this screen's notch window key only while the open notch shows Liquid Glass, so
+    /// the glass renders in its active (non-flattened) form.
+    private func updateGlassKeyWindow() {
+        let wantsActive = vm.notchState == .open && liquidGlassEnabled
+        for window in NSApp.windows.compactMap({ $0 as? DynamicNotchSkyLightWindow })
+        where vm.screenUUID == nil || window.screen?.displayUUID == vm.screenUUID {
+            window.setGlassActive(wantsActive, releaseDelay: 0.32)
+        }
+    }
+
     var body: some View {
         // Calculate scale based on gesture progress only
         let gestureScale: CGFloat = {
@@ -182,7 +194,13 @@ struct ContentView: View {
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
-                    .background(.black)
+                    .background {
+                        NotchBackground(
+                            glassEnabled: liquidGlassEnabled,
+                            isOpen: vm.notchState == .open,
+                            closedNotchHeight: max(vm.effectiveClosedNotchHeight, vm.closedNotchSize.height)
+                        )
+                    }
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
                         Rectangle()
@@ -242,7 +260,11 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .onChange(of: liquidGlassEnabled) {
+                        updateGlassKeyWindow()
+                    }
                     .onChange(of: vm.notchState) { _, newState in
+                        updateGlassKeyWindow()
                         if newState == .closed && isHovering {
                             withAnimation {
                                 isHovering = false
@@ -295,7 +317,8 @@ struct ContentView: View {
         }
         .padding(.bottom, 8)
         .frame(maxWidth: windowSize.width, maxHeight: windowSize.height, alignment: .top)
-        .compositingGroup()
+        // Flattening into one layer stops the glass sampling the desktop behind it.
+        .conditionalModifier(!liquidGlassEnabled) { $0.compositingGroup() }
         .scaleEffect(
             x: gestureScale,
             y: gestureScale,
@@ -833,6 +856,120 @@ struct ContentView: View {
 
             if Defaults[.enableHaptics] {
                 haptics.toggle()
+            }
+        }
+    }
+}
+
+/// The notch's background: plain black, or Liquid Glass while the expanded notch is open.
+private struct NotchBackground: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    /// Whether the Liquid Glass setting is on.
+    let glassEnabled: Bool
+    let isOpen: Bool
+    /// The notch's height once closed, used to spot the moment the close animation arrives.
+    let closedNotchHeight: CGFloat
+
+    /// True from the moment the notch opens until its close animation has finished.
+    @State private var glassMounted = false
+    /// Pending "the close animation has settled" check; restarted on every height change.
+    @State private var settleTask: Task<Void, Never>?
+
+    private var showsGlass: Bool { glassEnabled && glassMounted && !reduceTransparency }
+
+    private var coverAnimation: Animation? {
+        guard !reduceMotion else { return nil }
+        // On close the cover fades in gradually from the first frame, finishing about when the
+        // notch reaches its final small size. A delayed, short fade read as an abrupt cut.
+        return isOpen ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.32)
+    }
+
+    // The glass is drawn by the window server and animates size and shape changes on its own
+    // timing, so it lagged or led the notch's resize (a stray rectangle on close, glass
+    // appearing before the rest). Its size therefore never changes: it is always the full open
+    // size, and the notch's animating shape clips it, which SwiftUI keeps in step. It is
+    // mounted when the notch starts opening and unmounted only after the close animation, by
+    // which point just its black top is visible.
+    private let glassSize = CGSize(width: openNotchSize.width + 24, height: openNotchSize.height + 12)
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.black
+                .opacity(showsGlass ? 0 : 1)
+                .animation(nil, value: showsGlass)
+
+            if #available(macOS 26.0, *), showsGlass {
+                ZStack {
+                    // The dimming goes beneath the glass (Apple's guidance for clear glass),
+                    // so the glass refracts the dimmed backdrop and white controls stay
+                    // readable over bright backdrops.
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.40),
+                            .init(color: .black.opacity(0.55), location: 0.68),
+                            .init(color: .black.opacity(0.35), location: 1.0),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+
+                    Color.clear
+                        .glassEffect(.clear, in: Rectangle())
+                        .glassEffectTransition(.identity)
+
+                    // Glass over black still lightens it to grey, so the top (header,
+                    // artwork, title, camera area) gets true black above the glass. It is
+                    // fully clear by mid-height, so it never washes the glass out.
+                    LinearGradient(
+                        stops: [
+                            .init(color: .black, location: 0.0),
+                            .init(color: .black, location: 0.30),
+                            .init(color: .black.opacity(0.0), location: 0.52),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+
+                    // The window server draws the glass, so it can't be faded out or removed
+                    // in step with SwiftUI; a leftover sliver showed at the notch's final
+                    // small size. This cover is an ordinary SwiftUI layer: it fades in over
+                    // the glass as the notch starts to close, so the notch shrinks as plain
+                    // black and whatever the glass does underneath goes unseen.
+                    Color.black
+                        .opacity(isOpen ? 0 : 1)
+                        .animation(coverAnimation, value: isOpen)
+                }
+                .frame(width: glassSize.width, height: glassSize.height)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // Drop the glass the instant the close animation has settled. Lingering at the final
+        // small size shows a notch that is half glass and half not. The closed height varies
+        // (live activities, HUDs make it taller), so rather than compare against a known size
+        // this waits for the height to stop changing.
+        .onGeometryChange(for: CGFloat.self) { $0.size.height.rounded() } action: { height in
+            guard !isOpen, glassMounted else { return }
+            settleTask?.cancel()
+            if height <= closedNotchHeight + 4 {
+                glassMounted = false
+                return
+            }
+            settleTask = Task {
+                try? await Task.sleep(for: .milliseconds(60))
+                if !Task.isCancelled { glassMounted = false }
+            }
+        }
+        .task(id: isOpen) {
+            if isOpen {
+                settleTask?.cancel()
+                glassMounted = true
+            } else {
+                // Fallback in case the size never changes (nothing to settle).
+                try? await Task.sleep(for: .milliseconds(700))
+                if !Task.isCancelled { glassMounted = false }
             }
         }
     }

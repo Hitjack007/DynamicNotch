@@ -14,6 +14,12 @@ struct FileShareView: View {
     @EnvironmentObject private var vm: NotchViewModel
     @StateObject private var quickShare = QuickShareService.shared
     @Default(.quickShareProvider) var quickShareProvider: String
+    @Default(.liquidGlassEnabled) var liquidGlassEnabled
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    /// Over Liquid Glass the card drops its black fill and heavy shadow, which would
+    /// otherwise show as a dark smudge on the glass.
+    private var overGlass: Bool { liquidGlassEnabled && !reduceTransparency }
 
     @State private var hostView: NSView?
     @State private var interactionNonce: UUID = .init()
@@ -43,7 +49,9 @@ struct FileShareView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
                 .fill(
-                    LinearGradient(colors: [Color.black.opacity(0.35), Color.black.opacity(0.20)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    overGlass
+                        ? AnyShapeStyle(Color.white.opacity(0.06))
+                        : AnyShapeStyle(LinearGradient(colors: [Color.black.opacity(0.35), Color.black.opacity(0.20)], startPoint: .topLeading, endPoint: .bottomTrailing))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
@@ -54,7 +62,7 @@ struct FileShareView: View {
                             style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
                         )
                 )
-                .shadow(color: Color.black.opacity(0.6), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(overGlass ? 0 : 0.6), radius: 6, x: 0, y: 2)
 
             // Content
             VStack(spacing: 5) {

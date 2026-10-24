@@ -1596,7 +1596,11 @@ struct Appearance: View {
                 Defaults.Toggle(key: .settingsIconInNotch) {
                     Text("Show settings icon in notch")
                 }
-
+                if #available(macOS 26.0, *) {
+                    Defaults.Toggle(key: .liquidGlassEnabled) {
+                        Text("Liquid Glass")
+                    }
+                }
             } header: {
                 Text("General")
             }

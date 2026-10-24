@@ -72,6 +72,16 @@ class SettingsWindowController: NSWindowController {
     }
 
     func showWindow() {
+        // With Liquid Glass on, the notch panel may be the key window. Let it let go first,
+        // then present Settings a moment later so Settings activates as the key window
+        // instead of appearing inactive.
+        DynamicNotchSkyLightWindow.releaseGlassKey()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.presentWindow()
+        }
+    }
+
+    private func presentWindow() {
         // Set app to regular mode first
         NSApp.setActivationPolicy(.regular)
         
