@@ -141,6 +141,14 @@ struct WhatsNewView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(.effectiveAccent)
             }
+            // Escape hatch for anyone who can't run the update (no admin rights): fan control
+            // stays off and the fans go back to macOS, instead of the gate trapping them.
+            if !daemonClient.isInstalling {
+                Button("Turn Off Fan Control") {
+                    turnOffFanControl()
+                }
+                .buttonStyle(.bordered)
+            }
             if let error = migrationCheckError {
                 Text(error)
                     .font(.caption)
@@ -198,6 +206,17 @@ struct WhatsNewView: View {
                 index += 1
             }
         }
+    }
+
+    /// Switches off every fan override so macOS manages the fans, then lets the user past the
+    /// migration gate. `ThermalManager` already hands the fans back to auto while the daemon
+    /// is outdated, so nothing else needs to be told.
+    private func turnOffFanControl() {
+        Defaults[.fanCurveEnabled] = false
+        Defaults[.fanFloorEnabled] = false
+        Defaults[.fanCurvePreset] = .appleDefault
+        migrationConfirmed = true
+        advance()
     }
 
     private func runMigrationInstall() {

@@ -2236,195 +2236,195 @@ struct ThermalSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Show Thermal tab", isOn: $showThermalTab)
-            } header: {
-                Text("Display")
+                Toggle("Enable Thermal", isOn: $showThermalTab)
             } footer: {
-                Text("Adds a Thermal tab to the open notch showing live CPU, GPU, and fan data.")
+                Text("Adds a Thermal tab to the open notch showing live CPU, GPU, and fan data, and turns on temperature alerts and fan control. Turning it off hands the fans back to macOS.")
             }
 
-            Section {
-                Toggle("Alert when temperature is high", isOn: $thermalAlertEnabled)
-                if thermalAlertEnabled {
-                    Stepper(
-                        "Alert threshold: \(thermalAlertThreshold)°C",
-                        value: $thermalAlertThreshold,
-                        in: 70...100,
-                        step: 5
-                    )
-                }
-            } header: {
-                Text("Alerts")
-            } footer: {
-                Text("Shows a brief orange strip in the closed notch when peak CPU or GPU temperature exceeds the threshold. Alerts are rate-limited to once per minute.")
-            }
-            .disabled(!showThermalTab)
-
-            Section {
-                if !hasFans {
-                    HStack(spacing: 10) {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(.secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Not available on this Mac")
-                                .font(.subheadline)
-                            Text("Fan curve control requires fans. This Mac is fanless.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
+            // Everything below only exists while Thermal is on, so turning it off collapses it.
+            if showThermalTab {
+                Section {
+                    Toggle("Alert when temperature is high", isOn: $thermalAlertEnabled)
+                    if thermalAlertEnabled {
+                        Stepper(
+                            "Alert threshold: \(thermalAlertThreshold)°C",
+                            value: $thermalAlertThreshold,
+                            in: 70...100,
+                            step: 5
+                        )
                     }
-                    .padding(.vertical, 2)
-                } else {
-                    // Backstop for anyone who gets past the What's New migration gate (it's
-                    // a non-modal window, so this is reachable, not just theoretical): if the
-                    // daemon is running but reports an old protocol version, block the fan
-                    // curve controls here too until it's reinstalled.
-                    if migrationNeeded && daemonAvailable {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
+                } header: {
+                    Text("Alerts")
+                } footer: {
+                    Text("Shows a brief orange strip in the closed notch when peak CPU or GPU temperature exceeds the threshold. Alerts are rate-limited to once per minute.")
+                }
+
+                Section {
+                    if !hasFans {
+                        HStack(spacing: 10) {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(.secondary)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Fan control needs an update")
+                                Text("Not available on this Mac")
                                     .font(.subheadline)
-                                Text("The fan daemon was rebuilt with smoother ramping. Update it to keep using custom fan curves.")
+                                Text("Fan curve control requires fans. This Mac is fanless.")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
-                            Spacer()
-                            installButton(title: "Update…")
                         }
                         .padding(.vertical, 2)
-                    }
+                    } else {
+                        // Backstop for anyone who gets past the What's New migration gate (it's
+                        // a non-modal window, so this is reachable, not just theoretical): if the
+                        // daemon is running but reports an old protocol version, block the fan
+                        // curve controls here too until it's reinstalled.
+                        if migrationNeeded && daemonAvailable {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Fan control needs an update")
+                                        .font(.subheadline)
+                                    Text("The fan daemon was rebuilt with smoother ramping. Update it to keep using custom fan curves.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                installButton(title: "Update…")
+                            }
+                            .padding(.vertical, 2)
+                        }
 
-                    // Daemon status row
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(daemonClient.isInstalling ? Color.blue : (daemonAvailable ? Color.green : Color.orange))
-                            .frame(width: 8, height: 8)
-                        Text(daemonClient.isInstalling ? "Installing…" : (daemonAvailable ? "Fan daemon running" : "Fan daemon not installed"))
-                            .foregroundStyle(daemonAvailable ? .primary : .secondary)
-                        Spacer()
-                        if !daemonAvailable && !daemonClient.isInstalling {
-                            if showTerminalInstructions {
-                                HStack(spacing: 6) {
-                                    Button("Check again") { checkDaemon() }
-                                        .buttonStyle(.borderedProminent)
+                        // Daemon status row
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(daemonClient.isInstalling ? Color.blue : (daemonAvailable ? Color.green : Color.orange))
+                                .frame(width: 8, height: 8)
+                            Text(daemonClient.isInstalling ? "Installing…" : (daemonAvailable ? "Fan daemon running" : "Fan daemon not installed"))
+                                .foregroundStyle(daemonAvailable ? .primary : .secondary)
+                            Spacer()
+                            if !daemonAvailable && !daemonClient.isInstalling {
+                                if showTerminalInstructions {
+                                    HStack(spacing: 6) {
+                                        Button("Check again") { checkDaemon() }
+                                            .buttonStyle(.borderedProminent)
+                                            .controlSize(.small)
+                                        Button { showTerminalInstructions = false } label: {
+                                            Image(systemName: "xmark")
+                                        }
+                                        .buttonStyle(.borderless)
                                         .controlSize(.small)
-                                    Button { showTerminalInstructions = false } label: {
-                                        Image(systemName: "xmark")
                                     }
-                                    .buttonStyle(.borderless)
-                                    .controlSize(.small)
+                                } else {
+                                    installButton(title: "Setup…")
                                 }
                             } else {
-                                installButton(title: "Setup…")
+                                installButton(title: "Reinstall", style: .borderless)
                             }
-                        } else {
-                            installButton(title: "Reinstall", style: .borderless)
                         }
-                    }
 
-                    if showTerminalInstructions {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Command copied to clipboard.")
-                                .font(.caption).bold()
-                            Text("In Terminal, press ⌘V then Enter. Takes ~15s to compile. After it finishes, click Check again.")
+                        if showTerminalInstructions {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Command copied to clipboard.")
+                                    .font(.caption).bold()
+                                Text("In Terminal, press ⌘V then Enter. Takes ~15s to compile. After it finishes, click Check again.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                if !daemonAvailable {
+                                    Text("Still not detected? Run in Terminal: sudo launchctl list com.boringnotch.thermaldaemon")
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundStyle(.orange)
+                                        .textSelection(.enabled)
+                                }
+                            }
+                        }
+
+                        if let err = installError {
+                            Text(err)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
-                            if !daemonAvailable {
-                                Text("Still not detected? Run in Terminal: sudo launchctl list com.boringnotch.thermaldaemon")
-                                    .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.red)
+                        }
+
+                        if fanFloorEnabled {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(.orange)
-                                    .textSelection(.enabled)
-                            }
-                        }
-                    }
-
-                    if let err = installError {
-                        Text(err)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                    }
-
-                    if fanFloorEnabled {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Fan floor active: \(Int(fanFloorLevel * 100))%")
-                                    .font(.subheadline)
-                                Text("Set by an extension. The curve can't go below this until you disable it here.")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Button("Disable") {
-                                fanFloorEnabled = false
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.small)
-                        }
-                        .padding(.vertical, 2)
-                    }
-
-                    Picker("Fan Curve", selection: $fanCurvePreset) {
-                        ForEach(FanCurvePreset.allCases) { preset in
-                            Text(preset.rawValue).tag(preset)
-                        }
-                    }
-                    .disabled(!daemonAvailable || migrationNeeded)
-                    .onChange(of: fanCurvePreset) {
-                        applyPreset(fanCurvePreset)
-                    }
-
-                    LabeledContent("Presets in notch") {
-                        Text("up to 3")
-                            .foregroundStyle(.secondary)
-                            .font(.caption)
-                    }
-                    ForEach(FanCurvePreset.allCases) { preset in
-                        Toggle(preset.rawValue, isOn: Binding(
-                            get: { thermalNotchPresets.contains(preset) },
-                            set: { on in
-                                if on {
-                                    guard thermalNotchPresets.count < 3 else { return }
-                                    thermalNotchPresets.append(preset)
-                                } else {
-                                    thermalNotchPresets.removeAll { $0 == preset }
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Fan floor active: \(Int(fanFloorLevel * 100))%")
+                                        .font(.subheadline)
+                                    Text("Set by an extension. The curve can't go below this until you disable it here.")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                            }
-                        ))
-                        .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
-                    }
-
-                    if fanCurvePreset == .custom && daemonAvailable && !migrationNeeded {
-                        VStack(alignment: .leading, spacing: 10) {
-                            FanCurveEditorView()
-
-                            HStack {
-                                Text("Tap to add · Right-click to remove · Drag to move · 2–5 points")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
                                 Spacer()
-                                Button("Reset") {
-                                    fanCurvePoints = FanCurvePoint.defaultCurve
+                                Button("Disable") {
+                                    fanFloorEnabled = false
                                 }
-                                .font(.caption)
-                                .buttonStyle(.borderless)
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                            }
+                            .padding(.vertical, 2)
+                        }
+
+                        Picker("Fan Curve", selection: $fanCurvePreset) {
+                            ForEach(FanCurvePreset.allCases) { preset in
+                                Text(preset.rawValue).tag(preset)
                             }
                         }
-                        .padding(.vertical, 4)
+                        .disabled(!daemonAvailable || migrationNeeded)
+                        .onChange(of: fanCurvePreset) {
+                            applyPreset(fanCurvePreset)
+                        }
+
+                        LabeledContent("Presets in notch") {
+                            Text("up to 3")
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                        }
+                        ForEach(FanCurvePreset.allCases) { preset in
+                            Toggle(preset.rawValue, isOn: Binding(
+                                get: { thermalNotchPresets.contains(preset) },
+                                set: { on in
+                                    if on {
+                                        guard thermalNotchPresets.count < 3 else { return }
+                                        thermalNotchPresets.append(preset)
+                                    } else {
+                                        thermalNotchPresets.removeAll { $0 == preset }
+                                    }
+                                }
+                            ))
+                            .disabled(!thermalNotchPresets.contains(preset) && thermalNotchPresets.count >= 3)
+                        }
+
+                        if fanCurvePreset == .custom && daemonAvailable && !migrationNeeded {
+                            VStack(alignment: .leading, spacing: 10) {
+                                FanCurveEditorView()
+
+                                HStack {
+                                    Text("Tap to add · Right-click to remove · Drag to move · 2–5 points")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Button("Reset") {
+                                        fanCurvePoints = FanCurvePoint.defaultCurve
+                                    }
+                                    .font(.caption)
+                                    .buttonStyle(.borderless)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
                     }
-                }
-            } header: {
-                Text("Fan Curve")
-            } footer: {
-                if hasFans {
-                    Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when DynamicNotch quits.")
+                } header: {
+                    Text("Fan Curve")
+                } footer: {
+                    if hasFans {
+                        Text("The daemon runs as root so SMC fan writes succeed on all Apple Silicon Macs. It's installed once to /Library/BoringNotch/ and auto-starts on login. The fan curve is evaluated every 2 seconds; fans restore to Apple automatic control when DynamicNotch quits.")
+                    }
                 }
             }
-            .disabled(!showThermalTab)
         }
+        .animation(.default, value: showThermalTab)
         .formStyle(.grouped)
         .onAppear {
             daemonAvailable = ThermalDaemonClient.shared.checkAvailability()
