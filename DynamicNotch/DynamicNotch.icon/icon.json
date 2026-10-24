@@ -1,0 +1,69 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.22382,0.18609,0.53996,1.00000",
+      "display-p3:0.02423,0.02732,0.04903,1.00000"
+    ]
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Waveform.png",
+          "name" : "Waveform"
+        },
+        {
+          "image-name" : "AlbumArt.png",
+          "name" : "Album Art"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "Island.png",
+          "name" : "Island"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.6
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "image-name" : "NotchGhost.png",
+          "name" : "Notch Ghost"
+        },
+        {
+          "image-name" : "NotchTrail.png",
+          "name" : "Notch Trail"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.3
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}
