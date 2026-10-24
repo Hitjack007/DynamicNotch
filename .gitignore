@@ -46,6 +46,7 @@ build/
 # contributors' agents are not handed the maintainer's exemptions)
 CLAUDE.md
 CLAUDE.local.md
+CODEX.md
 .claude/settings.local.json
 
 # User-specific files
@@ -61,4 +62,3 @@ CLAUDE.local.md
 *.ipa
 *.xcarchive
 *.dSYM
-
