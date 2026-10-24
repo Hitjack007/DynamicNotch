@@ -58,4 +58,18 @@ struct WhatsNewCatalogTests {
         #expect(WhatsNewCatalog.isVersion("27.2.1", newerThan: "27.2"))
         #expect(!WhatsNewCatalog.isVersion("27.2", newerThan: "27.2.1"))
     }
+
+    @Test("Every highlight id that onboarding looks up exists in the real catalog")
+    func onboardingHighlightIDsResolve() {
+        // `WhatsNewCatalog.highlight(id:)` fatalErrors on a missing id, so a typo in an
+        // onboarding step would crash at runtime.
+        var ids = ["extensions", "reorderableActivities", "aiUsagePromotion"]
+        if WhatsNewCatalog.supportsLiquidGlass {
+            ids.append("liquidGlass")
+        }
+        let known = Set(WhatsNewCatalog.releases.flatMap(\.highlights).map(\.id))
+        for id in ids {
+            #expect(known.contains(id), "Missing highlight \(id)")
+        }
+    }
 }

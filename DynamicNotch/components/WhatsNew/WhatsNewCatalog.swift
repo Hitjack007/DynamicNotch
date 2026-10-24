@@ -19,6 +19,8 @@ enum WhatsNewAction {
     case settings(tab: String, label: LocalizedStringResource)   // tab = SettingsView's selectedTab string
     case link(URL, label: LocalizedStringResource)
     case permission(PermissionRequester.Kind, label: LocalizedStringResource)
+    /// Turns the Liquid Glass notch setting on directly from the page.
+    case enableLiquidGlass(label: LocalizedStringResource)
     /// Renders the unskippable thermal daemon migration flow instead of a normal button.
     /// Not tied to a specific release - synthesized at launch by DynamicNotchApp whenever
     /// ThermalDaemonClient.migrationNeeded is true, so it isn't part of `releases` below.
@@ -65,7 +67,25 @@ enum WhatsNewCatalog {
                 ),
             ]
         ),
+        WhatsNewRelease(
+            version: "27.5",
+            highlights: supportsLiquidGlass ? [liquidGlassHighlight] : []
+        ),
     ]
+
+    /// Liquid Glass needs macOS 26, so its highlight (and its onboarding step) only exist there.
+    static var supportsLiquidGlass: Bool {
+        if #available(macOS 26.0, *) { return true }
+        return false
+    }
+
+    static let liquidGlassHighlight = WhatsNewHighlight(
+        id: "liquidGlass",
+        icon: "rectangle.topthird.inset.filled",
+        title: "Liquid Glass Notch",
+        body: "Give the expanded notch a Liquid Glass look — solid black around the camera, melting into glass toward the bottom. Turn it on below, or any time in Appearance settings.",
+        action: .enableLiquidGlass(label: "Turn On Liquid Glass")
+    )
 
     /// Compares two version strings numerically, so "27.9" < "27.10" and "27.2" < "27.2.1".
     static func isVersion(_ a: String, newerThan b: String) -> Bool {

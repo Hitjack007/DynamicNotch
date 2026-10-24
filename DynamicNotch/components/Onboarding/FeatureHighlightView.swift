@@ -5,6 +5,7 @@
 //  Created by Mark Greene on 2026-09-20.
 //
 
+import Defaults
 import SwiftUI
 
 /// An onboarding step that tours a feature, reusing the same `WhatsNewHighlight` content
@@ -73,6 +74,14 @@ struct FeatureHighlightView: View {
                     await PermissionRequester.request(kind)
                     onContinue()
                 }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.effectiveAccent)
+
+        case .enableLiquidGlass(let label):
+            Button(label) {
+                Defaults[.liquidGlassEnabled] = true
+                onContinue()
             }
             .buttonStyle(.borderedProminent)
             .tint(.effectiveAccent)

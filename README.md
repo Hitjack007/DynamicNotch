@@ -21,6 +21,7 @@ Make your MacBook's notch actually useful. DynamicNotch turns the notch into a l
 - **Gesture controls** — swipe to open/close
 - **Extensions** — describe a small automation in plain English (e.g. turn Caffeine on when Xcode is frontmost) and DynamicNotch runs it every time, no code required
 - **AI Usage** — tracks your Claude and ChatGPT usage and surfaces an alert in the notch as you approach your limit
+- **Liquid Glass notch** — an optional Liquid Glass background for the expanded notch: solid black around the camera, melting into glass toward the bottom (macOS 26 or later; turn it on in Appearance settings)
 
 ---
 

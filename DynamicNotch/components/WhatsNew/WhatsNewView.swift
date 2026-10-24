@@ -5,6 +5,7 @@
 //  Created by Mark Greene on 2026-09-20.
 //
 
+import Defaults
 import SwiftUI
 
 struct WhatsNewView: View {
@@ -93,6 +94,14 @@ struct WhatsNewView: View {
                     await PermissionRequester.request(kind)
                     advance()
                 }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.effectiveAccent)
+
+        case .enableLiquidGlass(let label):
+            Button(label) {
+                Defaults[.liquidGlassEnabled] = true
+                advance()
             }
             .buttonStyle(.borderedProminent)
             .tint(.effectiveAccent)

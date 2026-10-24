@@ -22,6 +22,7 @@ enum OnboardingStep {
     case extensionsHighlight
     case activityReorderHighlight
     case aiUsageHighlight
+    case liquidGlassHighlight
     case thermalHighlight
     case finished
 }
@@ -30,6 +31,12 @@ struct OnboardingView: View {
     @State var step: OnboardingStep = .welcome
     let onFinish: () -> Void
     let onOpenSettings: (String) -> Void
+
+    /// Fan control is meaningless on fanless Macs, so the thermal step only exists when
+    /// `ThermalManager.detectHasFans()` found real fans.
+    private var stepAfterLiquidGlass: OnboardingStep {
+        ThermalManager.shared.detectHasFans() ? .thermalHighlight : .finished
+    }
 
     var body: some View {
         ZStack {
@@ -256,7 +263,20 @@ struct OnboardingView: View {
                     highlight: WhatsNewCatalog.highlight(id: "aiUsagePromotion"),
                     onContinue: {
                         withAnimation(.easeInOut(duration: 0.6)) {
-                            step = ThermalManager.shared.detectHasFans() ? .thermalHighlight : .finished
+                            step = WhatsNewCatalog.supportsLiquidGlass ? .liquidGlassHighlight : stepAfterLiquidGlass
+                        }
+                    },
+                    onOpenSettings: onOpenSettings
+                )
+                .transition(.opacity)
+
+            case .liquidGlassHighlight:
+                // Liquid Glass needs macOS 26, so this step is skipped on older systems.
+                FeatureHighlightView(
+                    highlight: WhatsNewCatalog.highlight(id: "liquidGlass"),
+                    onContinue: {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            step = stepAfterLiquidGlass
                         }
                     },
                     onOpenSettings: onOpenSettings
