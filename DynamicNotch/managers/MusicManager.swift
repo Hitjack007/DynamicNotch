@@ -100,6 +100,7 @@ class MusicManager: ObservableObject {
                       let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
                       app.bundleIdentifier == bundleID else { return }
                 withAnimation {
+                    self.isPlaying = false
                     self.isPlayerIdle = true
                 }
             }
