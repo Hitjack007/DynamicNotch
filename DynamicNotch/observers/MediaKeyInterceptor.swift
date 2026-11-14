@@ -51,7 +51,25 @@ final class MediaKeyInterceptor {
     private static let coreGraphicsHandle: UnsafeMutableRawPointer? =
         dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_LAZY)
 
-    private init() {}
+    // Lock state is tracked here (not read from the app delegate) because the event tap
+    // callback and the OSD suppressor timer run off the delegate's actor.
+    private let screenLocked = OSAllocatedUnfairLock(initialState: false)
+
+    private init() {
+        let center = DistributedNotificationCenter.default()
+        center.addObserver(forName: NSNotification.Name("com.apple.screenIsLocked"), object: nil, queue: nil) { [weak self] _ in
+            self?.screenLocked.withLock { $0 = true }
+        }
+        center.addObserver(forName: NSNotification.Name("com.apple.screenIsUnlocked"), object: nil, queue: nil) { [weak self] _ in
+            self?.screenLocked.withLock { $0 = false }
+        }
+    }
+
+    /// True when the lock screen is up and the notch is configured not to appear there.
+    /// There is nothing to draw our HUD on, so the system HUD must handle the key instead.
+    private var shouldDeferToSystemHUD: Bool {
+        screenLocked.withLock { $0 } && !Defaults[.showOnLockScreen]
+    }
 
     // MARK: - Accessibility
     // CGEvent.tapCreate checks the calling process's TCC entry — must be checked
@@ -220,7 +238,7 @@ final class MediaKeyInterceptor {
     }
 
     private func isCustomHUDEnabled(for keyType: NXKeyType, command: Bool) -> Bool {
-        guard Defaults[.hudReplacement] else { return false }
+        guard Defaults[.hudReplacement], !shouldDeferToSystemHUD else { return false }
         switch keyType {
         case .soundUp, .soundDown: return Defaults[.hudVolume]
         case .mute: return Defaults[.hudMic]
@@ -238,7 +256,7 @@ final class MediaKeyInterceptor {
             return Unmanaged.passUnretained(cgEvent)
         }
 
-        guard Defaults[.hudReplacement] && Defaults[.hudBrightness] else {
+        guard Defaults[.hudReplacement] && Defaults[.hudBrightness], !shouldDeferToSystemHUD else {
             return Unmanaged.passUnretained(cgEvent)
         }
 
@@ -418,7 +436,8 @@ final class MediaKeyInterceptor {
     // Safe to call from any thread — uses only thread-safe CGWindowList and CGS APIs.
     @discardableResult
     private func checkForOSDWindow() -> Bool {
-        guard Defaults[.hudReplacement] && (Defaults[.hudBrightness] || Defaults[.hudBacklight]) else {
+        guard Defaults[.hudReplacement] && (Defaults[.hudBrightness] || Defaults[.hudBacklight]),
+              !shouldDeferToSystemHUD else {
             return false
         }
         let windowList = CGWindowListCopyWindowInfo(
