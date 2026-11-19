@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4DE8F94C308C500000AB1810 /* DynamicNotch.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4DE8F94B308C500000AB1810 /* DynamicNotch.icon */; };
 		1100290C2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */; };
 		110029272E84FD4C00035A57 /* TemporaryFileStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */; };
 		1100292A2E8691B400035A57 /* FileShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110029292E8691B400035A57 /* FileShareView.swift */; };
@@ -146,6 +145,7 @@
 		4DD781093042DD0000C5B74D /* SpectrogramSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DD781083042DD0000C5B74D /* SpectrogramSetupView.swift */; };
 		4DDCD26C304AC3F200390EB8 /* AirPlayConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDCD26B304AC3F200390EB8 /* AirPlayConnector.swift */; };
 		4DE8F94A308C411500AB1810 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 4DE8F949308C411500AB1810 /* InfoPlist.xcstrings */; };
+		4DE8F94C308C500000AB1810 /* DynamicNotch.icon in Resources */ = {isa = PBXBuildFile; fileRef = 4DE8F94B308C500000AB1810 /* DynamicNotch.icon */; };
 		4DED0D12305DDD74005D32A2 /* DisplaySetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D11305DDD74005D32A2 /* DisplaySetupView.swift */; };
 		4DED0D32305E1110005D32A2 /* AIUsageThresholdState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */; };
 		4DED0D34305E1125005D32A2 /* AIUsageNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DED0D33305E1125005D32A2 /* AIUsageNotifier.swift */; };
@@ -251,7 +251,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		4DE8F94B308C500000AB1810 /* DynamicNotch.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = DynamicNotch.icon; sourceTree = "<group>"; };
 		1100290B2E847E2800035A57 /* NSItemProvider+LoadHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSItemProvider+LoadHelpers.swift"; sourceTree = "<group>"; };
 		110029262E84FD4C00035A57 /* TemporaryFileStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemporaryFileStorageService.swift; sourceTree = "<group>"; };
 		110029292E8691B400035A57 /* FileShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShareView.swift; sourceTree = "<group>"; };
@@ -388,6 +387,7 @@
 		4DD781083042DD0000C5B74D /* SpectrogramSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectrogramSetupView.swift; sourceTree = "<group>"; };
 		4DDCD26B304AC3F200390EB8 /* AirPlayConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayConnector.swift; sourceTree = "<group>"; };
 		4DE8F949308C411500AB1810 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		4DE8F94B308C500000AB1810 /* DynamicNotch.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = DynamicNotch.icon; sourceTree = "<group>"; };
 		4DED0D11305DDD74005D32A2 /* DisplaySetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySetupView.swift; sourceTree = "<group>"; };
 		4DED0D31305E1110005D32A2 /* AIUsageThresholdState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageThresholdState.swift; sourceTree = "<group>"; };
 		4DED0D33305E1125005D32A2 /* AIUsageNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIUsageNotifier.swift; sourceTree = "<group>"; };
@@ -1456,14 +1456,14 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 202611150834;
+				CURRENT_PROJECT_VERSION = 202611191934;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DynamicNotchXPCHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.DynamicNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1481,14 +1481,14 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 202611150834;
+				CURRENT_PROJECT_VERSION = 202611191934;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DynamicNotchXPCHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DynamicNotchXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.DynamicNotchXPCHelper;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -1635,7 +1635,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 202611150834;
+				CURRENT_PROJECT_VERSION = 202611191934;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = S67T94HBGJ;
@@ -1663,7 +1663,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1689,7 +1689,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 202611150834;
+				CURRENT_PROJECT_VERSION = 202611191934;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"DynamicNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = S67T94HBGJ;
@@ -1716,7 +1716,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1739,7 +1739,7 @@
 				DEVELOPMENT_TEAM = S67T94HBGJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -1760,7 +1760,7 @@
 				DEVELOPMENT_TEAM = S67T94HBGJ;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.4;
-				MARKETING_VERSION = 27.5.2;
+				MARKETING_VERSION = 27.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mark.dynamicnotch.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
