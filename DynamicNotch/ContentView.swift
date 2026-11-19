@@ -174,7 +174,69 @@ struct ContentView: View {
         }
     }
 
+    private var notchSurface: some View {
+        NotchLayout()
+            .frame(alignment: .top)
+            .padding(
+                .horizontal,
+                vm.notchState == .open
+                ? Defaults[.cornerRadiusScaling]
+                ? (cornerRadiusInsets.opened.top) : (cornerRadiusInsets.opened.bottom)
+                : cornerRadiusInsets.closed.bottom
+            )
+            .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
+            .background {
+                NotchBackground(
+                    glassEnabled: liquidGlassEnabled,
+                    isOpen: vm.notchState == .open,
+                    closedNotchHeight: max(vm.effectiveClosedNotchHeight, vm.closedNotchSize.height)
+                )
+            }
+            .clipShape(currentNotchShape)
+            .overlay(alignment: .top) {
+                Rectangle()
+                    .fill(.black)
+                    .frame(height: 1)
+                    .padding(.horizontal, topCornerRadius)
+            }
+            .shadow(
+                color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
+                    ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
+            )
+            .padding(
+                .bottom,
+                vm.effectiveClosedNotchHeight == 0 ? 10 : 0
+            )
+            .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
+    }
+
+    init() {}
+
+    #if DEBUG
+    enum LayoutSample {
+        case idle, volume, music
+    }
+
+    private var layoutSample: LayoutSample?
+
+    init(layoutSample: LayoutSample) {
+        self.layoutSample = layoutSample
+    }
+    #endif
+
     var body: some View {
+        #if DEBUG
+        if layoutSample != nil {
+            notchSurface
+        } else {
+            interactiveNotch
+        }
+        #else
+        interactiveNotch
+        #endif
+    }
+
+    private var interactiveNotch: some View {
         // Calculate scale based on gesture progress only
         let gestureScale: CGFloat = {
             guard gestureProgress != 0 else { return 1.0 }
@@ -184,41 +246,7 @@ struct ContentView: View {
 
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
-                let mainLayout = NotchLayout()
-                    .frame(alignment: .top)
-                    .padding(
-                        .horizontal,
-                        vm.notchState == .open
-                        ? Defaults[.cornerRadiusScaling]
-                        ? (cornerRadiusInsets.opened.top) : (cornerRadiusInsets.opened.bottom)
-                        : cornerRadiusInsets.closed.bottom
-                    )
-                    .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
-                    .background {
-                        NotchBackground(
-                            glassEnabled: liquidGlassEnabled,
-                            isOpen: vm.notchState == .open,
-                            closedNotchHeight: max(vm.effectiveClosedNotchHeight, vm.closedNotchSize.height)
-                        )
-                    }
-                    .clipShape(currentNotchShape)
-                    .overlay(alignment: .top) {
-                        Rectangle()
-                            .fill(.black)
-                            .frame(height: 1)
-                            .padding(.horizontal, topCornerRadius)
-                    }
-                    .shadow(
-                        color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
-                            ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
-                    )
-                    .padding(
-                        .bottom,
-                        vm.effectiveClosedNotchHeight == 0 ? 10 : 0
-                    )
-
-                mainLayout
-                    .frame(height: vm.notchState == .open ? vm.notchSize.height : nil)
+                notchSurface
                     .conditionalModifier(true) { view in
                         let openAnimation = Animation.spring(response: 0.42, dampingFraction: 0.8, blendDuration: 0)
                         let closeAnimation = Animation.spring(response: 0.45, dampingFraction: 1.0, blendDuration: 0)
@@ -381,6 +409,34 @@ struct ContentView: View {
 
     @ViewBuilder
     func NotchLayout() -> some View {
+        #if DEBUG
+        if let layoutSample {
+            switch layoutSample {
+            case .idle:
+                idleNotchPlaceholder
+            case .volume:
+                InlineHUD(
+                    type: .constant(.volume), value: .constant(0.25), icon: .constant(""),
+                    hoverAnimation: .constant(false), gestureProgress: .constant(0)
+                )
+                .fixedSize()
+            case .music:
+                MusicLiveActivity()
+            }
+        } else {
+            activeNotchLayout
+        }
+        #else
+        activeNotchLayout
+        #endif
+    }
+
+    private var idleNotchPlaceholder: some View {
+        Rectangle().fill(.clear)
+            .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+    }
+
+    private var activeNotchLayout: some View {
         VStack(alignment: .leading) {
             VStack(alignment: .leading) {
                 if coordinator.helloAnimationRunning {
@@ -464,7 +520,7 @@ struct ContentView: View {
                                .frame(height: max(24, vm.effectiveClosedNotchHeight))
                                .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
                        } else {
-                           Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+                           idleNotchPlaceholder
                        }
 
                       if coordinator.sneakPeek.show {

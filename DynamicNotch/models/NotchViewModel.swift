@@ -258,9 +258,19 @@ class NotchViewModel: NSObject, ObservableObject {
         return false
     }
 
+    func setOpenLayout() {
+        notchSize = openNotchSize
+        notchState = .open
+    }
+
+    func setClosedLayout(size: CGSize) {
+        notchSize = size
+        closedNotchSize = size
+        notchState = .closed
+    }
+
     func open() {
-        self.notchSize = openNotchSize
-        self.notchState = .open
+        setOpenLayout()
         
         // Force music information update when notch is opened
         MusicManager.shared.forceUpdate()
@@ -271,9 +281,7 @@ class NotchViewModel: NSObject, ObservableObject {
         if SharingStateManager.shared.preventNotchClose {
             return
         }
-        self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)
-        self.closedNotchSize = self.notchSize
-        self.notchState = .closed
+        setClosedLayout(size: getClosedNotchSize(screenUUID: screenUUID))
         self.isBatteryPopoverActive = false
         self.isAudioPickerActive = false
         self.coordinator.sneakPeek.show = false
