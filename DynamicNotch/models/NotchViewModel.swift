@@ -47,9 +47,15 @@ class NotchViewModel: NSObject, ObservableObject {
         destroy()
     }
 
+    private var screenChangeObserver: NSObjectProtocol?
+
     func destroy() {
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
+        if let screenChangeObserver {
+            NotificationCenter.default.removeObserver(screenChangeObserver)
+            self.screenChangeObserver = nil
+        }
     }
 
     init(screenUUID: String? = nil) {
@@ -70,6 +76,32 @@ class NotchViewModel: NSObject, ObservableObject {
 
         setupScreenConfig()
         setupDetectorObserver()
+        setupScreenChangeObserver()
+    }
+
+    /// `closedNotchSize` is a cached snapshot that is otherwise only refreshed by `close()`.
+    /// If a snapshot was taken while macOS was mid-way through a display change it stayed wrong
+    /// (live activities drawn shorter than the real notch) until the notch was opened and closed.
+    /// Re-read it after every screen change so a bad snapshot repairs itself.
+    private func setupScreenChangeObserver() {
+        // Registered synchronously so a notification posted right after init is not missed.
+        screenChangeObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                // Give macOS a moment to finish applying the new screen layout.
+                try? await Task.sleep(for: .milliseconds(150))
+                self?.refreshClosedNotchSize()
+            }
+        }
+    }
+
+    private func refreshClosedNotchSize() {
+        guard notchState == .closed,
+              let size = resolvedClosedNotchSize(screenUUID: screenUUID) else { return }
+        setClosedLayout(size: size)
     }
 
     // MARK: - Per-screen config
@@ -258,9 +290,19 @@ class NotchViewModel: NSObject, ObservableObject {
         return false
     }
 
+    func setOpenLayout() {
+        notchSize = openNotchSize
+        notchState = .open
+    }
+
+    func setClosedLayout(size: CGSize) {
+        notchSize = size
+        closedNotchSize = size
+        notchState = .closed
+    }
+
     func open() {
-        self.notchSize = openNotchSize
-        self.notchState = .open
+        setOpenLayout()
         
         // Force music information update when notch is opened
         MusicManager.shared.forceUpdate()
@@ -271,9 +313,9 @@ class NotchViewModel: NSObject, ObservableObject {
         if SharingStateManager.shared.preventNotchClose {
             return
         }
-        self.notchSize = getClosedNotchSize(screenUUID: self.screenUUID)
-        self.closedNotchSize = self.notchSize
-        self.notchState = .closed
+        // Keep the last known size if the screen can't be resolved right now, rather than
+        // caching a made-up one that stays wrong until the next close.
+        setClosedLayout(size: resolvedClosedNotchSize(screenUUID: screenUUID) ?? closedNotchSize)
         self.isBatteryPopoverActive = false
         self.isAudioPickerActive = false
         self.coordinator.sneakPeek.show = false

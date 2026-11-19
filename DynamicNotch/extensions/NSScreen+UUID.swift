@@ -52,7 +52,11 @@ final class NSScreenUUIDCache {
     
     private var cache: [String: NSScreen] = [:]
     private var observer: Any?
-    
+
+    /// The connected screens. Replaceable so tests can simulate the transient screen lists
+    /// macOS reports while displays wake, sleep, connect or reconfigure.
+    var screensProvider: () -> [NSScreen] = { NSScreen.screens }
+
     private init() {
         rebuildCache()
         setupObserver()
@@ -76,20 +80,33 @@ final class NSScreenUUIDCache {
         }
     }
     
-    private func rebuildCache() {
+    func rebuildCache() {
         var newCache: [String: NSScreen] = [:]
-        
-        for screen in NSScreen.screens {
+
+        for screen in screensProvider() {
             if let uuid = screen.displayUUID {
                 newCache[uuid] = screen
             }
         }
-        
+
+        // While displays wake, sleep or reconfigure macOS can briefly report no screens at
+        // all. Replacing the cache with that would make every screen look disconnected, so
+        // a lookup for the built-in display would fail until the next screen change.
+        guard !newCache.isEmpty else { return }
+
         cache = newCache
     }
-    
+
     func screen(forUUID uuid: String) -> NSScreen? {
-        return cache[uuid]
+        if let screen = cache[uuid] { return screen }
+
+        // The cache is rebuilt asynchronously after a screen change, so a lookup can run
+        // before it catches up (e.g. a display that was just connected). Ask the live list.
+        guard let screen = screensProvider().first(where: { $0.displayUUID == uuid }) else {
+            return nil
+        }
+        cache[uuid] = screen
+        return screen
     }
     
     var allScreens: [String: NSScreen] {
