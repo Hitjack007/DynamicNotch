@@ -29,7 +29,7 @@ Please review the [CONTRIBUTING.md](../CONTRIBUTING.md) file for detailed contri
 
 ## AI assistance
 
-- [ ] This pull request contains code written or modified with AI assistance
+- [ ] This pull request contains code written or modified by an AI coding agent or assistant (inline autocomplete doesn't count)
 
 If ticked, fill this in (see the [disclosure guidance](../AI_AGENTS.md#disclosure)). If not, delete this section.
 

@@ -1,6 +1,6 @@
 # AI Agent Policy
 
-DynamicNotch accepts AI-assisted contributions. This document explains the conditions.
+DynamicNotch accepts AI-assisted contributions, including pull requests written entirely by an agent, as long as they are disclosed. This document explains the conditions.
 
 This is not a grudging tolerance. Coding agents are genuinely useful on a codebase like this one, and pretending otherwise would be dishonest. But an agent can produce a plausible-looking 600-line diff faster than a maintainer can read one, and that asymmetry is the whole problem. Everything below exists to keep the cost of reviewing your contribution roughly proportional to the cost of making it.
 
@@ -38,11 +38,13 @@ Read this alongside [CONTRIBUTING.md](./CONTRIBUTING.md). That document covers *
 
 ## Who This Applies To
 
-Anyone opening a pull request, issue, or translation against this repository who used a large language model, coding agent, autocomplete tool, or AI review bot at any point in producing it.
+Anyone opening a pull request, issue, or translation against this repository who used a large language model, coding agent, or AI review bot to generate code, text, or translations that ended up in it.
 
-It applies whether the tool wrote one line or all of them, and whether it ran as an interactive assistant, a background agent, a GitHub bot, or an autonomous pipeline.
+It applies whether the tool wrote a single function or all of the change, and whether it ran as an interactive assistant, a background agent, a GitHub bot, or an autonomous pipeline.
 
-If you are a human who wrote every character yourself, none of this applies to you and you can go back to [CONTRIBUTING.md](./CONTRIBUTING.md).
+Inline autocomplete that finishes a line or a few tokens as you type (Xcode's predictive completion, accepting a suggestion from Copilot) does not need disclosure. If a tool wrote whole functions, files, or tests, it does.
+
+If you wrote the change yourself, with at most inline autocomplete helping, none of this applies to you and you can go back to [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## What Agents May Do
 
@@ -101,7 +103,7 @@ AI assistance must be disclosed in the pull request description. This is mandato
 
 Tick the box in the pull request template and add a short note covering three things:
 
-1. **Which tool and model.** "Claude Code (Opus 5)", "Cursor with GPT-5", "Copilot autocomplete". Version if you know it.
+1. **Which tool and model.** "Claude Code (Opus 5)", "Cursor with GPT-5", "Copilot agent mode". Version if you know it.
 2. **What it generated versus what you wrote.** Be specific about the split. "The agent wrote `ThermalDaemonClient.swift` end to end; I wrote the settings UI and rewrote its error handling."
 3. **What you verified, and how.** Not what the agent claimed. What *you* did. "Built in Xcode 26, ran on an M2 MacBook Air on macOS 26.1, confirmed fan speed updates under load with a synthetic CPU burn, checked the notch collapses correctly on external display."
 
@@ -121,7 +123,7 @@ A usable disclosure looks like this:
 > [!NOTE]
 > Disclosing AI use does not count against your contribution. Undisclosed AI use, discovered in review, does — and it is discovered more often than people expect.
 
-Autocomplete-scale assistance (a few lines here and there, no agent involvement) needs only a one-line mention. The detailed form is for agent-generated code.
+A pull request written entirely by an agent is welcome. The disclosure is what makes it reviewable, and the more of the change the tool wrote, the more specific your "what I verified" section needs to be.
 
 ## The Quality Bar
 
