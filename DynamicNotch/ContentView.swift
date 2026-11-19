@@ -236,6 +236,7 @@ struct ContentView: View {
         #endif
     }
 
+    @ViewBuilder
     private var interactiveNotch: some View {
         // Calculate scale based on gesture progress only
         let gestureScale: CGFloat = {

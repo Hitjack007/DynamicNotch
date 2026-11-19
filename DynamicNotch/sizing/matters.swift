@@ -36,9 +36,12 @@ enum MusicPlayerImageSizes {
     return nil
 }
 
-@MainActor func getClosedNotchSize(screenUUID: String? = nil) -> CGSize {
-    // Default notch size, to avoid using optionals
-    var notchHeight: CGFloat = Defaults[.nonNotchHeight]
+/// The closed notch size for a screen, or nil when that screen can't be found right now
+/// (for example while macOS is mid-way through a display wake or reconfiguration).
+/// Callers that cache the result should keep their previous value on nil instead of
+/// storing a made-up size.
+@MainActor func resolvedClosedNotchSize(screenUUID: String? = nil) -> CGSize? {
+    var notchHeight: CGFloat
     var notchWidth: CGFloat = 185
 
     var selectedScreen = NSScreen.main
@@ -47,32 +50,37 @@ enum MusicPlayerImageSizes {
         selectedScreen = NSScreen.screen(withUUID: uuid)
     }
 
-    // Check if the screen is available
-    if let screen = selectedScreen {
-        // Calculate and set the exact width of the notch
-        if let topLeftNotchpadding: CGFloat = screen.auxiliaryTopLeftArea?.width,
-           let topRightNotchpadding: CGFloat = screen.auxiliaryTopRightArea?.width
-        {
-            notchWidth = screen.frame.width - topLeftNotchpadding - topRightNotchpadding + 4
-        }
+    guard let screen = selectedScreen else { return nil }
 
-        // Check if the Mac has a notch
-        if screen.safeAreaInsets.top > 0 {
-            // This is a display WITH a notch - use notch height settings
-            notchHeight = Defaults[.notchHeight]
-            if Defaults[.notchHeightMode] == .matchRealNotchSize {
-                notchHeight = screen.safeAreaInsets.top
-            } else if Defaults[.notchHeightMode] == .matchMenuBar {
-                notchHeight = screen.frame.maxY - screen.visibleFrame.maxY
-            }
-        } else {
-            // This is a display WITHOUT a notch - use non-notch height settings
-            notchHeight = Defaults[.nonNotchHeight]
-            if Defaults[.nonNotchHeightMode] == .matchMenuBar {
-                notchHeight = screen.frame.maxY - screen.visibleFrame.maxY
-            }
+    // Calculate and set the exact width of the notch
+    if let topLeftNotchpadding: CGFloat = screen.auxiliaryTopLeftArea?.width,
+       let topRightNotchpadding: CGFloat = screen.auxiliaryTopRightArea?.width
+    {
+        notchWidth = screen.frame.width - topLeftNotchpadding - topRightNotchpadding + 4
+    }
+
+    // Check if the Mac has a notch
+    if screen.safeAreaInsets.top > 0 {
+        // This is a display WITH a notch - use notch height settings
+        notchHeight = Defaults[.notchHeight]
+        if Defaults[.notchHeightMode] == .matchRealNotchSize {
+            notchHeight = screen.safeAreaInsets.top
+        } else if Defaults[.notchHeightMode] == .matchMenuBar {
+            notchHeight = screen.frame.maxY - screen.visibleFrame.maxY
+        }
+    } else {
+        // This is a display WITHOUT a notch - use non-notch height settings
+        notchHeight = Defaults[.nonNotchHeight]
+        if Defaults[.nonNotchHeightMode] == .matchMenuBar {
+            notchHeight = screen.frame.maxY - screen.visibleFrame.maxY
         }
     }
 
     return .init(width: notchWidth, height: notchHeight)
+}
+
+@MainActor func getClosedNotchSize(screenUUID: String? = nil) -> CGSize {
+    // Default notch size, to avoid using optionals
+    resolvedClosedNotchSize(screenUUID: screenUUID)
+        ?? .init(width: 185, height: Defaults[.nonNotchHeight])
 }
